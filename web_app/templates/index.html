@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Evaluasi Publikasi BPS (KcDA / KDA 2026)</title>
+    <meta name="description" content="Aplikasi otomatisasi pemeriksaan dan evaluasi publikasi Kecamatan Dalam Angka (KcDA) dan Kabupaten Dalam Angka (KDA) berbasis AI & Pedoman BPS 2023 / Template 2026.">
+    <meta name="color-scheme" content="light dark">
+    <script>
+      (function() {
+        try {
+          var saved = localStorage.getItem('bps_theme');
+          if (saved) {
+            document.documentElement.setAttribute('data-theme', saved);
+          } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+            document.documentElement.setAttribute('data-theme', 'light');
+          }
+        } catch(e) {}
+      })();
+    </script>
+    <link rel="stylesheet" href="/static/css/style.css?v=6.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="brand-wrapper">
+                <div class="bps-logo-badge">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/>
+                    </svg>
+                </div>
+                <div class="brand-info">
+                    <div class="brand-title-row">
+                        <h1>Sistem Evaluasi Publikasi BPS (KcDA / KDA 2026)</h1>
+                        <span class="badge-version">v3.0 Ultra Deep Cross-Page</span>
+                    </div>
+                    <p>Audit Kepatuhan 11 Bagian Anatomi + Validasi Lintas Halaman ISSN/Katalog/Tahun + Deteksi Saltik Otomatis</p>
+                </div>
+            </div>
+
+            <!-- Top Actions -->
+            <div class="header-actions">
+                <button type="button" class="btn-theme-toggle" id="btn-theme-toggle" title="Ganti Mode Tampilan (Gelap / Terang)">
+                    <span class="theme-icon" id="theme-icon">☀️</span>
+                    <span class="theme-text" id="theme-text">Mode Terang</span>
+                </button>
+                <button type="button" class="btn-guide-toggle" id="btn-open-guide">
+                    <span>📖 Panduan Standar BPS</span>
+                </button>
+                <div class="lan-share-pill" id="lan-pill" title="Klik untuk menyalin tautan akses LAN sekantor">
+                    <span class="live-dot"></span>
+                    <span class="lan-text">Akses LAN:</span>
+                    <code id="lan-url">10.72.10.241:8000</code>
+                    <span class="copy-hint">📋 Salin</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Upload Card -->
+        <div class="glass-card" id="panel-upload">
+            <div class="card-headline">
+                <span class="headline-tag">Pemeriksaan Cepat & Akurat</span>
+                <h2>Unggah Publikasi untuk Evaluasi Menyeluruh</h2>
+                <p>Mendukung berkas PDF publikasi Kecamatan Dalam Angka (KcDA) dan Kabupaten Dalam Angka (KDA) se-Indonesia.</p>
+            </div>
+
+            <div class="dropzone-box" id="dropzone">
+                <div class="dropzone-icon-pulse">
+                    <span class="pulse-ring"></span>
+                    <span class="icon-inner">📑</span>
+                </div>
+                <div class="dropzone-title">Tarik & Letakkan Berkas PDF Publikasi di Sini</div>
+                <div class="dropzone-sub">atau klik tombol di bawah untuk memilih satu atau banyak berkas PDF sekaligus dari komputer</div>
+                <label for="pdf-input" class="btn-select-file" id="btn-trigger-file">
+                    <span>📁 Pilih Dokumen PDF (Bisa Banyak)</span>
+                </label>
+                <input type="file" id="pdf-input" class="visually-hidden-file-input" accept=".pdf" multiple>
+                <div class="dropzone-note">Mendukung audit berkas tunggal maupun audit kolektif seluruh kecamatan sekaligus (1 Master Excel)</div>
+            </div>
+
+            <div id="file-chosen" class="file-chosen-info" style="display: none;">
+                <div class="file-chosen-content">
+                    <span class="file-icon">📄</span>
+                    <div class="file-details">
+                        <div class="file-name" id="chosen-file-name">-</div>
+                        <div class="file-meta" id="chosen-file-size">-</div>
+                    </div>
+                    <div class="file-chosen-actions">
+                        <button type="button" class="btn-instant-analyze" id="btn-instant-analyze">
+                            <span>🚀 Mulai Audit Sekarang</span>
+                        </button>
+                        <button type="button" class="btn-remove-file" id="btn-remove-file" title="Ganti berkas">✕ Ganti</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advanced Config Toggle -->
+            <div class="advanced-settings-accordion">
+                <button type="button" class="btn-toggle-settings" id="btn-toggle-settings">
+                    <span>⚙️ Opsi Tambahan (Template Excel / AI Key)</span>
+                    <span class="toggle-arrow" id="settings-arrow">▼</span>
+                </button>
+                <div class="settings-content" id="settings-content" style="display: none;">
+                    <div class="options-grid">
+                        <div class="form-group">
+                            <label for="excel-input">Template Excel Evaluasi Induk (Opsional):</label>
+                            <input type="file" id="excel-input" class="form-control" accept=".xlsx">
+                            <small>Jika dikosongkan, sistem otomatis menerapkan instrumen baku BPS 2026.</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="api-key-input">Gemini API Key (Opsional):</label>
+                            <input type="password" id="api-key-input" class="form-control" placeholder="Default API Key BPS Aktif">
+                            <small>Digunakan untuk memperkaya variasi redaksi bahasa temuan agar makin solutif.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" id="btn-analyze-upload" class="btn-primary" disabled>
+                <span>🔍 Mulai Audit Kepatuhan & Ekstraksi Kesalahan</span>
+            </button>
+        </div>
+
+        <!-- Progress Card (Hidden by default) -->
+        <div class="progress-card" id="progress-card">
+            <div class="spinner-container">
+                <div class="spinner"></div>
+                <div class="spinner-glow"></div>
+            </div>
+            <h2 id="progress-title">Sedang Menganalisis Dokumen Publikasi...</h2>
+            <p id="progress-desc">
+                Sistem sedang memindai struktur teks, tipografi dwibahasa, visual gambar dummy template, tabel kosong, perataan angka, dan menyusun lembar evaluasi resmi.
+            </p>
+            <div class="progress-steps">
+                <div class="step-pill active" id="step-1">1. Ekstraksi PDF & Metadata</div>
+                <div class="step-pill" id="step-2">2. Pindai Visual & Tabel</div>
+                <div class="step-pill" id="step-3">3. Validasi Anatomi 11 Seksi</div>
+                <div class="step-pill" id="step-4">4. Kompilasi Excel Resmi BPS</div>
+            </div>
+        </div>
+
+        <!-- Batch Results Section (Hidden until analyzed) -->
+        <div class="batch-results-container" id="batch-results-container" style="display: none;">
+            <div class="batch-header-card">
+                <div class="batch-header-left">
+                    <div class="batch-tag">HASIL AUDIT KOLEKTIF MULTI-KECAMATAN</div>
+                    <div class="batch-title" id="batch-title">Rekapitulasi Evaluasi Publikasi KcDA 2026</div>
+                    <div class="batch-sub" id="batch-sub">Kompilasi audit kepatuhan format 11 anatomi BPS untuk seluruh kecamatan yang diperiksa.</div>
+                </div>
+                <div class="batch-header-actions">
+                    <a id="btn-batch-download-excel" class="batch-btn btn-excel-download" href="#" download>
+                        <span>📥 Unduh 1 File Master Excel (.xlsx)</span>
+                    </a>
+                    <a id="btn-batch-download-zip" class="batch-btn btn-pdf-download" href="#" download>
+                        <span>📦 Unduh Seluruh Laporan PDF (.zip)</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Batch Summary Stats Grid -->
+            <div class="summary-grid">
+                <div class="stat-card stat-blue">
+                    <div class="stat-icon-wrap blue">🏛️</div>
+                    <div class="stat-content">
+                        <div class="stat-val" id="batch-stat-total-districts">0</div>
+                        <div class="stat-lbl">Total Kecamatan Diaudit</div>
+                        <div class="stat-sub">Semua berkas terproses</div>
+                    </div>
+                </div>
+                <div class="stat-card stat-red">
+                    <div class="stat-icon-wrap red">⚠️</div>
+                    <div class="stat-content">
+                        <div class="stat-val" id="batch-stat-total-defects">0</div>
+                        <div class="stat-lbl">Total Temuan Agregat</div>
+                        <div class="stat-sub">Seluruh kecamatan</div>
+                    </div>
+                </div>
+                <div class="stat-card stat-green">
+                    <div class="stat-icon-wrap green">🛡️</div>
+                    <div class="stat-content">
+                        <div class="stat-val" id="batch-stat-clean-districts">0</div>
+                        <div class="stat-lbl">Kecamatan Bebas Kesalahan</div>
+                        <div class="stat-sub">Siap rilis tanpa catatan</div>
+                    </div>
+                </div>
+                <div class="stat-card stat-amber">
+                    <div class="stat-icon-wrap amber">🚨</div>
+                    <div class="stat-content">
+                        <div class="stat-val" id="batch-stat-mismatch-districts">0</div>
+                        <div class="stat-lbl">Inkonsistensi Wilayah</div>
+                        <div class="stat-sub">Kover vs isi berbeda</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Batch Table -->
+            <div class="batch-table-card">
+                <div class="batch-table-header">
+                    <div>
+                        <h3 class="batch-table-heading">Daftar Hasil Evaluasi per Kecamatan</h3>
+                        <p class="batch-table-sub">Klik tombol "Lihat Detail" pada kecamatan yang diinginkan untuk membuka rincian 11 bagian anatomi</p>
+                    </div>
+                    <span class="badge-count clean" id="batch-table-count">0 Kecamatan</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="batch-table" id="batch-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">No</th>
+                                <th>Kecamatan</th>
+                                <th>Nomor Katalog / ISSN</th>
+                                <th style="text-align: center;">Total Temuan</th>
+                                <th style="text-align: center;">Status Kelayakan</th>
+                                <th>Integritas Wilayah (Kover vs Isi)</th>
+                                <th style="text-align: center;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="batch-table-body">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section (Hidden until analyzed) -->
+        <div class="results-container" id="results-container">
+            <!-- Metadata & Compliance Banner -->
+            <div class="meta-banner">
+                <div class="meta-header-left">
+                    <div class="audit-status-tag">Laporan Audit Kepatuhan Publikasi BPS</div>
+                    <div class="meta-title" id="meta-title">Kecamatan Dalam Angka 2026</div>
+                    <div class="meta-tags">
+                        <span class="meta-tag" id="meta-region">📍 Wilayah: -</span>
+                        <span class="meta-tag" id="meta-year">📅 Tahun: 2026</span>
+                        <span class="meta-tag" id="meta-catalog">🏷️ Katalog: -</span>
+                        <span class="meta-tag" id="meta-issn">🔢 ISSN: -</span>
+                        <span class="meta-tag" id="meta-pages">📄 Fisik: - Hlm</span>
+                    </div>
+                </div>
+
+                <div class="audit-status-badge-wrapper">
+                    <div class="audit-badge-card status-revision" id="audit-badge-card">
+                        <div class="audit-badge-icon" id="audit-badge-icon">⚠️</div>
+                        <div class="audit-badge-details">
+                            <span class="audit-badge-sub">STATUS KELAYAKAN</span>
+                            <span class="audit-badge-main" id="audit-badge-title">PERLU REVISI</span>
+                        </div>
+                    </div>
+                    <div class="audit-badge-caption" id="audit-badge-caption">
+                        <span id="audit-badge-count">0</span> Catatan Wajib Diperbaiki
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fatal Identity Mismatch Alert -->
+            <div class="fatal-alert-banner" id="fatal-mismatch-banner" style="display: none;">
+                <div class="fatal-alert-glow"></div>
+                <div class="fatal-alert-icon">🚨</div>
+                <div class="fatal-alert-body">
+                    <div class="fatal-alert-badge">PERINGATAN FATAL: KETIDAKSESUAIAN WILAYAH (KOVER VS ISI)</div>
+                    <div class="fatal-alert-title">Publikasi Tidak Layak Terbit (Inkonsistensi Identitas Wilayah)</div>
+                    <div class="fatal-alert-desc" id="fatal-mismatch-desc">
+                        Kover publikasi tertulis nama wilayah tertentu, namun isi buku dan tabel data merupakan milik wilayah lain.
+                    </div>
+                    <div class="fatal-alert-reasons" id="fatal-mismatch-reasons"></div>
+                </div>
+            </div>
+
+            <!-- Stats Summary Cards -->
+            <div class="summary-grid">
+                <div class="stat-card stat-red">
+                    <div class="stat-icon-wrap red">⚠️</div>
+                    <div class="stat-content">
+                        <div class="stat-val" id="stat-total-defects">0</div>
+                        <div class="stat-lbl">Total Temuan Kesalahan</div>
+                        <div class="stat-sub">Murni temuan defect riil</div>
+                    </div>
+                </div>
+                <div class="stat-card stat-green">
+                    <div class="stat-icon-wrap green">🛡️</div>
+                    <div class="stat-content">
+                        <div class="stat-val" id="stat-clean-sections">0 / 11</div>
+                        <div class="stat-lbl">Bagian Bebas Kesalahan</div>
+                        <div class="stat-sub">11 Seksi Anatomi Baku</div>
+                    </div>
+                </div>
+                <div class="stat-card stat-amber">
+                    <div class="stat-icon-wrap amber">📷</div>
+                    <div class="stat-content">
+                        <div class="stat-val" id="stat-dummy-images">0</div>
+                        <div class="stat-lbl">Gambar Dummy / Placeholder</div>
+                        <div class="stat-sub">Ikon kamera bawaan template</div>
+                    </div>
+                </div>
+                <div class="stat-card stat-blue">
+                    <div class="stat-icon-wrap blue">🔗</div>
+                    <div class="stat-content">
+                        <div class="stat-val" id="stat-issn-consistency">-</div>
+                        <div class="stat-lbl">Konsistensi ISSN Lintas Halaman</div>
+                        <div class="stat-sub" id="stat-issn-sub">Cross-page ISSN validator</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Computer Vision Advanced Audit Telemetry Card -->
+            <div class="cv-telemetry-card" id="cv-telemetry-card" style="display: none;">
+                <div class="cv-telemetry-header">
+                    <div class="cv-telemetry-badge">⚡ COMPUTER VISION INSPECTION ENGINE (OPENCV)</div>
+                    <div class="cv-telemetry-title">Hasil Pemindaian Visual Multi-Dimensi Tingkat Lanjut</div>
+                </div>
+                <div class="cv-telemetry-grid">
+                    <div class="cv-item" id="cv-item-cover">
+                        <div class="cv-item-icon">📐</div>
+                        <div class="cv-item-info">
+                            <span class="cv-item-lbl">Kover Depan Header & Tipografi</span>
+                            <span class="cv-item-val" id="cv-val-cover">-</span>
+                        </div>
+                    </div>
+                    <div class="cv-item" id="cv-item-hju">
+                        <div class="cv-item-icon">🎨</div>
+                        <div class="cv-item-info">
+                            <span class="cv-item-lbl">Latar Belakang & Logo HJU</span>
+                            <span class="cv-item-val" id="cv-val-hju">-</span>
+                        </div>
+                    </div>
+                    <div class="cv-item" id="cv-item-preface">
+                        <div class="cv-item-icon">👤</div>
+                        <div class="cv-item-info">
+                            <span class="cv-item-lbl">Foto Pimpinan & Tanda Tangan</span>
+                            <span class="cv-item-val" id="cv-val-preface">-</span>
+                        </div>
+                    </div>
+                    <div class="cv-item" id="cv-item-body">
+                        <div class="cv-item-icon">📷</div>
+                        <div class="cv-item-info">
+                            <span class="cv-item-lbl">Placeholder Kamera & Batang Tubuh</span>
+                            <span class="cv-item-val" id="cv-val-body">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search & Action Toolbar -->
+            <div class="toolbar-box">
+                <div class="toolbar-left">
+                    <div class="search-wrap">
+                        <input type="text" id="defect-search" class="search-input" placeholder="🔍 Cari kata kunci (tabel, kamera, nomor katalog, issn, judul, ulasan)...">
+                    </div>
+                </div>
+
+                <div class="toolbar-right">
+                    <button type="button" class="btn-utility" id="btn-toggle-all">
+                        <span id="toggle-all-text">📁 Ciutkan Semua</span>
+                    </button>
+                    <button type="button" class="btn-utility" id="btn-copy-all">
+                        <span>📋 Salin Semua Catatan</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Aesthetic Tips Banner -->
+            <div class="aesthetic-tips-banner" id="aesthetic-tips-banner" style="display: none;">
+                <div class="aesthetic-banner-icon">✨</div>
+                <div class="aesthetic-banner-content">
+                    <div class="aesthetic-banner-title">
+                        <span>REKOMENDASI ESTETIKA & TATA LETAK VISUAL (BEYOND GUIDELINE)</span>
+                        <span class="aesthetic-badge-pill" id="aesthetic-count-pill">Saran Desain Profesional</span>
+                    </div>
+                    <div class="aesthetic-banner-desc">
+                        Sistem menyertakan saran estetika tata letak visual di luar kewajiban pedoman teknis BPS (seperti proporsi foto 3:4 & ruang kosong foto pimpinan pada Kata Pengantar, spasi tanda tangan 2.5–3 cm, tabel modern tanpa garis vertikal, serta safe margin 15 mm kover belakang) untuk memastikan dokumen tampil berkelas dan siap dipublikasikan ke publik.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sections Container -->
+            <div id="sections-wrapper">
+                <!-- Diisi via JavaScript -->
+            </div>
+
+            <!-- Floating Action Bar -->
+            <div class="action-bar">
+                <div class="action-bar-info">
+                    <div class="action-bar-icon">📊</div>
+                    <div>
+                        <div class="action-bar-title">Laporan Hasil Evaluasi Publikasi Resmi Siap Diunduh</div>
+                        <div class="action-bar-desc">Tersedia dalam format Dokumen PDF Eksekutif dan Lembar Kerja Excel (.xlsx) Standar BPS</div>
+                    </div>
+                </div>
+                <div class="action-bar-buttons">
+                    <a id="btn-download-pdf" class="action-bar-btn btn-pdf-download" href="#" download>
+                        <span>📄 Unduh Laporan PDF (.pdf)</span>
+                    </a>
+                    <a id="btn-download-excel" class="action-bar-btn btn-excel-download" href="#" download>
+                        <span>📥 Unduh Excel (.xlsx)</span>
+                    </a>
+                    <button type="button" class="action-bar-btn btn-new-audit" id="btn-reset-audit">
+                        <span>🔄 Periksa File Lain</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reference Guide Drawer / Modal -->
+        <div class="modal-overlay" id="guide-modal" style="display: none;">
+            <div class="modal-card">
+                <div class="modal-header">
+                    <div class="modal-title-wrap">
+                        <h3>📖 Ringkasan Standar Baku Publikasi BPS 2026</h3>
+                        <p>Berdasarkan Pedoman Pembuatan Publikasi 2023, Template KcDA 2026, dan Instrumen Pemeriksaan</p>
+                    </div>
+                    <button type="button" class="btn-close-modal" id="btn-close-guide">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div class="guide-grid">
+                        <div class="guide-card">
+                            <h4>1. Kover Depan & Belakang</h4>
+                            <ul>
+                                <li>Nomor katalog di pojok kanan atas: <code>Katalog/Catalogue: 1102001.xxxxx</code> (tanpa spasi sebelum titik dua).</li>
+                                <li>Nomor ISSN di bawah katalog: <code>ISSN xxxx-xxxx</code> (tanpa titik dua).</li>
+                                <li>Tahun judul wajib di tengah di bawah judul buku.</li>
+                                <li>Wajib mencantumkan <strong>Edisi Terbitan</strong> (Volume, Nomor, Tahun) di bawah judul buku.</li>
+                                <li>Kover Belakang wajib memuat slogan <strong>DATA MENCERDASKAN BANGSA / DATA ENLIGHTEN THE NATION</strong> di bagian tengah, logo BerAKHLAK, logo Sensus, dan barcode ISSN/ISBN di sudut kanan bawah.</li>
+                            </ul>
+                        </div>
+                        <div class="guide-card">
+                            <h4>2. Halaman Judul Utama</h4>
+                            <ul>
+                                <li><strong>Latar Belakang Putih Bersih</strong>: Dilarang memuat ilustrasi atau foto pemandangan alam (duplikasi kover depan).</li>
+                                <li><strong>Logo BPS Berwarna</strong>: Logo BPS dan identitas satker wajib ditampilkan berwarna (biru dan hijau BPS), bukan hitam-putih.</li>
+                                <li>Dilarang mencantumkan nomor halaman dan running title tercetak.</li>
+                            </ul>
+                        </div>
+                        <div class="guide-card">
+                            <h4>3. Format Tabel & Angka</h4>
+                            <ul>
+                                <li><strong>Perataan Angka</strong>: Seluruh sel data angka wajib <strong>rata kanan (right-aligned with indent)</strong> agar digit satuan, ribuan, dan desimal sejajar lurus.</li>
+                                <li><strong>Nilai Nol Mutlak</strong>: Menggunakan notasi En Dash <code>–</code>, bukan angka <code>0</code>.</li>
+                                <li><strong>Satuan Angka</strong>: Diletakkan pada judul kolom (contoh: <code>jiwa per km²</code>), bukan ditulis berulang di belakang angka sel data.</li>
+                                <li><strong>Posisi Catatan & Sumber</strong>: Wajib diletakkan di BAGIAN PALING BAWAH tabel, bukan di atas tabel.</li>
+                            </ul>
+                        </div>
+                        <div class="guide-card">
+                            <h4>4. Visual Gambar & Template</h4>
+                            <ul>
+                                <li>Dilarang membiarkan gambar dummy placeholder kotak abu-abu ikon kamera template pada Bab 1 s.d. Bab 7.</li>
+                                <li>Lembar Daftar Gambar hanya dibuat apabila terdapat minimal 3 gambar riil dalam publikasi.</li>
+                                <li>Istilah bahasa asing pada Penjelasan Umum (seperti <em>Not applicable</em>, <em>Estimated figure</em>, <em>Data not available</em>) wajib dicetak miring (italic).</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast-notification" style="display: none;"></div>
+
+    <script src="/static/js/app.js?v=6.0"></script>
+</body>
+</html>

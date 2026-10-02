@@ -1,0 +1,1177 @@
+{
+  "Buko": {
+    "Kover depan: -": [],
+    "Halaman Judul Utama: -": [
+      "Pelanggaran format latar belakang Halaman Judul Utama: Memuat gambar/foto pemandangan alam (duplikasi visual kover depan). Merujuk pada Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.1 dan Template KCDA 2026 halaman 3, Halaman Judul Utama (halaman fisik 3 / Romawi i) WAJIB berlatar putih bersih tanpa ilustrasi.",
+      "Halaman Judul Utama dibuat tanpa Ilustrasi",
+      "Logo dan nama BPS Penerbit  HARUS DIBUAT BERWARNA",
+      "Ketentuan penulisan judul buku sama seperti pada kover depan"
+    ],
+    "Halaman katalog: -": [
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku.",
+      "Edisi dicantumkan jika buku rutin atau memiliki ISSN. Ketentuan penulisan \nedisi sama seperti pada kover depan yaitu dibawah judul buku.",
+      "Nomor Publikasi pada buku masih kosong. Seharusnya Nomor Publikasi sama dengan Nomor Publikasi pada website yaitu Nomor Publikasi: 72010.26017",
+      "Perbaiki pencantuman jumlah halaman romawi seharusnya Jumlah halaman romawi adalah xviii",
+      "Penulisan Kata halaman pada halaman arab tidak boleh disingkat, Seharusnya 63 halaman/pages",
+      "Catatan: Penulisan BPS HARUS LENGKAP. Seharusnya BADAN PUSAT STATSITIK, baik untuk Penyusun Naskah, Penyunting, Pembuat Kover, Penerbit"
+    ],
+    "Halaman Tim Penyusun: -": [
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku."
+    ],
+    "Kata pengantar: -": [
+      "Kesalahan tahun pada narasi teks: Paragraf pertama teks Bahasa Indonesia tertulis \"Publikasi Kecamatan Buko Dalam Angka 2025\" dan Bahasa Inggris tertulis \"... in Figures 2025\". Terjadi ketidaksinkronan tahun narasi dengan titimangsa \"Salakan, September 2026\". Koreksi seharusnya: Diselaraskan menjadi tahun 2026.",
+      "wajib disertakan dengan tandan tangan pejabat baik kata pengantar dalam bahasa Indonesia maupun kata pengantar dalam bahasa Asing",
+      "Penulisan Provinsi sebaiknya jangan di singkat.\nSeharusnya: Provinsi Sulawesi Tengah",
+      "Ruang tanda tangan pejabat masih kosong: Kolom tanda tangan Kepala BPS Kabupaten Banggai Kepulauan pada Kata Pengantar dan Preface belum dibubuhi tanda tangan. Wajib dibubuhi tanda tangan resmi sebelum publikasi dirilis."
+    ],
+    "Daftar Isi: -": [
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku.",
+      "pada daftar isi terdapat keterangan halaman Daftar Gambar, akan tetapi dalam Buku pada halaman Romawi tidak terdapat Daftar Gambar"
+    ],
+    "Penjelasan Umum:": [
+      "Masih terdapat penulisan Kata dalam Bahasa Inggris yang belum dicetak \nmiring. Seharusnya penulisannya: Not applicable, Estimated figure, Revised figures, Preliminary figures, Very preliminary figures, Very very preliminary figures"
+    ],
+    "Daftar Tabel/Gambar/Grafik/Lampiran:": [
+      "Kesalahan fatal visual gambar dummy/placeholder di seluruh bab: Ditemukan 14 lembar gambar (Gambar 1.1 s.d. Gambar 7.2) yang masih memuat kotak abu-abu placeholder ikon kamera bawaan template. Pada Gambar 1.1 (Peta Wilayah), gambar peta riil belum di-insert (masih kotak kamera kosong), judul Gambar 2.1 s.d. 7.2 masih berupa elipsis (\"...\"), dan keterangan sumber masih berupa titik-titik dummy (\"Sumber/Source : ....\"). Wajib dimasukkan visual gambar/peta riil beserta sumber valid, atau seluruh halaman gambar placeholder dihapus dari buku.",
+      "Perbaiki penulisan sumber dalam bahasa Asing seharusnya dicetak \nmiring. Cek kembali penulisan keterangan Sumber yang terdapat di bawah masing-masing tabel pada buku Publikasi mulai dari BAB 1 sd BAB akhir"
+    ],
+    "Layout Isi:": [
+      "Beberapa ketentuan running title:                                                                                      1. Running title terdiri atas judul buku dan judul Bab\nRunning title pada halaman genap berisi judul buku, sedangkan pada halaman ganjil berisi judul Bab\nRunning title dicantumkan mulai dari halaman isi sampai dengan halaman penutup(halaman arab)",
+      "Running title pada halaman ganjil berisi judul Bab, pada Publikasi judul BAB 1 adalah Geografi dan Iklim. Seharusnya penulisan Running title disesuaikan dengan Judul BAB yaitu Geografi dan Iklim demikian pula untuk penulisan Running title untuk bahasa Asing",
+      "Perbaiki Margin antara penulisan bahasa Indonesia dan Penulisan bahasa Asing pada Penjelesan Teknis dari setiap BAB yang ada dalam Publikasi mulai dari BAB 1 sd BAB 7",
+      "Penulisan Pemisah bilangan ribuan menggunakan tanda titik (.) perbaiki penulisan pemisah bilangan ribuan pada Tabel 3.1 kolom 3 pada baris akhir yaitu BUKO menjadi 5.259",
+      "jika datanya merupakan angka tidak ada atau 0 (nol) maka menggunakan tanda En Dash “–“. Perbaiki semua penulisan angka 0 (nol) pada setiap angka-angka dalam tabel pada Publikasi.",
+      "Perbaiki pemberian satuan pada tabel lanjutan 3.1 kolom 3. Judul kolom 3, seharusnya satuannya (jiwa per km2)",
+      "Perbaiki penulisan angka pada tabel lanjutan 3.1 kolom 2, satuan angka tidak perlu dituliskan di belakang angka, namun satuan angka diletakkan pada judul kolom seperti pada kolom 3",
+      "Keterangan waktu dalam sebuah rentang ditulis dengan notasi En Dash “–“ tanpa spasi. Perbaiki penulisan keterangan kelompok umur pada tabel 3.2 kolom 1 dengan menggunakan En Dash “–“ tanpa spasi.",
+      "Kesalahan fatal pencantuman gambar placeholder ikon kamera: Pada halaman 29, 30, 37, 38, 47, 48, 58, 59, 74, 75, 88, 89, 98, 99 masih berupa kotak abu-abu placeholder ikon kamera bawaan template. Gambar Peta Wilayah Kecamatan (Gambar 1.1) belum dimasukkan, grafik Bab 2 s.d. Bab 7 belum dibuat, dan baris sumber masih berupa titik-titik (\"Sumber/Source : ....\"). Dilarang merilis publikasi yang masih memuat visual dummy template.",
+      "Kesalahan perataan data angka tabel (alignment): Seluruh sel data tabel berupa angka diatur rata tengah (center-aligned). Sesuai Pedoman Pembuatan Publikasi 2023 Hal. 110 poin h, isi tabel berupa angka wajib menggunakan rata kanan kemudian diatur di tengah kolom (right aligned with indent) agar digit satuan, puluhan, ratusan, serta tanda koma desimal sejajar lurus secara vertikal.",
+      "Data tabel belum diisi (masih kosong/elipsis): Seluruh sel data pada Tabel 2.2.1 (PNS Pemda), Tabel 3.1 (Penduduk per Desa), dan Tabel 3.2 (Kelompok Umur) masih berisi tanda titik-titik elipsis (\"...\") dan wajib dilengkapi sebelum dirilis.",
+      "Tabel pada halaman 5 (hal fisik 29): Baris Sumber/Source belum diisi (hanya memuat elipsis '...'). Wajib mencantumkan nama instansi resmi asal data.",
+      "Tabel pada halaman 6 (hal fisik 30): Saltik pada teks bahasa Inggris: Tertulis 'Subdistric' (kurang huruf 't', penulisan yang benar adalah 'Subdistrict').",
+      "Tabel pada halaman 6 (hal fisik 30): Penggunaan kata tidak baku 'ibukota'. Penulisan baku menurut KBBI dan pedoman BPS adalah 'ibu kota' (dipisah).",
+      "Tabel pada halaman 7 (hal fisik 31): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel pada halaman 7 (hal fisik 31): Baris Catatan/Note hanya memuat tanda elipsis '...' tanpa keterangan teknis apapun. Jika tidak ada catatan khusus, teks 'Catatan/Note:' wajib dihapus sepenuhnya.",
+      "Tabel pada halaman 7 (hal fisik 31): Kesalahan penulisan satuan luas '(km2)'. Sesuai kaidah baku tipografi BPS, wajib menggunakan simbol superskrip kuadrat '(km²)'.",
+      "Tabel pada halaman 8 (hal fisik 32): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 2.1.1 (hal 17): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 2.1.1 (hal 17): Data tabel kosong total / belum tersedia. Seluruh sel data numerik hanya menyajikan tanda elipsis ('…' atau '...'). Jika data tidak tersedia, tabel opsional sebaiknya tidak ditampilkan atau diisi data riil.",
+      "Tabel 2.2.1 (hal 18): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel pada halaman 19 (hal fisik 41): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 3.1 (hal 27): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel Lanjutan 3.1 (hal 28): Posisi Catatan dan Sumber diletakkan di ATAS tabel sebelum header kolom. Sesuai standar BPS, blok Catatan dan Sumber wajib diletakkan di bagian bawah tabel.",
+      "Tabel Lanjutan 3.1 (hal 28): Penomoran kolom tabel melompat dari (1) langsung ke (5). Kolom (2) s.d. (4) hilang.",
+      "Tabel 3.2 (hal 29): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.1.1 (hal 38): Tanda superscript '1/' ditemukan pada header tabel tanpa penjelasan catatan kaki yang sesuai di bagian bawah tabel.",
+      "Tabel 4.1.2 (hal 39): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.1.3 (hal 40): Saltik pada judul tabel: Tertulis 'Kepalad Sekolah' (kelebihan huruf 'd', penulisan yang benar adalah 'Kepala Sekolah').",
+      "Tabel 4.3.1 (hal 43): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.3.2 (hal 44): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.4.1 (hal 45): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.1 (hal 54): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.3 (hal 56): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.5 (hal 58): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.7 (hal 60): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 6.1.1 (hal 68): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 6.2.1 (hal 69): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel."
+    ],
+    "Daftar Pustaka: -": [
+      "Perbaiki penulisan Running title pada daftra pustaka. Belum terdapat penulisan Running title dengan menggunakan Bahasa Asing yang diletakkan pada pojok kanan bawah dari halaman daftar pustaka"
+    ],
+    "Kover belakang: -": [
+      "Untuk publikasi buku yang sudah memiliki ISBN atau ISSN, wajib dicantumkan \nbarcode ISBN/ISSN.  Barcode ISBN/ISSN ditampilkan di sudut kanan bawah \ndengan ukuran yang proporsional dengan kover belakang"
+    ]
+  },
+  "Buko Selatan": {
+    "Kover depan: -": [],
+    "Halaman Judul Utama: -": [
+      "Pelanggaran format latar belakang Halaman Judul Utama: Memuat gambar/foto pemandangan alam (duplikasi visual kover depan). Merujuk pada Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.1 dan Template KCDA 2026 halaman 3, Halaman Judul Utama (halaman fisik 3 / Romawi i) WAJIB berlatar putih bersih tanpa ilustrasi.",
+      "Halaman Judul Utama dibuat tanpa Ilustrasi",
+      "Logo dan nama BPS Penerbit  HARUS DIBUAT BERWARNA",
+      "Ketentuan penulisan judul buku sama seperti pada kover depan"
+    ],
+    "Halaman katalog: -": [
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku.",
+      "Penulisan judul buku dalam Bahasa Asing harus di tulis dengan miring",
+      "Edisi dicantumkan jika buku rutin atau memiliki ISSN. Ketentuan penulisan \nedisi sama seperti pada kover depan yaitu dibawah judul buku.",
+      "Nomor Publikasi pada buku masih kosong. Seharusnya Nomor Publikasi sama dengan Nomor Publikasi pada website yaitu Nomor Publikasi: 72010.26005",
+      "Penulisan Kata halaman pada halaman arab tidak boleh disingkat, Seharusnya 63 halaman/pages",
+      "Catatan: Penulisan BPS HARUS LENGKAP. Seharusnya BADAN PUSAT STATSITIK, baik untuk Penyusun Naskah, Penyunting, Pembuat Kover, Penerbit"
+    ],
+    "Halaman Tim Penyusun: -": [
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku."
+    ],
+    "Kata pengantar: -": [
+      "Kesalahan tahun pada narasi teks: Paragraf pertama teks Bahasa Indonesia tertulis \"Publikasi Kecamatan Buko Selatan Dalam Angka 2025\" dan Bahasa Inggris tertulis \"... in Figures 2025\". Terjadi ketidaksinkronan tahun narasi dengan titimangsa \"Salakan, September 2026\". Koreksi seharusnya: Diselaraskan menjadi tahun 2026.",
+      "wajib disertakan dengan tandan tangan pejabat baik kata pengantar dalam bahasa Indonesia maupun kata pengantar dalam bahasa Asing",
+      "Ruang tanda tangan pejabat masih kosong: Kolom tanda tangan Kepala BPS Kabupaten Banggai Kepulauan pada Kata Pengantar dan Preface belum dibubuhi tanda tangan. Wajib dibubuhi tanda tangan resmi sebelum publikasi dirilis."
+    ],
+    "Daftar Isi: -": [
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku.",
+      "pada daftar isi terdapat keterangan halaman Daftar Gambar, akan tetapi dalam Buku pada halaman Romawi tidak terdapat Daftar Gambar"
+    ],
+    "Penjelasan Umum:": [
+      "Masih terdapat penulisan Kata dalam Bahasa Asing yang belum dicetak \nmiring. Seharusnya penulisannya: Not applicable, Estimated figure, Revised figures, Preliminary figures, Very preliminary figures, Very very preliminary figures"
+    ],
+    "Daftar Tabel/Gambar/Grafik/Lampiran:": [
+      "Kesalahan fatal visual gambar dummy/placeholder di seluruh bab: Ditemukan 14 lembar gambar (Gambar 1.1 s.d. Gambar 7.2) yang masih memuat kotak abu-abu placeholder ikon kamera bawaan template. Pada Gambar 1.1 (Peta Wilayah), gambar peta riil belum di-insert (masih kotak kamera kosong), judul Gambar 2.1 s.d. 7.2 masih berupa elipsis (\"...\"), dan keterangan sumber masih berupa titik-titik dummy (\"Sumber/Source : ....\"). Wajib dimasukkan visual gambar/peta riil beserta sumber valid, atau seluruh halaman gambar placeholder dihapus dari buku.",
+      "Perbaiki penulisan sumber dalam bahasa inggris seharusnya dicetak \nmiring. Cek kembali penulisan keterangan Sumber yang terdapat di bawah masing-masing tabel pada buku Publikasi mulai dari BAB 1 sd BAB akhir"
+    ],
+    "Layout Isi:": [
+      "Beberapa ketentuan running title:                                                                                      1. Running title terdiri atas judul buku dan judul Bab\nRunning title pada halaman genap berisi judul buku, sedangkan pada halaman ganjil berisi judul Bab\nRunning title dicantumkan mulai dari halaman isi sampai dengan halaman penutup(halaman arab)",
+      "Running title pada halaman ganjil berisi judul Bab, pada Publikasi judul BAB 1 adalah Geografi dan Iklim. Seharusnya penulisan Running title disesuaikan dengan Judul BAB yaitu Geografi dan Iklim demikian pula untuk penulisan Running title untuk bahasa Asing",
+      "Perbaiki Margin antara penulisan bahasa Indonesia dan Penulisan bahasa Asing pada Penjelesan Teknis dari setiap BAB yang ada dalam Publikasi mulai dari BAB 1 sd BAB 7",
+      "jika datanya merupakan angka tidak ada atau 0 (Nol) maka menggunakan tanda En Dash “–“. Perbaiki semua penulisan angka 0 (nol) pada setiap angka-angka dalam tabel pada Publikasi. Contoh pada tabel 1.2 terdapat penulisan data angka 0 (nol) yang tidak menggunakan tanda En Dash “–“",
+      "Perbaiki penulisan sumber dalam bahasa Asing di cetak miring. Cek kembali penulisan keterangan Sumber yang terdapat di bawah masing-masing tabel pada buku Publikasi mulai dari BAB 1 sd BAB akhir",
+      "Perbaiki pemberian satuan pada tabel lanjutan 3.1 kolom 3. Judul kolom 3, seharusnya satuannya (jiwa per km2)",
+      "Perbaiki penulisan angka pada tabel lanjutan 3.1 kolom 2, satuan angka tidak perlu dituliskan di belakang angka, namun satuan angka diletakkan pada judul kolom seperti pada kolom 3",
+      "Keterangan waktu dalam sebuah rentang ditulis dengan notasi En Dash “–“ tanpa spasi. Perbaiki penulisan keterangan kelompok umur pada tabel 3.2 kolom 1 dengan menggunakan En Dash “–“ tanpa spasi.",
+      "Kesalahan fatal pencantuman gambar placeholder ikon kamera: Pada halaman 29, 30, 37, 38, 47, 48, 58, 59, 74, 75, 88, 89, 98, 99 masih berupa kotak abu-abu placeholder ikon kamera bawaan template. Gambar Peta Wilayah Kecamatan (Gambar 1.1) belum dimasukkan, grafik Bab 2 s.d. Bab 7 belum dibuat, dan baris sumber masih berupa titik-titik (\"Sumber/Source : ....\"). Dilarang merilis publikasi yang masih memuat visual dummy template.",
+      "Kesalahan perataan data angka tabel (alignment): Seluruh sel data tabel berupa angka diatur rata tengah (center-aligned). Sesuai Pedoman Pembuatan Publikasi 2023 Hal. 110 poin h, isi tabel berupa angka wajib menggunakan rata kanan kemudian diatur di tengah kolom (right aligned with indent) agar digit satuan, puluhan, ratusan, serta tanda koma desimal sejajar lurus secara vertikal.",
+      "Data tabel belum diisi (masih kosong/elipsis): Seluruh sel data pada Tabel 2.2.1 (PNS Pemda), Tabel 3.1 (Penduduk per Desa), dan Tabel 3.2 (Kelompok Umur) masih berisi tanda titik-titik elipsis (\"...\") dan wajib dilengkapi sebelum dirilis.",
+      "Tabel pada halaman 5 (hal fisik 29): Baris Sumber/Source belum diisi (hanya memuat elipsis '...'). Wajib mencantumkan nama instansi resmi asal data.",
+      "Tabel pada halaman 6 (hal fisik 30): Saltik pada teks bahasa Inggris: Tertulis 'Subdistric' (kurang huruf 't', penulisan yang benar adalah 'Subdistrict').",
+      "Tabel pada halaman 6 (hal fisik 30): Penggunaan kata tidak baku 'ibukota'. Penulisan baku menurut KBBI dan pedoman BPS adalah 'ibu kota' (dipisah).",
+      "Tabel pada halaman 7 (hal fisik 31): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel pada halaman 7 (hal fisik 31): Baris Catatan/Note hanya memuat tanda elipsis '...' tanpa keterangan teknis apapun. Jika tidak ada catatan khusus, teks 'Catatan/Note:' wajib dihapus sepenuhnya.",
+      "Tabel pada halaman 7 (hal fisik 31): Kesalahan penulisan satuan luas '(km2)'. Sesuai kaidah baku tipografi BPS, wajib menggunakan simbol superskrip kuadrat '(km²)'.",
+      "Tabel pada halaman 8 (hal fisik 32): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 2.1.1 (hal 15): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 2.1.1 (hal 15): Data tabel kosong total / belum tersedia. Seluruh sel data numerik hanya menyajikan tanda elipsis ('…' atau '...'). Jika data tidak tersedia, tabel opsional sebaiknya tidak ditampilkan atau diisi data riil.",
+      "Tabel 2.2.1 (hal 16): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel pada halaman 17 (hal fisik 41): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 3.1 (hal 25): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel Lanjutan 3.1 (hal 26): Posisi Catatan dan Sumber diletakkan di ATAS tabel sebelum header kolom. Sesuai standar BPS, blok Catatan dan Sumber wajib diletakkan di bagian bawah tabel.",
+      "Tabel Lanjutan 3.1 (hal 26): Penomoran kolom tabel melompat dari (1) langsung ke (5). Kolom (2) s.d. (4) hilang.",
+      "Tabel 3.2 (hal 27): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.1.1 (hal 36): Tanda superscript '1/' ditemukan pada header tabel tanpa penjelasan catatan kaki yang sesuai di bagian bawah tabel.",
+      "Tabel 4.1.2 (hal 37): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.1.3 (hal 38): Saltik pada judul tabel: Tertulis 'Kepalad Sekolah' (kelebihan huruf 'd', penulisan yang benar adalah 'Kepala Sekolah').",
+      "Tabel 4.3.1 (hal 41): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.3.2 (hal 42): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.4.1 (hal 43): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.1 (hal 52): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.3 (hal 54): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.5 (hal 56): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.7 (hal 58): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 6.1.1 (hal 66): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 6.2.1 (hal 67): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel."
+    ],
+    "Daftar Pustaka: -": [
+      "Perbaiki penulisan Running title pada daftra pustaka. Belum terdapat penulisan Running title dengan menggunakan Bahasa Asing yang diletakkan pada pojok kanan bawah dari halaman daftar pustaka"
+    ],
+    "Kover belakang: -": [
+      "Untuk publikasi buku yang sudah memiliki ISBN atau ISSN, wajib dicantumkan \nbarcode ISBN/ISSN.  Barcode ISBN/ISSN ditampilkan di sudut kanan bawah \ndengan ukuran yang proporsional dengan kover belakang"
+    ]
+  },
+  "Bulagi": {
+    "Kover depan: -": [],
+    "Halaman Judul Utama: -": [
+      "Pelanggaran format latar belakang Halaman Judul Utama: Memuat gambar/foto pemandangan alam (duplikasi visual kover depan). Merujuk pada Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.1 dan Template KCDA 2026 halaman 3, Halaman Judul Utama (halaman fisik 3 / Romawi i) WAJIB berlatar putih bersih tanpa ilustrasi.",
+      "Halaman Judul Utama dibuat tanpa Ilustrasi",
+      "Logo dan nama BPS Penerbit  HARUS DIBUAT BERWARNA",
+      "Ketentuan penulisan judul buku sama seperti pada kover depan"
+    ],
+    "Halaman katalog: -": [
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku.",
+      "Penulisan judul buku dalam Bahasa Asing harus di cetak miring",
+      "Edisi dicantumkan jika buku rutin atau memiliki ISSN. Ketentuan penulisan \nedisi sama seperti pada kover depan yaitu dibawah judul buku.",
+      "Nomor Publikasi pada buku masih kosong. Seharusnya Nomor Publikasi sama dengan Nomor Publikasi pada website yaitu Nomor Publikasi: 72010.26006",
+      "Perbaiki pencantuman jumlah halaman romawi seharusnya Jumlah halaman romawi adalah xviii",
+      "Penulisan Kata halaman pada halaman arab tidak boleh disingkat, Seharusnya 63 halaman/pages",
+      "Catatan: Penulisan BPS HARUS LENGKAP. Seharusnya BADAN PUSAT STATSITIK, baik untuk Penyusun Naskah, Penyunting, Pembuat Kover, Penerbit"
+    ],
+    "Halaman Tim Penyusun: -": [
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku."
+    ],
+    "Kata pengantar: -": [
+      "Kesalahan tahun pada narasi teks: Paragraf pertama teks Bahasa Indonesia tertulis \"Publikasi Kecamatan Bulagi Dalam Angka 2025\" dan Bahasa Inggris tertulis \"... in Figures 2025\". Terjadi ketidaksinkronan tahun narasi dengan titimangsa \"Salakan, September 2026\". Koreksi seharusnya: Diselaraskan menjadi tahun 2026.",
+      "wajib disertakan dengan tandan tangan pejabat baik kata pengantar dalam bahasa Indonesia maupun kata pengantar dalam bahasa Asing",
+      "Ruang tanda tangan pejabat masih kosong: Kolom tanda tangan Kepala BPS Kabupaten Banggai Kepulauan pada Kata Pengantar dan Preface belum dibubuhi tanda tangan. Wajib dibubuhi tanda tangan resmi sebelum publikasi dirilis."
+    ],
+    "Daftar Isi: -": [
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku.",
+      "pada daftar isi terdapat keterangan halaman Daftar Gambar, akan tetapi dalam Buku pada halaman Romawi tidak terdapat Daftar Gambar"
+    ],
+    "Penjelasan Umum:": [
+      "Masih terdapat penulisan Kata dalam Bahasa Asing yang belum dicetak \nmiring. Seharusnya penulisannya: Not applicable, Estimated figure, Revised figures, Preliminary figures, Very preliminary figures, Very very preliminary figures"
+    ],
+    "Daftar Tabel/Gambar/Grafik/Lampiran:": [
+      "Kesalahan fatal visual gambar dummy/placeholder di seluruh bab: Ditemukan 14 lembar gambar (Gambar 1.1 s.d. Gambar 7.2) yang masih memuat kotak abu-abu placeholder ikon kamera bawaan template. Pada Gambar 1.1 (Peta Wilayah), gambar peta riil belum di-insert (masih kotak kamera kosong), judul Gambar 2.1 s.d. 7.2 masih berupa elipsis (\"...\"), dan keterangan sumber masih berupa titik-titik dummy (\"Sumber/Source : ....\"). Wajib dimasukkan visual gambar/peta riil beserta sumber valid, atau seluruh halaman gambar placeholder dihapus dari buku.",
+      "Perbaiki penulisan sumber dalam bahasa inggris seharusnya dicetak \nmiring. Cek kembali penulisan keterangan Sumber yang terdapat di bawah masing-masing tabel pada buku Publikasi mulai dari BAB 1 sd BAB akhir"
+    ],
+    "Layout Isi:": [
+      "Beberapa ketentuan running title:                                                                                      1. Running title terdiri atas judul buku dan judul Bab\nRunning title pada halaman genap berisi judul buku, sedangkan pada halaman ganjil berisi judul Bab\nRunning title dicantumkan mulai dari halaman isi sampai dengan halaman penutup(halaman arab)",
+      "Running title pada halaman ganjil berisi judul Bab, pada Publikasi judul BAB 1 adalah Geografi dan Iklim. Seharusnya penulisan Running title disesuaikan dengan Judul BAB yaitu Geografi dan Iklim demikian pula untuk penulisan Running title untuk bahasa Asing",
+      "Perbaiki Margin antara penulisan bahasa Indonesia dan Penulisan bahasa Asing pada Penjelesan Teknis dari setiap BAB yang ada dalam Publikasi mulai dari BAB 1 sd BAB 7",
+      "jika datanya merupakan angka tidak ada atau 0 (Nol) maka menggunakan tanda En Dash “–“. Perbaiki semua penulisan angka 0 (nol) pada setiap angka-angka dalam tabel pada Publikasi. Contoh pada tabel 1.2 terdapat penulisan data angka 0 (nol) yang tidak menggunakan tanda En Dash “–“ Catatan: Perbaiki untuk semua angka pada tabel dalam buku publikasi",
+      "Perbaiki penulisan sumber dalam bahasa Asing di cetak miring. Cek kembali penulisan keterangan Sumber yang terdapat di bawah masing-masing tabel pada buku Publikasi mulai dari BAB 1 sd BAB akhir",
+      "Perbaiki pemberian satuan pada tabel lanjutan 3.1 kolom 3. Judul kolom 3, seharusnya satuannya (jiwa per km2)",
+      "Keterangan waktu dalam sebuah rentang ditulis dengan notasi En Dash “–“ tanpa spasi. Perbaiki penulisan keterangan kelompok umur pada tabel 3.2 kolom 1 dengan menggunakan En Dash “–“ tanpa spasi.",
+      "Perbaiki tabel 4.1.2 sd 4.1.4 untuk pemberian warnanya pada kolom 1",
+      "Kesalahan fatal pencantuman gambar placeholder ikon kamera: Pada halaman 29, 30, 37, 38, 47, 48, 58, 59, 74, 75, 88, 89, 98, 99 masih berupa kotak abu-abu placeholder ikon kamera bawaan template. Gambar Peta Wilayah Kecamatan (Gambar 1.1) belum dimasukkan, grafik Bab 2 s.d. Bab 7 belum dibuat, dan baris sumber masih berupa titik-titik (\"Sumber/Source : ....\"). Dilarang merilis publikasi yang masih memuat visual dummy template.",
+      "Kesalahan perataan data angka tabel (alignment): Seluruh sel data tabel berupa angka diatur rata tengah (center-aligned). Sesuai Pedoman Pembuatan Publikasi 2023 Hal. 110 poin h, isi tabel berupa angka wajib menggunakan rata kanan kemudian diatur di tengah kolom (right aligned with indent) agar digit satuan, puluhan, ratusan, serta tanda koma desimal sejajar lurus secara vertikal.",
+      "Data tabel belum diisi (masih kosong/elipsis): Seluruh sel data pada Tabel 2.2.1 (PNS Pemda), Tabel 3.1 (Penduduk per Desa), dan Tabel 3.2 (Kelompok Umur) masih berisi tanda titik-titik elipsis (\"...\") dan wajib dilengkapi sebelum dirilis.",
+      "Tabel pada halaman 5 (hal fisik 29): Baris Sumber/Source belum diisi (hanya memuat elipsis '...'). Wajib mencantumkan nama instansi resmi asal data.",
+      "Tabel pada halaman 6 (hal fisik 30): Saltik pada teks bahasa Inggris: Tertulis 'Subdistric' (kurang huruf 't', penulisan yang benar adalah 'Subdistrict').",
+      "Tabel pada halaman 6 (hal fisik 30): Penggunaan kata tidak baku 'ibukota'. Penulisan baku menurut KBBI dan pedoman BPS adalah 'ibu kota' (dipisah).",
+      "Tabel pada halaman 7 (hal fisik 31): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel pada halaman 7 (hal fisik 31): Baris Catatan/Note hanya memuat tanda elipsis '...' tanpa keterangan teknis apapun. Jika tidak ada catatan khusus, teks 'Catatan/Note:' wajib dihapus sepenuhnya.",
+      "Tabel pada halaman 7 (hal fisik 31): Kesalahan penulisan satuan luas '(km2)'. Sesuai kaidah baku tipografi BPS, wajib menggunakan simbol superskrip kuadrat '(km²)'.",
+      "Tabel pada halaman 8 (hal fisik 32): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 2.1.1 (hal 15): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 2.2.1 (hal 16): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 2.2.1 (hal 16): Data tabel kosong total / belum tersedia. Seluruh sel data numerik hanya menyajikan tanda elipsis ('…' atau '...'). Jika data tidak tersedia, tabel opsional sebaiknya tidak ditampilkan atau diisi data riil.",
+      "Tabel pada halaman 17 (hal fisik 41): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 3.1 (hal 25): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel Lanjutan 3.1 (hal 26): Posisi Catatan dan Sumber diletakkan di ATAS tabel sebelum header kolom. Sesuai standar BPS, blok Catatan dan Sumber wajib diletakkan di bagian bawah tabel.",
+      "Tabel Lanjutan 3.1 (hal 26): Penomoran kolom tabel melompat dari (1) langsung ke (5). Kolom (2) s.d. (4) hilang.",
+      "Tabel 3.2 (hal 27): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.1.1 (hal 36): Tanda superscript '1/' ditemukan pada header tabel tanpa penjelasan catatan kaki yang sesuai di bagian bawah tabel.",
+      "Tabel 4.1.2 (hal 37): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.1.3 (hal 38): Saltik pada judul tabel: Tertulis 'Kepalad Sekolah' (kelebihan huruf 'd', penulisan yang benar adalah 'Kepala Sekolah').",
+      "Tabel 4.3.1 (hal 41): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.3.2 (hal 42): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.4.1 (hal 43): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.1 (hal 52): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.3 (hal 54): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.5 (hal 56): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.6 (hal 57): Data tabel KOSONG TOTAL / belum diisi. Seluruh sel data baris tidak memuat angka, notasi nol ('–'), ataupun notasi tidak tersedia ('NA'). Sesuai Pedoman Publikasi BPS 2023 hal. 42 dan Instrumen baris 151, dilarang membiarkan sel tabel kosong tanpa notasi. Jika data memang tidak tersedia dari instansi terkait, tabel opsional sebaiknya tidak dimuat dalam buku daripada dibiarkan berupa template kosong melompong.",
+      "Tabel 5.7 (hal 58): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 6.1.1 (hal 66): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 6.2.1 (hal 67): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel."
+    ],
+    "Daftar Pustaka: -": [
+      "Perbaiki penulisan Running title pada daftra pustaka. Belum terdapat penulisan Running title dengan menggunakan Bahasa Asing yang diletakkan pada pojok kanan bawah dari halaman daftar pustaka"
+    ],
+    "Kover belakang: -": [
+      "Untuk publikasi buku yang sudah memiliki ISBN atau ISSN, wajib dicantumkan \nbarcode ISBN/ISSN.  Barcode ISBN/ISSN ditampilkan di sudut kanan bawah \ndengan ukuran yang proporsional dengan kover belakang"
+    ]
+  },
+  "Bulagi Selatan": {
+    "Kover depan: -": [
+      "Penulisan nomor katalog harusnya tidak ada spasi sebelum titik dua (:), sesudah titik dua ada spasi.",
+      "Format penulisan ISSN harusnya tanpa tanda titik dua (:) setelah kata ISSN"
+    ],
+    "Halaman Judul Utama: -": [
+      "Pelanggaran format latar belakang Halaman Judul Utama: Memuat gambar/foto pemandangan alam (duplikasi visual kover depan). Merujuk pada Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.1 dan Template KCDA 2026 halaman 3, Halaman Judul Utama (halaman fisik 3 / Romawi i) WAJIB berlatar putih bersih tanpa ilustrasi.",
+      "Halaman Judul Utama dibuat tanpa Ilustrasi",
+      "Logo dan nama BPS Penerbit  HARUS DIBUAT BERWARNA",
+      "Ketentuan penulisan judul buku sama seperti pada kover depan",
+      "Penulisan nomor katalog harusnya tidak ada spasi sebelum titik dua (:), sesudah titik dua ada spasi.",
+      "Format penulisan ISSN harusnya tanpa tanda titik dua (:) setelah kata ISSN"
+    ],
+    "Halaman katalog: -": [
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku.",
+      "Penulisan judul buku dalam Bahasa Asing harus di cetak miring",
+      "Edisi dicantumkan jika buku rutin atau memiliki ISSN. Ketentuan penulisan \nedisi sama seperti pada kover depan yaitu dibawah judul buku.",
+      "Perbaiki pencantuman Nomor Katalog pada halaman katalog seharusnya 1102001.7201061",
+      "Perbaiki pencantuman Nomor ISSN pada halaman katalog seharusnya 2655-1063",
+      "Nomor Publikasi pada buku masih kosong. Seharusnya Nomor Publikasi sama dengan Nomor Publikasi pada website yaitu Nomor Publikasi: 72010.26019",
+      "Jumlah halaman pada halaman katalog belum dicantumkan. seharusnya Jumlah halaman romawi dan jumlah halaman arab adalah xviii+63 halaman/pages",
+      "Penulisan Kata halaman pada halaman arab tidak boleh disingkat, Seharusnya halaman/pages",
+      "Catatan: Penulisan BPS HARUS LENGKAP. Seharusnya BADAN PUSAT STATSITIK, baik untuk Penyusun Naskah, Penyunting, Pembuat Kover, Penerbit"
+    ],
+    "Halaman Tim Penyusun: -": [
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku.",
+      "Perbaiki pencantuman nomor ISSN harus sama dengan ISSN yang ada pada website. Seharusnya ISSN 2655-1063"
+    ],
+    "Kata pengantar: -": [
+      "Kesalahan tahun pada narasi teks: Paragraf pertama teks Bahasa Indonesia tertulis \"Publikasi Kecamatan Bulagi Selatan Dalam Angka 2025\" dan Bahasa Inggris tertulis \"... in Figures 2025\". Terjadi ketidaksinkronan tahun narasi dengan titimangsa \"Salakan, September 2026\". Koreksi seharusnya: Diselaraskan menjadi tahun 2026.",
+      "wajib disertakan dengan tandan tangan pejabat baik kata pengantar dalam bahasa Indonesia maupun kata pengantar dalam bahasa Asing",
+      "Ruang tanda tangan pejabat masih kosong: Kolom tanda tangan Kepala BPS Kabupaten Banggai Kepulauan pada Kata Pengantar dan Preface belum dibubuhi tanda tangan. Wajib dibubuhi tanda tangan resmi sebelum publikasi dirilis."
+    ],
+    "Daftar Isi: -": [
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku.",
+      "pada daftar isi terdapat keterangan halaman Daftar Gambar, akan tetapi dalam Buku pada halaman Romawi tidak terdapat Daftar Gambar",
+      "Perbaiki pencantuman nomor ISSN harus sama dengan ISSN yang ada pada website. Seharusnya ISSN 2655-1063",
+      "Tidak terdapat nomor halaman romawi pada Daftar isi. Seharusnya halaman romawi daftra isi adalah ix"
+    ],
+    "Penjelasan Umum:": [
+      "Masih terdapat penulisan Kata dalam Bahasa Asing yang belum dicetak \nmiring. Seharusnya penulisannya: Not applicable, Estimated figure, Revised figures, Preliminary figures, Very preliminary figures, Very very preliminary figures"
+    ],
+    "Daftar Tabel/Gambar/Grafik/Lampiran:": [
+      "Kesalahan fatal visual gambar dummy/placeholder di seluruh bab: Ditemukan 14 lembar gambar (Gambar 1.1 s.d. Gambar 7.2) yang masih memuat kotak abu-abu placeholder ikon kamera bawaan template. Pada Gambar 1.1 (Peta Wilayah), gambar peta riil belum di-insert (masih kotak kamera kosong), judul Gambar 2.1 s.d. 7.2 masih berupa elipsis (\"...\"), dan keterangan sumber masih berupa titik-titik dummy (\"Sumber/Source : ....\"). Wajib dimasukkan visual gambar/peta riil beserta sumber valid, atau seluruh halaman gambar placeholder dihapus dari buku.",
+      "Perbaiki penulisan sumber dalam bahasa inggris seharusnya dicetak \nmiring. Cek kembali penulisan keterangan Sumber yang terdapat di bawah masing-masing tabel pada buku Publikasi mulai dari BAB 1 sd BAB akhir"
+    ],
+    "Layout Isi:": [
+      "Beberapa ketentuan running title:                                                                                      1. Running title terdiri atas judul buku dan judul Bab\nRunning title pada halaman genap berisi judul buku, sedangkan pada halaman ganjil berisi judul Bab\nRunning title dicantumkan mulai dari halaman isi sampai dengan halaman penutup(halaman arab)",
+      "Running title pada halaman ganjil berisi judul Bab, pada Publikasi judul BAB 1 adalah Geografi dan Iklim. Seharusnya penulisan Running title disesuaikan dengan Judul BAB yaitu Geografi dan Iklim demikian pula untuk penulisan Running title untuk bahasa Asing",
+      "Perbaiki Margin antara penulisan bahasa Indonesia dan Penulisan bahasa Asing pada Penjelesan Teknis dari setiap BAB yang ada dalam Publikasi mulai dari BAB 1 sd BAB 7",
+      "jika datanya merupakan angka tidak ada atau 0 (Nol) maka menggunakan tanda En Dash “–“. Perbaiki semua penulisan angka 0 (nol) pada setiap angka-angka dalam tabel pada Publikasi. Contoh pada tabel 1.2 terdapat penulisan data angka 0 (nol) yang tidak menggunakan tanda En Dash “–“ Catatan: Perbaiki untuk semua angka pada tabel dalam buku publikasi",
+      "Perbaiki penulisan sumber dalam bahasa Asing di cetak miring. Cek kembali penulisan keterangan Sumber yang terdapat di bawah masing-masing tabel pada buku Publikasi mulai dari BAB 1 sd BAB akhir",
+      "Perbaiki pemberian satuan pada tabel lanjutan 3.1 kolom 3. Judul kolom 3, seharusnya satuannya (jiwa per km2)",
+      "Keterangan waktu dalam sebuah rentang ditulis dengan notasi En Dash “–“ tanpa spasi. Perbaiki penulisan keterangan kelompok umur pada tabel 3.2 kolom 1 dengan menggunakan En Dash “–“ tanpa spasi.",
+      "Perbaiki tabel 4.1.2 sd 4.1.4 untuk pemberian warnanya pada kolom 1",
+      "Perbaiki judul Sub BAB pada masing-masing BAB, Ukuran dan jenis huruf judul bab/judul subbab harus sama dan konsisten di setiap BAB. Contoh pada penulisan judul sub BAB 6.1 PARIWISATA/Tourism",
+      "Kesalahan fatal pencantuman gambar placeholder ikon kamera: Pada halaman 29, 30, 37, 38, 47, 48, 58, 59, 74, 75, 88, 89, 98, 99 masih berupa kotak abu-abu placeholder ikon kamera bawaan template. Gambar Peta Wilayah Kecamatan (Gambar 1.1) belum dimasukkan, grafik Bab 2 s.d. Bab 7 belum dibuat, dan baris sumber masih berupa titik-titik (\"Sumber/Source : ....\"). Dilarang merilis publikasi yang masih memuat visual dummy template.",
+      "Kesalahan perataan data angka tabel (alignment): Seluruh sel data tabel berupa angka diatur rata tengah (center-aligned). Sesuai Pedoman Pembuatan Publikasi 2023 Hal. 110 poin h, isi tabel berupa angka wajib menggunakan rata kanan kemudian diatur di tengah kolom (right aligned with indent) agar digit satuan, puluhan, ratusan, serta tanda koma desimal sejajar lurus secara vertikal.",
+      "Data tabel belum diisi (masih kosong/elipsis): Seluruh sel data pada Tabel 2.2.1 (PNS Pemda), Tabel 3.1 (Penduduk per Desa), dan Tabel 3.2 (Kelompok Umur) masih berisi tanda titik-titik elipsis (\"...\") dan wajib dilengkapi sebelum dirilis.",
+      "Tabel pada halaman 5 (hal fisik 29): Baris Sumber/Source belum diisi (hanya memuat elipsis '...'). Wajib mencantumkan nama instansi resmi asal data.",
+      "Tabel pada halaman 6 (hal fisik 30): Saltik pada teks bahasa Inggris: Tertulis 'Subdistric' (kurang huruf 't', penulisan yang benar adalah 'Subdistrict').",
+      "Tabel pada halaman 6 (hal fisik 30): Penggunaan kata tidak baku 'ibukota'. Penulisan baku menurut KBBI dan pedoman BPS adalah 'ibu kota' (dipisah).",
+      "Tabel pada halaman 7 (hal fisik 31): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel pada halaman 7 (hal fisik 31): Baris Catatan/Note hanya memuat tanda elipsis '...' tanpa keterangan teknis apapun. Jika tidak ada catatan khusus, teks 'Catatan/Note:' wajib dihapus sepenuhnya.",
+      "Tabel pada halaman 7 (hal fisik 31): Kesalahan penulisan satuan luas '(km2)'. Sesuai kaidah baku tipografi BPS, wajib menggunakan simbol superskrip kuadrat '(km²)'.",
+      "Tabel pada halaman 8 (hal fisik 32): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 2.1.1 (hal 15): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 2.2.1 (hal 16): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 2.2.1 (hal 16): Data tabel kosong total / belum tersedia. Seluruh sel data numerik hanya menyajikan tanda elipsis ('…' atau '...'). Jika data tidak tersedia, tabel opsional sebaiknya tidak ditampilkan atau diisi data riil.",
+      "Tabel pada halaman 17 (hal fisik 41): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 3.1 (hal 25): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel Lanjutan 3.1 (hal 26): Posisi Catatan dan Sumber diletakkan di ATAS tabel sebelum header kolom. Sesuai standar BPS, blok Catatan dan Sumber wajib diletakkan di bagian bawah tabel.",
+      "Tabel Lanjutan 3.1 (hal 26): Penomoran kolom tabel melompat dari (1) langsung ke (5). Kolom (2) s.d. (4) hilang.",
+      "Tabel 3.2 (hal 27): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.1.1 (hal 36): Tanda superscript '1/' ditemukan pada header tabel tanpa penjelasan catatan kaki yang sesuai di bagian bawah tabel.",
+      "Tabel 4.1.2 (hal 37): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.1.3 (hal 38): Saltik pada judul tabel: Tertulis 'Kepalad Sekolah' (kelebihan huruf 'd', penulisan yang benar adalah 'Kepala Sekolah').",
+      "Tabel 4.3.1 (hal 41): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.3.2 (hal 42): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.4.1 (hal 43): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.1 (hal 52): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.3 (hal 54): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.5 (hal 56): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.7 (hal 58): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 6.1.1 (hal 66): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 6.2.1 (hal 67): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel."
+    ],
+    "Daftar Pustaka: -": [
+      "Perbaiki penulisan Running title pada daftra pustaka. Belum terdapat penulisan Running title dengan menggunakan Bahasa Asing yang diletakkan pada pojok kanan bawah dari halaman daftar pustaka"
+    ],
+    "Kover belakang: -": [
+      "Untuk publikasi buku yang sudah memiliki ISBN atau ISSN, wajib dicantumkan \nbarcode ISBN/ISSN.  Barcode ISBN/ISSN ditampilkan di sudut kanan bawah \ndengan ukuran yang proporsional dengan kover belakang",
+      "Lengkapi penulisan alamat BPS Penerbit pada Kover Belakang seharusnya Jalan: Jl. Bukit Trikora, Salakan, Tinangkung, Kabupaten Banggai Kepulauan 94885\nTelp.: (0462) 2225261\nHomepage: http://bangkepkab.bps.go.id, http://banggailautkab.bps.go.id\nE-mail: 7201@bps.go.i"
+    ]
+  },
+  "Bulagi Utara": {
+    "Kover depan: -": [],
+    "Halaman Judul Utama: -": [
+      "Pelanggaran format latar belakang Halaman Judul Utama: Memuat gambar/foto pemandangan alam (duplikasi visual kover depan). Merujuk pada Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.1 dan Template KCDA 2026 halaman 3, Halaman Judul Utama (halaman fisik 3 / Romawi i) WAJIB berlatar putih bersih tanpa ilustrasi.",
+      "Halaman Judul Utama dibuat tanpa Ilustrasi",
+      "Logo dan nama BPS Penerbit  HARUS DIBUAT BERWARNA",
+      "Ketentuan penulisan judul buku sama seperti pada kover depan"
+    ],
+    "Halaman katalog: -": [
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku.",
+      "Penulisan judul buku dalam Bahasa Asing harus di cetak miring",
+      "Edisi dicantumkan jika buku rutin atau memiliki ISSN. Ketentuan penulisan \nedisi sama seperti pada kover depan yaitu dibawah judul buku.",
+      "Nomor Publikasi pada buku masih kosong. Seharusnya Nomor Publikasi sama dengan Nomor Publikasi pada website yaitu Nomor Publikasi: 72010.26018",
+      "Perbaiki pencantuman jumlah halaman arab dan halaman romawi seharusnya Jumlah halaman arab adalah 68 dan halaman romawi adalah xviii",
+      "Penulisan Kata halaman pada halaman arab tidak boleh disingkat, Seharusnya 63 halaman/pages",
+      "Penulisan BPS pada Penyusun Naskah, Penyunting, Pembuat Kover dan Penerbit, dituliskan dengan lengkap seharusnya: Badan Pusat Statistik",
+      "Catatan: Penulisan BPS HARUS LENGKAP. Seharusnya BADAN PUSAT STATSITIK, baik untuk Penyusun Naskah, Penyunting, Pembuat Kover, Penerbit"
+    ],
+    "Halaman Tim Penyusun: -": [
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku."
+    ],
+    "Kata pengantar: -": [
+      "Kesalahan tahun pada narasi teks: Paragraf pertama teks Bahasa Indonesia tertulis \"Publikasi Kecamatan Bulagi Utara Dalam Angka 2025\" dan Bahasa Inggris tertulis \"... in Figures 2025\". Terjadi ketidaksinkronan tahun narasi dengan titimangsa \"Salakan, September 2026\". Koreksi seharusnya: Diselaraskan menjadi tahun 2026.",
+      "wajib disertakan dengan tandan tangan pejabat baik kata pengantar dalam bahasa Indonesia maupun kata pengantar dalam bahasa Asing",
+      "Ruang tanda tangan pejabat masih kosong: Kolom tanda tangan Kepala BPS Kabupaten Banggai Kepulauan pada Kata Pengantar dan Preface belum dibubuhi tanda tangan. Wajib dibubuhi tanda tangan resmi sebelum publikasi dirilis."
+    ],
+    "Daftar Isi: -": [
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku.",
+      "pada daftar isi terdapat keterangan halaman Daftar Gambar, akan tetapi dalam Buku pada halaman Romawi tidak terdapat Daftar Gambar",
+      "Hapus halaman daftar Gambar pada halaman Daftar ISI",
+      "Perbaiki penulisan bahasa asing pada Daftar Isi, penulisan kata bahasa Inggirs HARUS DICETAK MIRING. Contoh: Penjelasan Umum/Explanatory Notes. Cek dan Pebaiki kembali semua penulisan Bahasa Asing pada daftar ISI.  Cek dan Pebaiki kembali semua penulisan Bahasa Asing pada daftar ISI"
+    ],
+    "Penjelasan Umum:": [
+      "Masih terdapat penulisan Kata dalam Bahasa Asing yang belum dicetak \nmiring. Seharusnya penulisannya: Not applicable, Estimated figure, Revised figures, Preliminary figures, Very preliminary figures, Very very preliminary figures"
+    ],
+    "Daftar Tabel/Gambar/Grafik/Lampiran:": [
+      "Kesalahan fatal visual gambar dummy/placeholder di seluruh bab: Ditemukan 14 lembar gambar (Gambar 1.1 s.d. Gambar 7.2) yang masih memuat kotak abu-abu placeholder ikon kamera bawaan template. Pada Gambar 1.1 (Peta Wilayah), gambar peta riil belum di-insert (masih kotak kamera kosong), judul Gambar 2.1 s.d. 7.2 masih berupa elipsis (\"...\"), dan keterangan sumber masih berupa titik-titik dummy (\"Sumber/Source : ....\"). Wajib dimasukkan visual gambar/peta riil beserta sumber valid, atau seluruh halaman gambar placeholder dihapus dari buku.",
+      "Perbaiki penulisan sumber dalam bahasa inggris seharusnya dicetak \nmiring. Cek kembali penulisan keterangan Sumber yang terdapat di bawah masing-masing tabel pada buku Publikasi mulai dari BAB 1 sd BAB akhir",
+      "Judul tabel bahasa indonesia dan bahasa inggis sudah benar dipisahkan barisnya, namun untuk nomor halamannya cukup diisikan pada bahasa inggrisnya saja, pada judul indonesia tidak perlu."
+    ],
+    "Layout Isi:": [
+      "Beberapa ketentuan running title:                                                                                      1. Running title terdiri atas judul buku dan judul Bab\nRunning title pada halaman genap berisi judul buku, sedangkan pada halaman ganjil berisi judul Bab\nRunning title dicantumkan mulai dari halaman isi sampai dengan halaman penutup(halaman arab)",
+      "Running title pada halaman ganjil berisi judul Bab, pada Publikasi judul BAB 1 adalah Geografi dan Iklim. Seharusnya penulisan Running title disesuaikan dengan Judul BAB yaitu Geografi dan Iklim demikian pula untuk penulisan Running title untuk bahasa Asing. Seharusnya: GEOGRAPHY AND CLIMATE",
+      "Perbaiki penulisan Penjelasan Teknis pada masing-masing BAB dalam Buku, Penjelasan teknis untuk Bahasa Indonesia dan Bahasa Asing urutan Penomorannya di buat sejajar, perhatikan semua penjelasan Teknis mulai dari BAB 1 sd BAB 7. contoh pada BAB 4",
+      "Perbaiki halaman isi. Hapus 1 halaman kosong sesudah penjelasan teknis. Aturan penulisan Publikasi untuk halaman isi yang berada pada halaman ganjil hanyalah Pembatas BAB dan Penjelasan Teknis, Cek kembali BAB 1 sd BAB 7",
+      "Perbaiki penulisan angka pada baris Jumlah pada tabel 1.1 untuk JENIS HURUF DAN UKURAN HURUF kolom 2 dan kolom 3 pada Bulagi Utara",
+      "Jika datanya merupakan angka tidak ada atau 0 (Nol) pada kolom 2 dan kolom 3, maka menggunakan tanda En Dash “–“. Perbaiki semua penulisan angka 0 (nol) pada setiap angka-angka dalam tabel pada Publikasi. Contoh pada tabel 2.1.1 terdapat penulisan data angka 0 (nol) yang tidak menggunakan tanda En Dash “–“ Catatan: Perbaiki untuk semua angka pada tabel dalam buku publikasi",
+      "Perbaiki penulisan sumber dalam bahasa Asing di cetak miring. Cek kembali penulisan keterangan Sumber yang terdapat di bawah masing-masing tabel pada buku Publikasi mulai dari BAB 1 sd BAB 7, terdapat sumber yang belum dilengkapi dengan penulisan bahasa Asing. Contoh pada sumber tabel 2.1.1",
+      "Perbaiki pemberian satuan pada tabel lanjutan 3.1 kolom 3. Judul kolom 3, seharusnya satuannya (jiwa per km2)",
+      "Keterangan waktu dalam sebuah rentang ditulis dengan notasi En Dash “–“ tanpa spasi. Perbaiki penulisan keterangan kelompok umur pada tabel 3.2 kolom 1 dengan menggunakan En Dash “–“ tanpa spasi.",
+      "Keterangan waktu dalam sebuah rentang ditulis dengan notasi En Dash “–“ tanpa spasi. Perbaiki penulisan keterangan kelompok umur pada tabel 3.2 kolom 1 dengan menggunakan En Dash “–“ tanpa spasi. Seharusnya: 0–4, 5–9",
+      "Perbaiki penulisan Tabel 4.1.4, masih terdapat HURUF X sebelum kata Tabel",
+      "Perbaiki tabel 4.1.2 sd 4.1.4 untuk pemberian warnanya pada kolom 1",
+      "Perbaiki peletakan kolom pada tabel 6.2.1, tabel 7.2, Pelatakan kolom harus rata sesuai dengan JUDUL TABEL",
+      "Perbaiki judul Sub BAB pada masing-masing BAB, Ukuran dan jenis huruf judul bab/judul subbab harus sama dan konsisten di setiap BAB. Contoh pada penulisan judul sub BAB 4.3 PERUMAHAN DAN LINGKUNGAN/HOUSING AND ENVIRONMENT. Cek kembali semua judul Sub BAB pada masing-masing BAB, mulai dari BAB 1 sd BAB 7",
+      "Kesalahan fatal pencantuman gambar placeholder ikon kamera: Pada halaman 29, 30, 37, 38, 47, 48, 58, 59, 74, 75, 88, 89, 98, 99 masih berupa kotak abu-abu placeholder ikon kamera bawaan template. Gambar Peta Wilayah Kecamatan (Gambar 1.1) belum dimasukkan, grafik Bab 2 s.d. Bab 7 belum dibuat, dan baris sumber masih berupa titik-titik (\"Sumber/Source : ....\"). Dilarang merilis publikasi yang masih memuat visual dummy template.",
+      "Kesalahan perataan data angka tabel (alignment): Seluruh sel data tabel berupa angka diatur rata tengah (center-aligned). Sesuai Pedoman Pembuatan Publikasi 2023 Hal. 110 poin h, isi tabel berupa angka wajib menggunakan rata kanan kemudian diatur di tengah kolom (right aligned with indent) agar digit satuan, puluhan, ratusan, serta tanda koma desimal sejajar lurus secara vertikal.",
+      "Data tabel belum diisi (masih kosong/elipsis): Seluruh sel data pada Tabel 2.2.1 (PNS Pemda), Tabel 3.1 (Penduduk per Desa), dan Tabel 3.2 (Kelompok Umur) masih berisi tanda titik-titik elipsis (\"...\") dan wajib dilengkapi sebelum dirilis.",
+      "Tabel pada halaman 5 (hal fisik 29): Baris Sumber/Source belum diisi (hanya memuat elipsis '...'). Wajib mencantumkan nama instansi resmi asal data.",
+      "Tabel pada halaman 6 (hal fisik 30): Saltik pada teks bahasa Inggris: Tertulis 'Subdistric' (kurang huruf 't', penulisan yang benar adalah 'Subdistrict').",
+      "Tabel pada halaman 6 (hal fisik 30): Penggunaan kata tidak baku 'ibukota'. Penulisan baku menurut KBBI dan pedoman BPS adalah 'ibu kota' (dipisah).",
+      "Tabel pada halaman 7 (hal fisik 31): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel pada halaman 7 (hal fisik 31): Baris Catatan/Note hanya memuat tanda elipsis '...' tanpa keterangan teknis apapun. Jika tidak ada catatan khusus, teks 'Catatan/Note:' wajib dihapus sepenuhnya.",
+      "Tabel pada halaman 7 (hal fisik 31): Kesalahan penulisan satuan luas '(km2)'. Sesuai kaidah baku tipografi BPS, wajib menggunakan simbol superskrip kuadrat '(km²)'.",
+      "Tabel pada halaman 8 (hal fisik 32): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 2.1.1 (hal 17): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 2.2.1 (hal 18): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 2.2.1 (hal 18): Data tabel kosong total / belum tersedia. Seluruh sel data numerik hanya menyajikan tanda elipsis ('…' atau '...'). Jika data tidak tersedia, tabel opsional sebaiknya tidak ditampilkan atau diisi data riil.",
+      "Tabel pada halaman 19 (hal fisik 41): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 3.1 (hal 27): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel Lanjutan 3.1 (hal 28): Posisi Catatan dan Sumber diletakkan di ATAS tabel sebelum header kolom. Sesuai standar BPS, blok Catatan dan Sumber wajib diletakkan di bagian bawah tabel.",
+      "Tabel Lanjutan 3.1 (hal 28): Penomoran kolom tabel melompat dari (1) langsung ke (5). Kolom (2) s.d. (4) hilang.",
+      "Tabel 3.2 (hal 29): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.1.1 (hal 38): Tanda superscript '1/' ditemukan pada header tabel tanpa penjelasan catatan kaki yang sesuai di bagian bawah tabel.",
+      "Tabel 4.1.2 (hal 39): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.1.3 (hal 40): Saltik pada judul tabel: Tertulis 'Kepalad Sekolah' (kelebihan huruf 'd', penulisan yang benar adalah 'Kepala Sekolah').",
+      "Tabel 4.3.1 (hal 43): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.3.2 (hal 44): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.4.1 (hal 45): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.1 (hal 54): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.3 (hal 56): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.5 (hal 58): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.7 (hal 60): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 6.1.1 (hal 68): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 6.2.1 (hal 69): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel."
+    ],
+    "Daftar Pustaka: -": [
+      "Perbaiki penulisan Running title pada daftra pustaka. Belum terdapat penulisan Running title dengan menggunakan Bahasa Asing yang diletakkan pada pojok kanan bawah dari halaman daftar pustaka, seharusnya: BIBLIOGRAPHY"
+    ],
+    "Kover belakang: -": [
+      "Untuk publikasi buku yang sudah memiliki ISBN atau ISSN, wajib dicantumkan \nbarcode ISBN/ISSN.  Barcode ISBN/ISSN ditampilkan di sudut kanan bawah \ndengan ukuran yang proporsional dengan kover belakang"
+    ]
+  },
+  "Tinangkung": {
+    "Kover depan: -": [],
+    "Halaman Judul Utama: -": [
+      "Pelanggaran format latar belakang Halaman Judul Utama: Memuat gambar/foto pemandangan alam (duplikasi visual kover depan). Merujuk pada Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.1 dan Template KCDA 2026 halaman 3, Halaman Judul Utama (halaman fisik 3 / Romawi i) WAJIB berlatar putih bersih tanpa ilustrasi.",
+      "Halaman Judul Utama dibuat tanpa Ilustrasi",
+      "Logo dan nama BPS Penerbit  HARUS DIBUAT BERWARNA",
+      "Ketentuan penulisan judul buku sama seperti pada kover depan",
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku.",
+      "PERBAIKI PEMBERIAN JUDUL BUKU PADA PUBLIKASI.TULISKAN SECARA LENGKAP TANPA YYYYY dan XXXXX"
+    ],
+    "Halaman katalog: -": [
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku. Lengkapi judul buku",
+      "PERBAIKI PEMBERIAN JUDUL BUKU PADA PUBLIKASI.TULISKAN SECARA LENGKAP TANPA YYYYY",
+      "Penulisan judul buku dalam Bahasa Asing harus dilengkapi dan di cetak miring",
+      "Edisi dicantumkan jika buku rutin atau memiliki ISSN. Ketentuan penulisan \nedisi sama seperti pada kover depan yaitu dibawah judul buku.",
+      "Perbaiki pencantuman Nomor Katalog pada halaman katalog seharusnya 1102001.7201040",
+      "Perbaiki pencantuman Nomor ISSN pada halaman katalog seharusnya 2620-6501. PENULISAN NOMOR ISSN JANGAN MENGGUNAKAN HHHH-HHHH",
+      "Nomor Publikasi pada buku masih kosong. Seharusnya Nomor Publikasi sama dengan Nomor Publikasi pada website yaitu Nomor Publikasi: 72010.26009",
+      "Jumlah halaman pada halaman katalog belum dicantumkan. seharusnya Jumlah halaman romawi dan jumlah halaman arab adalah xviii+64 halaman/pages",
+      "Penulisan Kata halaman pada halaman arab tidak boleh disingkat, Seharusnya halaman/pages",
+      "Catatan: Penulisan BPS HARUS LENGKAP. Seharusnya BADAN PUSAT STATSITIK, baik untuk Penyusun Naskah, Penyunting, Pembuat Kover, Penerbit",
+      "CATATAN : 1 Halaman Daftar Gambar telah di hapus maka jumlah total halaman romawi yang tadinya adalah xx menjadi xviii",
+      "Perbaiki pencantuman Nomor ISSN pada halaman katalog seharusnya 2620-6501"
+    ],
+    "Halaman Tim Penyusun: -": [
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku.",
+      "Perbaiki pencantuman Nomor ISSN pada halaman Tim Penyusun seharusnya 2620-6501",
+      "CATATAN: Perbaiki JUDUL PUBLIKASI mulai dari Kover depan sd Judul Publikasi pada TIM PENYUSUN harus dibuat Konsisten baik UKURAN maupun JENIS HURUF"
+    ],
+    "Kata pengantar: -": [
+      "Kesalahan tahun pada narasi teks: Paragraf pertama teks Bahasa Indonesia tertulis \"Publikasi Kecamatan Tinangkung Dalam Angka 2025\" dan Bahasa Inggris tertulis \"... in Figures 2025\". Terjadi ketidaksinkronan tahun narasi dengan titimangsa \"Salakan, September 2026\". Koreksi seharusnya: Diselaraskan menjadi tahun 2026.",
+      "Wajib disertakan dengan tandan tangan pejabat baik kata pengantar dalam bahasa Indonesia maupun kata pengantar dalam bahasa Asing",
+      "Penulisan BPS dalam bahasa Asing dituliskan dengan lengkap, Seharusnya: Badan Pusat Statistik",
+      "Ruang tanda tangan pejabat masih kosong: Kolom tanda tangan Kepala BPS Kabupaten Banggai Kepulauan pada Kata Pengantar dan Preface belum dibubuhi tanda tangan. Wajib dibubuhi tanda tangan resmi sebelum publikasi dirilis."
+    ],
+    "Daftar Isi: -": [
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku.",
+      "pada daftar isi terdapat keterangan halaman Daftar Gambar, akan tetapi dalam Buku pada Layout Isi tidak terdapat halaman Daftar Gambar, jadi perbaiki halaman Daftar ISI dengan menghapus 1 halaman daftar Gambar",
+      "Perbaiki pencantuman nomor ISSN harus sama dengan ISSN yang ada pada website. Seharusnya ISSN 2620-6501",
+      "PERBAIKI PEMBERIAN JUDUL BUKU PADA PUBLIKASI.TULISKAN SECARA LENGKAP KECAMATAN PUBLIKASI TANPA YYYYY DAN PENULISAN JUDUL BUKU WAJIB MENGGUNAKAN WARNA HITAM",
+      "Judul tabel bahasa indonesia dan bahasa inggis sudah benar dipisahkan barisnya, namun untuk nomor halamannya cukup diisikan pada bahasa inggrisnya saja, pada judul indonesia tidak perlu.",
+      "CATATAN : 1 Halaman Daftar Gambar telah di hapus maka jumlah total halaman romawi yang tadinya adalah xx menjadi xviii"
+    ],
+    "Penjelasan Umum:": [
+      "Masih terdapat penulisan Kata dalam Bahasa Asing yang belum dicetak \nmiring. Seharusnya penulisannya: Not applicable, Estimated figure, Revised figures, Preliminary figures, Very preliminary figures, Very very preliminary figures"
+    ],
+    "Daftar Tabel/Gambar/Grafik/Lampiran:": [
+      "Kesalahan fatal visual gambar dummy/placeholder di seluruh bab: Ditemukan 14 lembar gambar (Gambar 1.1 s.d. Gambar 7.2) yang masih memuat kotak abu-abu placeholder ikon kamera bawaan template. Pada Gambar 1.1 (Peta Wilayah), gambar peta riil belum di-insert (masih kotak kamera kosong), judul Gambar 2.1 s.d. 7.2 masih berupa elipsis (\"...\"), dan keterangan sumber masih berupa titik-titik dummy (\"Sumber/Source : ....\"). Wajib dimasukkan visual gambar/peta riil beserta sumber valid, atau seluruh halaman gambar placeholder dihapus dari buku.",
+      "KETENTUAN DAFTAR GAMBAR ADALAH : Daftar gambar memuat urutan gambar (foto, grafik, diagram, ilustrasi, bagan, infografis, \ndan peta) yang berada di halaman isi, tidak termasuk gambar yang ada di halaman \npembatas, beserta nomor halamannya.",
+      "Daftar gambar dibuat apabila minimal ada tiga gambar yang terdapat dalam \nbuku. Pada buku tidak terdapat gambar sehingga tidak perlu membuat halaman daftar gambar",
+      "Hapus Halaman DAFTAR GAMBAR",
+      "Perbaiki penulisan sumber dalam bahasa inggris seharusnya dicetak \nmiring. Cek kembali penulisan keterangan Sumber yang terdapat di bawah masing-masing tabel pada buku Publikasi mulai dari BAB 1 sd BAB akhir"
+    ],
+    "Layout Isi:": [
+      "Beberapa ketentuan running title:                                                                                      1. Running title terdiri atas judul buku dan judul Bab\nRunning title pada halaman genap berisi judul buku, sedangkan pada halaman ganjil berisi judul Bab\nRunning title dicantumkan mulai dari halaman isi sampai dengan halaman penutup(halaman arab)",
+      "Running title pada halaman ganjil berisi judul Bab, pada Publikasi judul BAB 1 adalah Geografi dan Iklim. Seharusnya penulisan Running title disesuaikan dengan Judul BAB yaitu Geografi dan Iklim demikian pula untuk penulisan Running title untuk bahasa Asing. Seharusnya Running title bahasa Asing adalah GEOGRAPHY AND CLIMATE",
+      "Perbaiki penulisan Penjelasan Teknis pada masing-masing BAB dalam Buku, Penjelasan teknis untuk Bahasa Indonesia dan Bahasa Asing urutan Penomorannya di buat sejajar dan penomorannya harus KONSISTEN. Contoh Penjelasan Teknis pada BAB 1. untuk Bahasa Indonesia menggunakan Penomoran 1.1 sedangkan untuk pejelasan Bahasa Asing menggunakan penomoran 1. SEHARUSNYA PENOMORANNYA disamakan, apakah memakai 1.1 atau 1",
+      "Perbaiki Margin antara penulisan bahasa Indonesia dan Penulisan bahasa Asing pada Penjelesan Teknis dari setiap BAB yang ada dalam Publikasi mulai dari BAB 1 sd BAB 7",
+      "Penulisan Pemisah angka desimal menggunakan tanda koma (,) perbaiki penulisan pemisah angka desimal pada Tabel 1.1 kolom 2 dan 3 sesuai ketentuan penulisan publikasi. CEK KEMBALI SEMUA ISIAN ANGKA UNTUK PEMISAH ANGKA DESIMAL PADA SETIAP TABEL DALAM BUKU",
+      "Perbaiki penulisan sumber pada setiap tabel dimulai dari BAB 1 sd BAB akhir dalam Buku. Seharusnya penulisan Sumber yang terdiri atas informasi nama instansi dituliskan Huruf pertama setiap kata dalam sumber tabel ditulis dengan huruf kapital (Capitalize Each Word), Seharusnya: Sumber/Source Dinas Pendidikan",
+      "CATATAN: Perbaiki PENULISAN SUMBER PADA SETIAP TABEL. APAKAH BENAR ADA DINAS TINANGKUNG?",
+      "Untuk Halaman ISI pada setiap BAB berada pada halaman GANJIL, mulai dari Pembatas BAB dan Penjelasan Teknis. BAB 2 dalam Publikasi tidak berada pada halaman ganjil tetapi berada pada halaman GENAP yaitu halaman 6 dan halaman penjelasan teknis berada pada halaman 8. Perbaiki HALAMAN PADA BAB 2 harus BERADA PADA HALAMAN GANJIL. Tambahkan 1 halaman kosong sebelum Pembatas BAB pada BAB 2 dan tambahkan 1 halaman kosong sebelum PENJELASAN TEKNIS",
+      "Perbaiki HALAMAN ISI mulai dari BAB 2 sd BAB 7 harus BERADA PADA HALAMAN GANJIL. Tambahkan 1 halaman kosong sebelum Pembatas BAB dan tambahkan 1 halaman kosong sebelum PENJELASAN TEKNIS atau hapus 1 halaman kosong sebelum Pembatas BAB dan Penjelasan Teknis agar setiap Pembatas Bab dan Penjelasan teknis berada pada halaman GANJIL",
+      "Hapus 1 halaman kosong sesudah penjelasan teknis. Aturan penulisan Publikasi untuk halaman isi yang berada pada halaman ganjil hanyalah Pembatas BAB dan Penjelasan Teknis",
+      "jika datanya merupakan angka tidak ada atau 0 (Nol) maka menggunakan tanda En Dash “–“. Perbaiki semua penulisan angka 0 (nol) pada setiap angka-angka dalam tabel pada Publikasi. Contoh pada tabel 2.1.1 terdapat penulisan data angka 0 (nol) yang tidak menggunakan tanda En Dash “–“ Catatan: CEK KEMBALI dan Perbaiki untuk semua angka pada tabel dalam buku publikasi",
+      "Perbaiki judul Tabel 2.2.2 lengkapi Judul tabel dengan menyebutkan Kecamatan buku tidak dengan menggunakan KATA XX. SEHARUSNYA DI TULISKAN KECAMATAN TINANGKUNG. Cek kembali semua Judul Tabel dalam Publikasi, pastikan semua judul publikasi di tulis lengkap sesuai KECAMATAN",
+      "Penulisan Pemisah angka RIBUAN menggunakan tanda titik (.) perbaiki penulisan pemisah angka RIBUAN pada Tabel 3.1 kolom 2,3 dan 4 sesuai ketentuan penulisan publikasi. Seharusnya: menggunakan tanda titik (.) contoh 9.757. CEK KEMBALI SEMUA ISIAN ANGKA UNTUK PEMISAH ANGKA RIBUAN PADA SETIAP TABEL DALAM BUKU",
+      "Perbaiki penulisan sumber. Belum terdapat penulisan sumber dalam bahasa Asing dan harus di cetak miring. Cek kembali penulisan keterangan Sumber yang terdapat di bawah masing-masing tabel pada buku Publikasi mulai dari BAB 1 sd BAB 7. Contoh, pada Bab 3.1 pada keterangan sumber yang berada di bawah tabel belum menuliskan dalam bahasa Asing",
+      "Perbaiki pemberian satuan pada tabel lanjutan 3.1 kolom 3. Judul kolom 3, seharusnya satuannya (jiwa per km2)",
+      "Keterangan waktu dalam sebuah rentang ditulis dengan notasi En Dash “–“ tanpa spasi. Perbaiki penulisan keterangan kelompok umur pada tabel 3.2 kolom 1 dengan menggunakan En Dash “–“ tanpa spasi. Seharusnya: 0–4, 5–9",
+      "Perbaiki penulisan Kelompok umur pada Tabel 3.2 Kolom 1. Seharusnya 0–4, 5–9",
+      "Perbaiki tabel 4.1.2 sd 4.1.4 untuk pemberian warnanya pada kolom 1",
+      "Perbaiki judul Sub BAB pada masing-masing BAB, Ukuran dan jenis huruf judul bab/judul subbab harus sama dan konsisten di setiap BAB. Contoh pada penulisan judul sub BAB 4.2 KESEHATAN/HEALTH. Cek kembali semua judul Sub BAB pada masing-masing BAB, mulai dari BAB 1 sd BAB 7",
+      "Perbaiki semua Jenis Huruf dan Ukuran jenis huruf yang digunakan dalam BUKU. Semua jenis Huruf dan Ukuran dalam Publikasi HARUS KONSISTEN dari BAB 1 sd BAB 7.",
+      "Pada Tabel 5.3, 5.4, 5.5, 5.6 kolom 1 untuk keterangan Jenis Tanaman masih terdapat penulisan Komoditas Tanaman dengan menggunakan warna merah. Seharusnya Penulisan Komoditas dengan warna HITAM.",
+      "Ada kolom tabel yang berisi angka yang rata tengah, seharusnya menggunakan rata kanan dan diletakkan di tengah kolom, misalnya pada Tabel 6.2.1 Perhatikan tatacara penulisan tersebut pada semua tabel publikasi.",
+      "Kesalahan fatal pencantuman gambar placeholder ikon kamera: Pada halaman 29, 30, 37, 38, 47, 48, 58, 59, 74, 75, 88, 89, 98, 99 masih berupa kotak abu-abu placeholder ikon kamera bawaan template. Gambar Peta Wilayah Kecamatan (Gambar 1.1) belum dimasukkan, grafik Bab 2 s.d. Bab 7 belum dibuat, dan baris sumber masih berupa titik-titik (\"Sumber/Source : ....\"). Dilarang merilis publikasi yang masih memuat visual dummy template.",
+      "Data tabel belum diisi (masih kosong/elipsis): Seluruh sel data pada Tabel 2.2.1 (PNS Pemda), Tabel 3.1 (Penduduk per Desa), dan Tabel 3.2 (Kelompok Umur) masih berisi tanda titik-titik elipsis (\"...\") dan wajib dilengkapi sebelum dirilis.",
+      "Tabel pada halaman 5 (hal fisik 29): Baris Sumber/Source belum diisi (hanya memuat elipsis '...'). Wajib mencantumkan nama instansi resmi asal data.",
+      "Tabel pada halaman 6 (hal fisik 30): Saltik pada teks bahasa Inggris: Tertulis 'Subdistric' (kurang huruf 't', penulisan yang benar adalah 'Subdistrict').",
+      "Tabel pada halaman 6 (hal fisik 30): Penggunaan kata tidak baku 'ibukota'. Penulisan baku menurut KBBI dan pedoman BPS adalah 'ibu kota' (dipisah).",
+      "Tabel pada halaman 7 (hal fisik 31): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel pada halaman 7 (hal fisik 31): Baris Catatan/Note hanya memuat tanda elipsis '...' tanpa keterangan teknis apapun. Jika tidak ada catatan khusus, teks 'Catatan/Note:' wajib dihapus sepenuhnya.",
+      "Tabel pada halaman 7 (hal fisik 31): Kesalahan penulisan satuan luas '(km2)'. Sesuai kaidah baku tipografi BPS, wajib menggunakan simbol superskrip kuadrat '(km²)'.",
+      "Tabel pada halaman 8 (hal fisik 32): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 2.1.1 (hal 17): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 2.2.1 (hal 18): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 2.2.1 (hal 18): Data tabel kosong total / belum tersedia. Seluruh sel data numerik hanya menyajikan tanda elipsis ('…' atau '...'). Jika data tidak tersedia, tabel opsional sebaiknya tidak ditampilkan atau diisi data riil.",
+      "Tabel pada halaman 19 (hal fisik 41): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 3.1 (hal 27): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel Lanjutan 3.1 (hal 28): Posisi Catatan dan Sumber diletakkan di ATAS tabel sebelum header kolom. Sesuai standar BPS, blok Catatan dan Sumber wajib diletakkan di bagian bawah tabel.",
+      "Tabel Lanjutan 3.1 (hal 28): Penomoran kolom tabel melompat dari (1) langsung ke (5). Kolom (2) s.d. (4) hilang.",
+      "Tabel 3.2 (hal 29): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.1.1 (hal 38): Tanda superscript '1/' ditemukan pada header tabel tanpa penjelasan catatan kaki yang sesuai di bagian bawah tabel.",
+      "Tabel 4.1.2 (hal 39): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.1.3 (hal 40): Saltik pada judul tabel: Tertulis 'Kepalad Sekolah' (kelebihan huruf 'd', penulisan yang benar adalah 'Kepala Sekolah').",
+      "Tabel 4.3.1 (hal 43): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.3.2 (hal 44): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.4.1 (hal 45): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.1 (hal 54): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.3 (hal 56): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.5 (hal 58): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.7 (hal 60): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 6.1.1 (hal 68): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 6.2.1 (hal 69): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel."
+    ],
+    "Daftar Pustaka: -": [],
+    "Kover belakang: -": []
+  },
+  "Tinangkung Selatan": {
+    "Kover depan: -": [],
+    "Halaman Judul Utama: -": [
+      "Pelanggaran format latar belakang Halaman Judul Utama: Memuat gambar/foto pemandangan alam (duplikasi visual kover depan). Merujuk pada Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.1 dan Template KCDA 2026 halaman 3, Halaman Judul Utama (halaman fisik 3 / Romawi i) WAJIB berlatar putih bersih tanpa ilustrasi.",
+      "Halaman Judul Utama dibuat tanpa Ilustrasi",
+      "Logo dan nama BPS Penerbit  HARUS DIBUAT BERWARNA",
+      "Ketentuan penulisan judul buku sama seperti pada kover depan",
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku.",
+      "PERBAIKI PEMBERIAN JUDUL BUKU PADA PUBLIKASI.TULISKAN SECARA LENGKAP TANPA YYYY"
+    ],
+    "Halaman katalog: -": [
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku. Lengkapi judul buku",
+      "Penulisan judul buku dalam Bahasa Asing harus dilengkapi dan di cetak miring",
+      "Edisi dicantumkan jika buku rutin atau memiliki ISSN. Ketentuan penulisan \nedisi sama seperti pada kover depan yaitu dibawah judul buku.",
+      "Perbaiki pencantuman Nomor Katalog pada halaman katalog seharusnya 1102001.7201041",
+      "Perbaiki pencantuman Nomor ISSN pada halaman katalog seharusnya 2655-1020. PENULISAN NOMOR ISSN JANGAN MENGGUNAKAN HHHHHHH-HHHHH",
+      "Nomor Publikasi pada buku masih kosong. Seharusnya Nomor Publikasi sama dengan Nomor Publikasi pada website yaitu Nomor Publikasi: 72010.26010",
+      "Jumlah halaman pada halaman katalog belum dicantumkan. seharusnya Jumlah halaman romawi dan jumlah halaman arab adalah xviii+65 halaman/pages",
+      "Penulisan Kata halaman pada halaman arab tidak boleh disingkat, Seharusnya halaman/pages",
+      "Catatan: Penulisan BPS HARUS LENGKAP. Seharusnya BADAN PUSAT STATSITIK, baik untuk Penyusun Naskah, Penyunting, Pembuat Kover, Penerbit",
+      "CATATAN : 1 Halaman Daftar Gambar telah di hapus maka jumlah total halaman romawi yang tadinya adalah xx menjadi xviii",
+      "Perbaiki pencantuman Nomor ISSN pada halaman katalog seharusnya 2655-1020"
+    ],
+    "Halaman Tim Penyusun: -": [
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku.",
+      "Perbaiki pencantuman Nomor ISSN pada halaman Tim Penyusun seharusnya 2655-1020",
+      "CATATAN: Perbaiki JUDUL PUBLIKASI mulai dari Kover depan sd Judul Publikasi pada TIM PENYUSUN harus dibuat Konsisten baik UKURAN maupun JENIS HURUF"
+    ],
+    "Kata pengantar: -": [
+      "Kesalahan tahun pada narasi teks: Paragraf pertama teks Bahasa Indonesia tertulis \"Publikasi Kecamatan Tinangkung Selatan Dalam Angka 2025\" dan Bahasa Inggris tertulis \"... in Figures 2025\". Terjadi ketidaksinkronan tahun narasi dengan titimangsa \"Salakan, September 2026\". Koreksi seharusnya: Diselaraskan menjadi tahun 2026.",
+      "Wajib disertakan dengan tandan tangan pejabat baik kata pengantar dalam bahasa Indonesia maupun kata pengantar dalam bahasa Asing",
+      "Ruang tanda tangan pejabat masih kosong: Kolom tanda tangan Kepala BPS Kabupaten Banggai Kepulauan pada Kata Pengantar dan Preface belum dibubuhi tanda tangan. Wajib dibubuhi tanda tangan resmi sebelum publikasi dirilis."
+    ],
+    "Daftar Isi: -": [
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku.",
+      "pada daftar isi terdapat keterangan halaman Daftar Gambar, akan tetapi dalam Buku pada Layout Isi tidak terdapat halaman Daftar Gambar, jadi perbaiki halaman Daftar ISI dengan menghapus 1 halaman daftar Gambar",
+      "Perbaiki pencantuman nomor ISSN harus sama dengan ISSN yang ada pada website. Seharusnya ISSN 2655-1020",
+      "CATATAN : 1 Halaman Daftar Gambar telah di hapus maka jumlah total halaman romawi yang tadinya adalah xx menjadi xviii"
+    ],
+    "Penjelasan Umum:": [
+      "Masih terdapat penulisan Kata dalam Bahasa Asing yang belum dicetak \nmiring. Seharusnya penulisannya: Not applicable, Estimated figure, Revised figures, Preliminary figures, Very preliminary figures, Very very preliminary figures"
+    ],
+    "Daftar Tabel/Gambar/Grafik/Lampiran:": [
+      "Kesalahan fatal visual gambar dummy/placeholder di seluruh bab: Ditemukan 14 lembar gambar (Gambar 1.1 s.d. Gambar 7.2) yang masih memuat kotak abu-abu placeholder ikon kamera bawaan template. Pada Gambar 1.1 (Peta Wilayah), gambar peta riil belum di-insert (masih kotak kamera kosong), judul Gambar 2.1 s.d. 7.2 masih berupa elipsis (\"...\"), dan keterangan sumber masih berupa titik-titik dummy (\"Sumber/Source : ....\"). Wajib dimasukkan visual gambar/peta riil beserta sumber valid, atau seluruh halaman gambar placeholder dihapus dari buku.",
+      "KETENTUAN DAFTAR GAMBAR ADALAH : Daftar gambar memuat urutan gambar (foto, grafik, diagram, ilustrasi, bagan, infografis, \ndan peta) yang berada di halaman isi, tidak termasuk gambar yang ada di halaman \npembatas, beserta nomor halamannya.",
+      "Daftar gambar dibuat apabila minimal ada tiga gambar yang terdapat dalam \nbuku. Pada buku tidak terdapat gambar sehingga tidak perlu membuat halaman daftar gambar",
+      "Hapus Halaman DAFTAR GAMBAR",
+      "Perbaiki penulisan sumber dalam bahasa inggris seharusnya dicetak \nmiring. Cek kembali penulisan keterangan Sumber yang terdapat di bawah masing-masing tabel pada buku Publikasi mulai dari BAB 1 sd BAB akhir"
+    ],
+    "Layout Isi:": [
+      "Beberapa ketentuan running title:                                                                                      1. Running title terdiri atas judul buku dan judul Bab\nRunning title pada halaman genap berisi judul buku, sedangkan pada halaman ganjil berisi judul Bab\nRunning title dicantumkan mulai dari halaman isi sampai dengan halaman penutup(halaman arab)",
+      "Running title pada halaman ganjil berisi judul Bab, pada Publikasi judul BAB 1 adalah Geografi dan Iklim. Seharusnya penulisan Running title disesuaikan dengan Judul BAB yaitu Geografi dan Iklim demikian pula untuk penulisan Running title untuk bahasa Asing",
+      "Perbaiki penulisan Penjelasan Teknis pada masing-masing BAB dalam Buku, Penjelasan teknis untuk Bahasa Indonesia dan Bahasa Asing urutan Penomorannya di buat sejajar dan penomorannya harus KONSISTEN. Contoh Penjelasan Teknis pada BAB 1. untuk Bahasa Indonesia menggunakan Penomoran 1.1 sedangkan untuk pejelasan Bahasa Asing menggunakan penomoran 1. SEHARUSNYA PENOMORANNYA 1. 2. 3 dst dan konsisten di pada setiap BAB",
+      "Perbaiki Margin antara penulisan bahasa Indonesia dan Penulisan bahasa Asing pada Penjelesan Teknis dari setiap BAB yang ada dalam Publikasi mulai dari BAB 1 sd BAB 7",
+      "Penulisan Pemisah angka desimal menggunakan tanda koma (,) perbaiki penulisan pemisah angka desimal pada Tabel 1.1 kolom 2 dan 3 sesuai ketentuan penulisan publikasi. CEK KEMBALI SEMUA ISIAN ANGKA UNTUK PEMISAH ANGKA DESIMAL PADA SETIAP TABEL DALAM BUKU",
+      "Perbaiki penulisan sumber pada setiap tabel dimulai dari BAB 1 sd BAB akhir dalam Buku. Seharusnya penulisan Sumber yang terdiri atas informasi nama instansi dituliskan Huruf pertama setiap kata dalam sumber tabel ditulis dengan huruf kapital (Capitalize Each Word), Seharusnya: Sumber/Source Dinas Pendidikan",
+      "CATATAN: Perbaiki PENULISAN SUMBER PADA SETIAP TABEL. APAKAH BENAR ADA DINAS TINANGKUNG SELATAN?",
+      "Perbaiki judul Tabel 2.2.2 lengkapi Judul tabel dengan menyebutkan Kecamatan buku tidak dengan menggunakan KATA XX. SEHARUSNYA DI TULISKAN KECAMATAN TINANGKUNG SELATAN",
+      "Penulisan Pemisah angka RIBUAN menggunakan tanda titik (.) perbaiki penulisan pemisah angka RIBUAN pada Tabel 3.1 kolom 2,3 dan 4 sesuai ketentuan penulisan publikasi. Seharusnya: 4.459. CEK KEMBALI SEMUA ISIAN ANGKA UNTUK PEMISAH ANGKA RIBUAN PADA SETIAP TABEL DALAM BUKU",
+      "Perbaiki penulisan angka pada tabel lanjutan 3.1 kolom 2, satuan angka tidak perlu dituliskan di belakang angka, namun satuan angka diletakkan pada judul kolom seperti pada kolom 3",
+      "jika datanya merupakan angka tidak ada atau 0 (Nol) maka menggunakan tanda En Dash “–“. Perbaiki semua penulisan angka 0 (nol) pada setiap angka-angka dalam tabel pada Publikasi. Contoh pada tabel 4.1.4 terdapat penulisan data angka 0 (nol) yang tidak menggunakan tanda En Dash “–“ Catatan: CEK KEMBALI dan Perbaiki untuk semua angka pada tabel dalam buku publikasi",
+      "Perbaiki penulisan sumber dalam bahasa Asing di cetak miring. Cek kembali penulisan keterangan Sumber yang terdapat di bawah masing-masing tabel pada buku Publikasi mulai dari BAB 1 sd BAB akhir",
+      "Perbaiki pemberian satuan pada tabel lanjutan 3.1 kolom 3. Judul kolom 3, seharusnya satuannya (jiwa per km2)",
+      "Keterangan waktu dalam sebuah rentang ditulis dengan notasi En Dash “–“ tanpa spasi. Perbaiki penulisan keterangan kelompok umur pada tabel 3.2 kolom 1 dengan menggunakan En Dash “–“ tanpa spasi.",
+      "Perbaiki penulisan Kelompok umur pada Tabel 3.2 Kolom 1. Seharusnya 0–4, 5–9",
+      "Untuk Halaman ISI pada setiap BAB dimulai dari halaman GANJIL. BAB 4 dalam Publikasi tidak berada pada halaman ganjil tetapi berada pada halaman GENAP yaitu halaman 22 dan halaman penjelasan teknis berada pada halaman 24. Perbaiki HALAMAN PADA BAB 4 sd BAB 7 harus BERADA PADA HALAMAN GANJIL. Hapus 1 halaman kosong sebelum BAB 4 dan hapus 1 halaman kosong sebelum PENJELASAN TEKNIS atau Tambahkan 1 halaman kosong sebelum BAB dan Penjelasan Teknis agar setiap Bab dan awal Penjelasan teknis berada pada halaman GANJIL",
+      "Perbaiki tabel 4.1.2 sd 4.1.4 untuk pemberian warnanya pada kolom 1",
+      "Perbaiki tata LETAK untuk pemberian CATATAN dan SUMBER yang berada dibawah Tabel 4.1.3 dan Tabel 4.1.4, sehingga keterangan sumbernya berada dalam 1 halaman arab",
+      "Perbaiki judul Sub BAB pada masing-masing BAB, Ukuran dan jenis huruf judul bab/judul subbab harus sama dan konsisten di setiap BAB. Contoh pada penulisan judul sub BAB 6.1 PARIWISATA/Tourism",
+      "Kesalahan fatal pencantuman gambar placeholder ikon kamera: Pada halaman 29, 30, 37, 38, 47, 48, 58, 59, 74, 75, 88, 89, 98, 99 masih berupa kotak abu-abu placeholder ikon kamera bawaan template. Gambar Peta Wilayah Kecamatan (Gambar 1.1) belum dimasukkan, grafik Bab 2 s.d. Bab 7 belum dibuat, dan baris sumber masih berupa titik-titik (\"Sumber/Source : ....\"). Dilarang merilis publikasi yang masih memuat visual dummy template.",
+      "Kesalahan perataan data angka tabel (alignment): Seluruh sel data tabel berupa angka diatur rata tengah (center-aligned). Sesuai Pedoman Pembuatan Publikasi 2023 Hal. 110 poin h, isi tabel berupa angka wajib menggunakan rata kanan kemudian diatur di tengah kolom (right aligned with indent) agar digit satuan, puluhan, ratusan, serta tanda koma desimal sejajar lurus secara vertikal.",
+      "Data tabel belum diisi (masih kosong/elipsis): Seluruh sel data pada Tabel 2.2.1 (PNS Pemda), Tabel 3.1 (Penduduk per Desa), dan Tabel 3.2 (Kelompok Umur) masih berisi tanda titik-titik elipsis (\"...\") dan wajib dilengkapi sebelum dirilis.",
+      "Tabel pada halaman 5 (hal fisik 29): Baris Sumber/Source belum diisi (hanya memuat elipsis '...'). Wajib mencantumkan nama instansi resmi asal data.",
+      "Tabel pada halaman 6 (hal fisik 30): Saltik pada teks bahasa Inggris: Tertulis 'Subdistric' (kurang huruf 't', penulisan yang benar adalah 'Subdistrict').",
+      "Tabel pada halaman 6 (hal fisik 30): Penggunaan kata tidak baku 'ibukota'. Penulisan baku menurut KBBI dan pedoman BPS adalah 'ibu kota' (dipisah).",
+      "Tabel pada halaman 7 (hal fisik 31): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel pada halaman 7 (hal fisik 31): Baris Catatan/Note hanya memuat tanda elipsis '...' tanpa keterangan teknis apapun. Jika tidak ada catatan khusus, teks 'Catatan/Note:' wajib dihapus sepenuhnya.",
+      "Tabel pada halaman 7 (hal fisik 31): Kesalahan penulisan satuan luas '(km2)'. Sesuai kaidah baku tipografi BPS, wajib menggunakan simbol superskrip kuadrat '(km²)'.",
+      "Tabel pada halaman 8 (hal fisik 32): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 2.1.1 (hal 15): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 2.2.1 (hal 16): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 2.2.1 (hal 16): Data tabel kosong total / belum tersedia. Seluruh sel data numerik hanya menyajikan tanda elipsis ('…' atau '...'). Jika data tidak tersedia, tabel opsional sebaiknya tidak ditampilkan atau diisi data riil.",
+      "Tabel pada halaman 17 (hal fisik 41): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 3.1 (hal 25): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel Lanjutan 3.1 (hal 26): Posisi Catatan dan Sumber diletakkan di ATAS tabel sebelum header kolom. Sesuai standar BPS, blok Catatan dan Sumber wajib diletakkan di bagian bawah tabel.",
+      "Tabel Lanjutan 3.1 (hal 26): Penomoran kolom tabel melompat dari (1) langsung ke (5). Kolom (2) s.d. (4) hilang.",
+      "Tabel 3.2 (hal 27): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.1.1 (hal 36): Tanda superscript '1/' ditemukan pada header tabel tanpa penjelasan catatan kaki yang sesuai di bagian bawah tabel.",
+      "Tabel 4.1.2 (hal 37): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.1.3 (hal 38): Saltik pada judul tabel: Tertulis 'Kepalad Sekolah' (kelebihan huruf 'd', penulisan yang benar adalah 'Kepala Sekolah').",
+      "Tabel 4.3.1 (hal 41): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.3.2 (hal 42): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.4.1 (hal 43): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.1 (hal 52): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.3 (hal 54): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.5 (hal 56): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.7 (hal 58): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 6.1.1 (hal 66): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 6.2.1 (hal 67): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel."
+    ],
+    "Daftar Pustaka: -": [
+      "Daftar Pustaka wajib berada pada halaman Ganjil pada Buku",
+      "Perbaiki penulisan Running title pada daftra pustaka. Belum terdapat penulisan Running title dengan menggunakan Bahasa Asing yang diletakkan pada pojok kanan bawah dari halaman daftar pustaka"
+    ],
+    "Kover belakang: -": [
+      "Untuk publikasi buku yang sudah memiliki ISBN atau ISSN, wajib dicantumkan \nbarcode ISBN/ISSN.  Barcode ISBN/ISSN ditampilkan di sudut kanan bawah \ndengan ukuran yang proporsional dengan kover belakang"
+    ]
+  },
+  "Tinangkung Utara": {
+    "Kover depan: -": [],
+    "Halaman Judul Utama: -": [
+      "Pelanggaran format latar belakang Halaman Judul Utama: Memuat gambar/foto pemandangan alam (duplikasi visual kover depan). Merujuk pada Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.1 dan Template KCDA 2026 halaman 3, Halaman Judul Utama (halaman fisik 3 / Romawi i) WAJIB berlatar putih bersih tanpa ilustrasi.",
+      "Halaman Judul Utama dibuat tanpa Ilustrasi",
+      "Logo dan nama BPS Penerbit  HARUS DIBUAT BERWARNA",
+      "Ketentuan penulisan judul buku sama seperti pada kover depan",
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku.",
+      "PERBAIKI PEMBERIAN JUDUL BUKU PADA PUBLIKASI.TULISKAN SECARA LENGKAP TANPA YYYYY dan XXXXX baik bahasa Indonesia maupun bahasa Asing"
+    ],
+    "Halaman katalog: -": [
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku. Lengkapi judul buku",
+      "PERBAIKI PEMBERIAN JUDUL BUKU PADA PUBLIKASI.TULISKAN SECARA LENGKAP TANPA YYYYY",
+      "Penulisan judul buku dalam Bahasa Asing harus dilengkapi dan di cetak miring",
+      "Edisi dicantumkan jika buku rutin atau memiliki ISSN. Ketentuan penulisan \nedisi sama seperti pada kover depan yaitu dibawah judul buku.",
+      "Perbaiki pencantuman Nomor Katalog pada halaman katalog seharusnya 1102001.7201042",
+      "Perbaiki pencantuman Nomor ISSN pada halaman katalog seharusnya 2655-125X. PENULISAN NOMOR ISSN JANGAN MENGGUNAKAN HHHH-HHHH",
+      "Nomor Publikasi pada buku masih kosong. Seharusnya Nomor Publikasi sama dengan Nomor Publikasi pada website yaitu Nomor Publikasi: 72010.26011",
+      "Jumlah halaman pada halaman katalog belum dicantumkan. seharusnya Jumlah halaman romawi dan jumlah halaman arab adalah xviii+65 halaman/pages",
+      "Penulisan Kata halaman pada halaman arab tidak boleh disingkat, Seharusnya halaman/pages",
+      "Catatan: Penulisan BPS HARUS LENGKAP. Seharusnya BADAN PUSAT STATSITIK, baik untuk Penyusun Naskah, Penyunting, Pembuat Kover, Penerbit",
+      "CATATAN : 1 Halaman Daftar Gambar telah di hapus maka jumlah total halaman romawi yang tadinya adalah xx menjadi xviii",
+      "Perbaiki pencantuman Nomor ISSN pada halaman katalog seharusnya 2655-125X"
+    ],
+    "Halaman Tim Penyusun: -": [
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku.",
+      "Perbaiki pencantuman Nomor ISSN pada halaman Tim Penyusun seharusnya 2655-125X",
+      "CATATAN: Perbaiki JUDUL PUBLIKASI mulai dari Kover depan sd Judul Publikasi pada TIM PENYUSUN harus dibuat Konsisten baik UKURAN maupun JENIS HURUF"
+    ],
+    "Kata pengantar: -": [
+      "Kesalahan tahun pada narasi teks: Paragraf pertama teks Bahasa Indonesia tertulis \"Publikasi Kecamatan Tinangkung Utara Dalam Angka 2025\" dan Bahasa Inggris tertulis \"... in Figures 2025\". Terjadi ketidaksinkronan tahun narasi dengan titimangsa \"Salakan, September 2026\". Koreksi seharusnya: Diselaraskan menjadi tahun 2026.",
+      "Wajib disertakan dengan tandan tangan pejabat baik kata pengantar dalam bahasa Indonesia maupun kata pengantar dalam bahasa Asing",
+      "Penulisan BPS dalam bahasa Asing dituliskan dengan lengkap, Seharusnya: Badan Pusat Statistik",
+      "Ruang tanda tangan pejabat masih kosong: Kolom tanda tangan Kepala BPS Kabupaten Banggai Kepulauan pada Kata Pengantar dan Preface belum dibubuhi tanda tangan. Wajib dibubuhi tanda tangan resmi sebelum publikasi dirilis."
+    ],
+    "Daftar Isi: -": [
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku.",
+      "pada daftar isi terdapat keterangan halaman Daftar Gambar, akan tetapi dalam Buku pada Layout Isi tidak terdapat halaman Daftar Gambar, jadi perbaiki halaman Daftar ISI dengan menghapus 1 halaman daftar Gambar",
+      "Perbaiki pencantuman nomor ISSN harus sama dengan ISSN yang ada pada website. Seharusnya ISSN 2655-125X",
+      "PERBAIKI PEMBERIAN JUDUL BUKU PADA PUBLIKASI.TULISKAN SECARA LENGKAP KECAMATAN PUBLIKASI TANPA YYYYY DAN PENULISAN JUDUL BUKU WAJIB MENGGUNAKAN WARNA HITAM",
+      "Judul tabel bahasa indonesia dan bahasa inggis sudah benar dipisahkan barisnya, namun untuk nomor halamannya cukup diisikan pada bahasa inggrisnya saja, pada judul indonesia tidak perlu.",
+      "CATATAN : 1 Halaman Daftar Gambar telah di hapus maka jumlah total halaman romawi yang tadinya adalah xx menjadi xviii"
+    ],
+    "Penjelasan Umum:": [
+      "Masih terdapat penulisan Kata dalam Bahasa Asing yang belum dicetak \nmiring. Seharusnya penulisannya: Not applicable, Estimated figure, Revised figures, Preliminary figures, Very preliminary figures, Very very preliminary figures"
+    ],
+    "Daftar Tabel/Gambar/Grafik/Lampiran:": [
+      "Kesalahan fatal visual gambar dummy/placeholder di seluruh bab: Ditemukan 14 lembar gambar (Gambar 1.1 s.d. Gambar 7.2) yang masih memuat kotak abu-abu placeholder ikon kamera bawaan template. Pada Gambar 1.1 (Peta Wilayah), gambar peta riil belum di-insert (masih kotak kamera kosong), judul Gambar 2.1 s.d. 7.2 masih berupa elipsis (\"...\"), dan keterangan sumber masih berupa titik-titik dummy (\"Sumber/Source : ....\"). Wajib dimasukkan visual gambar/peta riil beserta sumber valid, atau seluruh halaman gambar placeholder dihapus dari buku.",
+      "KETENTUAN DAFTAR GAMBAR ADALAH : Daftar gambar memuat urutan gambar (foto, grafik, diagram, ilustrasi, bagan, infografis, \ndan peta) yang berada di halaman isi, tidak termasuk gambar yang ada di halaman \npembatas, beserta nomor halamannya.",
+      "Daftar gambar dibuat apabila minimal ada tiga gambar yang terdapat dalam \nbuku. Pada buku tidak terdapat gambar sehingga tidak perlu membuat halaman daftar gambar",
+      "Hapus Halaman DAFTAR GAMBAR",
+      "Perbaiki penulisan sumber dalam bahasa inggris seharusnya dicetak \nmiring. Cek kembali penulisan keterangan Sumber yang terdapat di bawah masing-masing tabel pada buku Publikasi mulai dari BAB 1 sd BAB akhir"
+    ],
+    "Layout Isi:": [
+      "Beberapa ketentuan running title:                                                                                      1. Running title terdiri atas judul buku dan judul Bab\nRunning title pada halaman genap berisi judul buku, sedangkan pada halaman ganjil berisi judul Bab\nRunning title dicantumkan mulai dari halaman isi sampai dengan halaman penutup(halaman arab)",
+      "Running title pada halaman ganjil berisi judul Bab, pada Publikasi judul BAB 1 adalah Geografi dan Iklim. Seharusnya penulisan Running title disesuaikan dengan Judul BAB yaitu Geografi dan Iklim demikian pula untuk penulisan Running title untuk bahasa Asing. Seharusnya Running title bahasa Asing adalah GEOGRAPHY AND CLIMATE",
+      "Perbaiki penulisan Penjelasan Teknis pada masing-masing BAB dalam Buku, Penjelasan teknis untuk Bahasa Indonesia dan Bahasa Asing urutan Penomorannya di buat sejajar dan penomorannya harus KONSISTEN. Contoh Penjelasan Teknis pada BAB 1. untuk Bahasa Indonesia menggunakan Penomoran 1.1 sedangkan untuk pejelasan Bahasa Asing menggunakan penomoran 1. SEHARUSNYA PENOMORANNYA disamakan, apakah memakai 1.1 atau 1",
+      "Perbaiki Penulisan Untuk jenis Huruf dan Ukuran Huruf pada Penjelasan Teknis harus sama baik jenis Huruf maupun Ukuran Huruf. Cek kembali Semua penjelasan teknis mulai dari BAB 1 sd BAB 7",
+      "Perbaiki Margin antara penulisan bahasa Indonesia dan Penulisan bahasa Asing pada Penjelesan Teknis dari setiap BAB yang ada dalam Publikasi mulai dari BAB 1 sd BAB 7",
+      "Penulisan Pemisah angka desimal menggunakan tanda koma (,) perbaiki penulisan pemisah angka desimal pada Tabel 1.1 kolom 2 dan 3 sesuai ketentuan penulisan publikasi. CEK KEMBALI SEMUA ISIAN ANGKA UNTUK PEMISAH ANGKA DESIMAL PADA SETIAP TABEL DALAM BUKU",
+      "Perbaiki penulisan sumber pada setiap tabel dimulai dari BAB 1 sd BAB akhir dalam Buku. Seharusnya penulisan Sumber yang terdiri atas informasi nama instansi dituliskan Huruf pertama setiap kata dalam sumber tabel ditulis dengan huruf kapital (Capitalize Each Word), Seharusnya: Sumber/Source Dinas Pendidikan",
+      "CATATAN: Perbaiki PENULISAN SUMBER PADA SETIAP TABEL. APAKAH BENAR ADA DINAS TINANGKUNG UTARA?",
+      "Untuk Halaman ISI pada setiap BAB berada pada halaman GANJIL, mulai dari Pembatas BAB dan Penjelasan Teknis. BAB 2 dalam Publikasi tidak berada pada halaman ganjil tetapi berada pada halaman GENAP yaitu halaman 6 dan halaman penjelasan teknis berada pada halaman 8. Perbaiki HALAMAN PADA BAB 2 harus BERADA PADA HALAMAN GANJIL. Tambahkan 1 halaman kosong sebelum Pembatas BAB pada BAB 2 dan tambahkan 1 halaman kosong sebelum PENJELASAN TEKNIS",
+      "Perbaiki HALAMAN ISI mulai dari BAB 2 sd BAB 7 harus BERADA PADA HALAMAN GANJIL. Tambahkan 1 halaman kosong sebelum Pembatas BAB dan tambahkan 1 halaman kosong sebelum PENJELASAN TEKNIS atau hapus 1 halaman kosong sebelum Pembatas BAB dan Penjelasan Teknis agar setiap Pembatas Bab dan Penjelasan teknis berada pada halaman GANJIL",
+      "Hapus 1 halaman kosong sesudah penjelasan teknis. Aturan penulisan Publikasi untuk halaman isi yang berada pada halaman ganjil hanyalah Pembatas BAB dan Penjelasan Teknis, Cek kembali BAB 2 sd BAB 7",
+      "jika datanya merupakan angka tidak ada atau 0 (Nol) maka menggunakan tanda En Dash “–“. Perbaiki semua penulisan angka 0 (nol) pada setiap angka-angka dalam tabel pada Publikasi. Contoh pada tabel 4.1.1 terdapat penulisan data angka 0 (nol) yang tidak menggunakan tanda En Dash “–“ Catatan: CEK KEMBALI dan Perbaiki untuk semua angka pada tabel dalam buku publikasi, dari BAB 1 sd BAB 7",
+      "Perbaiki Penempatan tabel 2.2.2 seharusnya antara Judul tabel dan Kolom Tabel berada dalam 1 halaman",
+      "Perbaiki judul Tabel 2.2.2 lengkapi Judul tabel dengan menyebutkan Kecamatan buku tidak dengan menggunakan KATA XX. SEHARUSNYA DI TULISKAN KECAMATAN TINANGKUNG UTARA. Cek kembali semua Judul Tabel dalam Publikasi, pastikan semua judul publikasi di tulis lengkap sesuai KECAMATAN",
+      "Penulisan Pemisah angka RIBUAN menggunakan tanda titik (.) perbaiki penulisan pemisah angka RIBUAN pada Tabel 3.1 kolom 2,3 dan 4 sesuai ketentuan penulisan publikasi. Seharusnya: menggunakan tanda titik (.) contoh 4.877. CEK KEMBALI SEMUA ISIAN ANGKA UNTUK PEMISAH ANGKA RIBUAN PADA SETIAP TABEL DALAM BUKU",
+      "Perbaiki penulisan angka pada tabel lanjutan 3.1 kolom 2, satuan angka tidak perlu dituliskan di belakang angka, namun satuan angka diletakkan pada judul kolom seperti pada kolom 3",
+      "Perbaiki pemberian satuan pada tabel lanjutan 3.1 kolom 3. Judul kolom 3, seharusnya satuannya (jiwa per km2)",
+      "Perbaiki penulisan sumber. Belum terdapat penulisan sumber dalam bahasa Asing dan harus di cetak miring. Cek kembali penulisan keterangan Sumber yang terdapat di bawah masing-masing tabel pada buku Publikasi mulai dari BAB 1 sd BAB 7. Contoh, pada Bab 3.1 pada keterangan sumber yang berada di bawah tabel belum menuliskan dalam bahasa Asing",
+      "Keterangan waktu dalam sebuah rentang ditulis dengan notasi En Dash “–“ tanpa spasi. Perbaiki penulisan keterangan kelompok umur pada tabel 3.2 kolom 1 dengan menggunakan En Dash “–“ tanpa spasi. Seharusnya: 0–4, 5–9",
+      "Perbaiki penulisan Kelompok umur pada Tabel 3.2 Kolom 1. Seharusnya 0–4, 5–9",
+      "Perbaiki tabel 4.1.2 sd 4.1.4 untuk pemberian warnanya pada kolom 1",
+      "Perbaiki judul Sub BAB pada masing-masing BAB, Ukuran dan jenis huruf judul bab/judul subbab harus sama dan konsisten di setiap BAB. Contoh pada penulisan judul sub BAB 4.1 PENDIDIKAN/EDUCATION. Cek kembali semua judul Sub BAB pada masing-masing BAB, mulai dari BAB 1 sd BAB 7",
+      "Kesalahan fatal pencantuman gambar placeholder ikon kamera: Pada halaman 29, 30, 37, 38, 47, 48, 58, 59, 74, 75, 88, 89, 98, 99 masih berupa kotak abu-abu placeholder ikon kamera bawaan template. Gambar Peta Wilayah Kecamatan (Gambar 1.1) belum dimasukkan, grafik Bab 2 s.d. Bab 7 belum dibuat, dan baris sumber masih berupa titik-titik (\"Sumber/Source : ....\"). Dilarang merilis publikasi yang masih memuat visual dummy template.",
+      "Kesalahan perataan data angka tabel (alignment): Seluruh sel data tabel berupa angka diatur rata tengah (center-aligned). Sesuai Pedoman Pembuatan Publikasi 2023 Hal. 110 poin h, isi tabel berupa angka wajib menggunakan rata kanan kemudian diatur di tengah kolom (right aligned with indent) agar digit satuan, puluhan, ratusan, serta tanda koma desimal sejajar lurus secara vertikal.",
+      "Data tabel belum diisi (masih kosong/elipsis): Seluruh sel data pada Tabel 2.2.1 (PNS Pemda), Tabel 3.1 (Penduduk per Desa), dan Tabel 3.2 (Kelompok Umur) masih berisi tanda titik-titik elipsis (\"...\") dan wajib dilengkapi sebelum dirilis.",
+      "Tabel pada halaman 5 (hal fisik 29): Baris Sumber/Source belum diisi (hanya memuat elipsis '...'). Wajib mencantumkan nama instansi resmi asal data.",
+      "Tabel pada halaman 6 (hal fisik 30): Saltik pada teks bahasa Inggris: Tertulis 'Subdistric' (kurang huruf 't', penulisan yang benar adalah 'Subdistrict').",
+      "Tabel pada halaman 6 (hal fisik 30): Penggunaan kata tidak baku 'ibukota'. Penulisan baku menurut KBBI dan pedoman BPS adalah 'ibu kota' (dipisah).",
+      "Tabel pada halaman 7 (hal fisik 31): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel pada halaman 7 (hal fisik 31): Baris Catatan/Note hanya memuat tanda elipsis '...' tanpa keterangan teknis apapun. Jika tidak ada catatan khusus, teks 'Catatan/Note:' wajib dihapus sepenuhnya.",
+      "Tabel pada halaman 7 (hal fisik 31): Kesalahan penulisan satuan luas '(km2)'. Sesuai kaidah baku tipografi BPS, wajib menggunakan simbol superskrip kuadrat '(km²)'.",
+      "Tabel pada halaman 8 (hal fisik 32): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 2.1.1 (hal 15): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 2.2.1 (hal 16): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 2.2.1 (hal 16): Data tabel kosong total / belum tersedia. Seluruh sel data numerik hanya menyajikan tanda elipsis ('…' atau '...'). Jika data tidak tersedia, tabel opsional sebaiknya tidak ditampilkan atau diisi data riil.",
+      "Tabel pada halaman 17 (hal fisik 41): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 3.1 (hal 25): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel Lanjutan 3.1 (hal 26): Posisi Catatan dan Sumber diletakkan di ATAS tabel sebelum header kolom. Sesuai standar BPS, blok Catatan dan Sumber wajib diletakkan di bagian bawah tabel.",
+      "Tabel Lanjutan 3.1 (hal 26): Penomoran kolom tabel melompat dari (1) langsung ke (5). Kolom (2) s.d. (4) hilang.",
+      "Tabel 3.2 (hal 27): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.1.1 (hal 36): Tanda superscript '1/' ditemukan pada header tabel tanpa penjelasan catatan kaki yang sesuai di bagian bawah tabel.",
+      "Tabel 4.1.2 (hal 37): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.1.3 (hal 38): Saltik pada judul tabel: Tertulis 'Kepalad Sekolah' (kelebihan huruf 'd', penulisan yang benar adalah 'Kepala Sekolah').",
+      "Tabel 4.3.1 (hal 41): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.3.2 (hal 42): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.4.1 (hal 43): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.1 (hal 52): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.3 (hal 54): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.5 (hal 56): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.7 (hal 58): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 6.1.1 (hal 66): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 6.2.1 (hal 67): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel."
+    ],
+    "Daftar Pustaka: -": [],
+    "Kover belakang: -": []
+  },
+  "Totikum": {
+    "Kover depan: -": [],
+    "Halaman Judul Utama: -": [
+      "Pelanggaran format latar belakang Halaman Judul Utama: Memuat gambar/foto pemandangan alam (duplikasi visual kover depan). Merujuk pada Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.1 dan Template KCDA 2026 halaman 3, Halaman Judul Utama (halaman fisik 3 / Romawi i) WAJIB berlatar putih bersih tanpa ilustrasi.",
+      "Halaman Judul Utama dibuat tanpa Ilustrasi",
+      "Logo dan nama BPS Penerbit  HARUS DIBUAT BERWARNA",
+      "Ketentuan penulisan judul buku sama seperti pada kover depan",
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku."
+    ],
+    "Halaman katalog: -": [
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku. Lengkapi judul buku",
+      "Penulisan judul buku dalam Bahasa Asing harus di cetak miring",
+      "Edisi dicantumkan jika buku rutin atau memiliki ISSN. Ketentuan penulisan \nedisi sama seperti pada kover depan yaitu dibawah judul buku.",
+      "Perbaiki pencantuman Nomor ISSN pada halaman katalog seharusnya 2620-6498",
+      "Nomor Publikasi pada buku masih kosong. Seharusnya Nomor Publikasi sama dengan Nomor Publikasi pada website yaitu Nomor Publikasi: 72010.26007",
+      "Jumlah halaman pada halaman katalog belum dicantumkan. seharusnya Jumlah halaman romawi dan jumlah halaman arab adalah xviii+63 halaman/pages",
+      "Penulisan Kata halaman pada halaman arab tidak boleh disingkat, Seharusnya halaman/pages",
+      "Catatan: Penulisan BPS HARUS LENGKAP. Seharusnya BADAN PUSAT STATSITIK, baik untuk Penyusun Naskah, Penyunting, Pembuat Kover, Penerbit"
+    ],
+    "Halaman Tim Penyusun: -": [
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku.",
+      "Perbaiki pencantuman Nomor ISSN pada halaman Tim Penyusun seharusnya 2620-6498",
+      "CATATAN: Perbaiki JUDUL PUBLIKASI mulai dari Kover depan sd Judul Publikasi pada TIM PENYUSUN harus dibuat Konsisten baik UKURAN maupun JENIS HURUF"
+    ],
+    "Kata pengantar: -": [
+      "Kesalahan tahun pada narasi teks: Paragraf pertama teks Bahasa Indonesia tertulis \"Publikasi Kecamatan Totikum Dalam Angka 2025\" dan Bahasa Inggris tertulis \"... in Figures 2025\". Terjadi ketidaksinkronan tahun narasi dengan titimangsa \"Salakan, September 2026\". Koreksi seharusnya: Diselaraskan menjadi tahun 2026.",
+      "Wajib disertakan dengan tandan tangan pejabat baik kata pengantar dalam bahasa Indonesia maupun kata pengantar dalam bahasa Asing",
+      "Penulisan BPS dalam bahasa Asing dituliskan dengan lengkap, Seharusnya: Badan Pusat Statistik",
+      "Ruang tanda tangan pejabat masih kosong: Kolom tanda tangan Kepala BPS Kabupaten Banggai Kepulauan pada Kata Pengantar dan Preface belum dibubuhi tanda tangan. Wajib dibubuhi tanda tangan resmi sebelum publikasi dirilis."
+    ],
+    "Daftar Isi: -": [
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku.",
+      "pada daftar isi terdapat keterangan halaman Daftar Gambar, akan tetapi dalam Buku pada Layout Isi tidak terdapat halaman Daftar Gambar, jadi perbaiki halaman Daftar ISI dengan menghapus 1 halaman daftar Gambar",
+      "Perbaiki pencantuman nomor ISSN harus sama dengan ISSN yang ada pada website. Seharusnya ISSN 2620-6498"
+    ],
+    "Penjelasan Umum:": [
+      "Masih terdapat penulisan Kata dalam Bahasa Asing yang belum dicetak \nmiring. Seharusnya penulisannya: Not applicable, Estimated figure, Revised figures, Preliminary figures, Very preliminary figures, Very very preliminary figures"
+    ],
+    "Daftar Tabel/Gambar/Grafik/Lampiran:": [
+      "Kesalahan fatal visual gambar dummy/placeholder di seluruh bab: Ditemukan 14 lembar gambar (Gambar 1.1 s.d. Gambar 7.2) yang masih memuat kotak abu-abu placeholder ikon kamera bawaan template. Pada Gambar 1.1 (Peta Wilayah), gambar peta riil belum di-insert (masih kotak kamera kosong), judul Gambar 2.1 s.d. 7.2 masih berupa elipsis (\"...\"), dan keterangan sumber masih berupa titik-titik dummy (\"Sumber/Source : ....\"). Wajib dimasukkan visual gambar/peta riil beserta sumber valid, atau seluruh halaman gambar placeholder dihapus dari buku.",
+      "KETENTUAN DAFTAR GAMBAR ADALAH : Daftar gambar memuat urutan gambar (foto, grafik, diagram, ilustrasi, bagan, infografis, \ndan peta) yang berada di halaman isi, tidak termasuk gambar yang ada di halaman \npembatas, beserta nomor halamannya.",
+      "Hapus penulisan Halaman DAFTAR GAMBAR pada daftar isi",
+      "Judul tabel bahasa indonesia dan bahasa inggis sudah benar dipisahkan barisnya, namun untuk nomor halamannya cukup diisikan pada bahasa inggrisnya saja, pada judul indonesia tidak perlu.",
+      "Perbaiki penulisan sumber dalam bahasa inggris seharusnya dicetak \nmiring. Cek kembali penulisan keterangan Sumber yang terdapat di bawah masing-masing tabel pada buku Publikasi mulai dari BAB 1 sd BAB akhir"
+    ],
+    "Layout Isi:": [
+      "Beberapa ketentuan running title:                                                                                      1. Running title terdiri atas judul buku dan judul Bab\nRunning title pada halaman genap berisi judul buku, sedangkan pada halaman ganjil berisi judul Bab\nRunning title dicantumkan mulai dari halaman isi sampai dengan halaman penutup(halaman arab)",
+      "Running title pada halaman ganjil berisi judul Bab, pada Publikasi judul BAB 1 adalah Geografi dan Iklim. Seharusnya penulisan Running title disesuaikan dengan Judul BAB yaitu Geografi dan Iklim demikian pula untuk penulisan Running title untuk bahasa Asing. Seharusnya Running title bahasa Asing adalah GEOGRAPHY AND CLIMATE",
+      "Perbaiki penulisan Penjelasan Teknis pada masing-masing BAB dalam Buku, Penjelasan teknis untuk Bahasa Indonesia dan Bahasa Asing urutan Penomorannya di buat sejajar",
+      "Perbaiki Penulisan Untuk jenis Huruf dan Ukuran Huruf pada Penjelasan Teknis harus sama baik jenis Huruf maupun Ukuran Huruf. Cek kembali Semua penjelasan teknis mulai dari BAB 1 sd BAB 7",
+      "Penulisan Pemisah angka desimal menggunakan tanda koma (,) perbaiki penulisan pemisah angka desimal pada Tabel 1.1 kolom 2 dan 3 sesuai ketentuan penulisan publikasi. CEK KEMBALI SEMUA ISIAN ANGKA UNTUK PEMISAH ANGKA DESIMAL PADA SETIAP TABEL DALAM BUKU",
+      "Perbaiki penulisan sumber pada setiap tabel dimulai dari BAB 1 sd BAB akhir dalam Buku. Seharusnya penulisan Sumber yang terdiri atas informasi nama instansi dituliskan Huruf pertama setiap kata dalam sumber tabel ditulis dengan huruf kapital (Capitalize Each Word), Seharusnya: Sumber/Source Dinas Pendidikan",
+      "CATATAN: Perbaiki PENULISAN SUMBER PADA SETIAP TABEL. APAKAH BENAR ADA DINAS TOTIKUM?",
+      "Perbaiki halaman isi. Hapus 1 halaman kosong sesudah penjelasan teknis. Aturan penulisan Publikasi untuk halaman isi yang berada pada halaman ganjil hanyalah Pembatas BAB dan Penjelasan Teknis, Cek kembali BAB 1 sd BAB 7",
+      "Karena Publikasi menggunakan 2 (dua) bahasa maka semua isi Pubikasi wajib menggunakan 2 bahasa yaitu bahasa Indonesia dan bahasa Asing. Perbaiki judul kolom 2 dan kolom 3 pada tabel 2.1.1. lengkapi dengan tulisan bahasa Asing",
+      "Perbaiki judul Tabel 2.2.2 lengkapi Judul tabel dengan menyebutkan Kecamatan buku tidak dengan menggunakan KATA XX. SEHARUSNYA DI TULISKAN KECAMATAN TOTIKIM. Cek kembali semua Judul Tabel dalam Publikasi, pastikan semua judul publikasi di tulis lengkap sesuai KECAMATAN",
+      "data pada Tabel 3.1 kolom 2 dan 4 kurang ke tengah. Perbaiki Margin kolom. Cek kembali data pada setiap tabel di setiap BAB perbaiki margin kolomnya",
+      "Penulisan Pemisah angka RIBUAN menggunakan tanda titik (.) perbaiki penulisan pemisah angka RIBUAN pada Tabel 3.1 kolom 2,3 dan 4 sesuai ketentuan penulisan publikasi. Seharusnya: menggunakan tanda titik (.) contoh 5.859. CEK KEMBALI SEMUA ISIAN ANGKA UNTUK PEMISAH ANGKA RIBUAN PADA SETIAP TABEL DALAM BUKU",
+      "Perbaiki pemberian satuan pada tabel lanjutan 3.1 kolom 3. Judul kolom 3, seharusnya satuannya (jiwa per km2)",
+      "Keterangan waktu dalam sebuah rentang ditulis dengan notasi En Dash “–“ tanpa spasi. Perbaiki penulisan keterangan kelompok umur pada tabel 3.2 kolom 1 dengan menggunakan En Dash “–“ tanpa spasi. Seharusnya: 0–4, 5–9",
+      "Perbaiki penulisan Kelompok umur pada Tabel 3.2 Kolom 1. Seharusnya 0–4, 5–9",
+      "Perbaiki penulisan sumber. Belum terdapat penulisan sumber dalam bahasa Asing dan harus di cetak miring. Cek kembali penulisan keterangan Sumber yang terdapat di bawah masing-masing tabel pada buku Publikasi mulai dari BAB 1 sd BAB 7. Contoh, pada Bab 3.1 pada keterangan sumber yang berada di bawah tabel belum menuliskan dalam bahasa Asing",
+      "jika datanya merupakan angka tidak ada atau 0 (Nol) maka menggunakan tanda En Dash “–“. Perbaiki semua penulisan angka 0 (nol) pada setiap angka-angka dalam tabel pada Publikasi. Contoh pada tabel 4.1.1 terdapat penulisan data angka 0 (nol) yang tidak menggunakan tanda En Dash “–“ Catatan: CEK KEMBALI dan Perbaiki untuk semua angka pada tabel dalam buku publikasi, dari BAB 1 sd BAB 7",
+      "Perbaiki judul Sub BAB pada masing-masing BAB, Ukuran dan jenis huruf judul bab/judul subbab harus sama dan konsisten di setiap BAB. Contoh pada penulisan judul sub BAB 4.1 PENDIDIKAN/EDUCATION. Cek kembali semua judul Sub BAB pada masing-masing BAB, mulai dari BAB 1 sd BAB 7",
+      "Perbaiki tabel 4.1.2 sd 4.1.4 untuk pemberian warnanya pada kolom 1",
+      "Perbaiki semua Jenis Huruf dan Ukuran jenis huruf yang digunakan dalam BUKU. Semua jenis Huruf dan Ukuran dalam Publikasi HARUS KONSISTEN dari BAB 1 sd BAB 7.",
+      "Ada kolom tabel yang berisi angka yang rata tengah, seharusnya menggunakan rata kanan dan diletakkan di tengah kolom, misalnya pada Tabel 5.2, 5.3, 5.4, 5.5, 5.6 Perhatikan tatacara penulisan tersebut pada semua tabel publikasi.",
+      "Perbaiki peletakan kolom pada tabel 6.2.1, tabel 7.2, 7.3. Pelatakan kolom harus rata sesuai dengan JUDUL TABEL",
+      "Kesalahan fatal pencantuman gambar placeholder ikon kamera: Pada halaman 29, 30, 37, 38, 47, 48, 58, 59, 74, 75, 88, 89, 98, 99 masih berupa kotak abu-abu placeholder ikon kamera bawaan template. Gambar Peta Wilayah Kecamatan (Gambar 1.1) belum dimasukkan, grafik Bab 2 s.d. Bab 7 belum dibuat, dan baris sumber masih berupa titik-titik (\"Sumber/Source : ....\"). Dilarang merilis publikasi yang masih memuat visual dummy template.",
+      "Data tabel belum diisi (masih kosong/elipsis): Seluruh sel data pada Tabel 2.2.1 (PNS Pemda), Tabel 3.1 (Penduduk per Desa), dan Tabel 3.2 (Kelompok Umur) masih berisi tanda titik-titik elipsis (\"...\") dan wajib dilengkapi sebelum dirilis.",
+      "Tabel pada halaman 5 (hal fisik 29): Baris Sumber/Source belum diisi (hanya memuat elipsis '...'). Wajib mencantumkan nama instansi resmi asal data.",
+      "Tabel pada halaman 6 (hal fisik 30): Saltik pada teks bahasa Inggris: Tertulis 'Subdistric' (kurang huruf 't', penulisan yang benar adalah 'Subdistrict').",
+      "Tabel pada halaman 6 (hal fisik 30): Penggunaan kata tidak baku 'ibukota'. Penulisan baku menurut KBBI dan pedoman BPS adalah 'ibu kota' (dipisah).",
+      "Tabel pada halaman 7 (hal fisik 31): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel pada halaman 7 (hal fisik 31): Baris Catatan/Note hanya memuat tanda elipsis '...' tanpa keterangan teknis apapun. Jika tidak ada catatan khusus, teks 'Catatan/Note:' wajib dihapus sepenuhnya.",
+      "Tabel pada halaman 7 (hal fisik 31): Kesalahan penulisan satuan luas '(km2)'. Sesuai kaidah baku tipografi BPS, wajib menggunakan simbol superskrip kuadrat '(km²)'.",
+      "Tabel pada halaman 8 (hal fisik 32): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 2.1.1 (hal 17): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 2.2.1 (hal 18): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 2.2.1 (hal 18): Data tabel kosong total / belum tersedia. Seluruh sel data numerik hanya menyajikan tanda elipsis ('…' atau '...'). Jika data tidak tersedia, tabel opsional sebaiknya tidak ditampilkan atau diisi data riil.",
+      "Tabel pada halaman 19 (hal fisik 41): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 3.1 (hal 27): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel Lanjutan 3.1 (hal 28): Posisi Catatan dan Sumber diletakkan di ATAS tabel sebelum header kolom. Sesuai standar BPS, blok Catatan dan Sumber wajib diletakkan di bagian bawah tabel.",
+      "Tabel Lanjutan 3.1 (hal 28): Penomoran kolom tabel melompat dari (1) langsung ke (5). Kolom (2) s.d. (4) hilang.",
+      "Tabel 3.2 (hal 29): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.1.1 (hal 38): Tanda superscript '1/' ditemukan pada header tabel tanpa penjelasan catatan kaki yang sesuai di bagian bawah tabel.",
+      "Tabel 4.1.2 (hal 39): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.1.3 (hal 40): Saltik pada judul tabel: Tertulis 'Kepalad Sekolah' (kelebihan huruf 'd', penulisan yang benar adalah 'Kepala Sekolah').",
+      "Tabel 4.3.1 (hal 43): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.3.2 (hal 44): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.4.1 (hal 45): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.1 (hal 54): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.3 (hal 56): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.5 (hal 58): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.7 (hal 60): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 6.1.1 (hal 68): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 6.2.1 (hal 69): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel."
+    ],
+    "Daftar Pustaka: -": [
+      "Perbaiki penulisan Running title pada daftra pustaka. Penulisan Running title adalah judul Bab yaitu Daftar Pustaka demikian pula dengan Bahasa Asing. Seharusnya Running title BIBLIOGRAPHY diletakkan di pojok kanan bawah",
+      "Perhatikan JENIS HURUF DAN UKURAN yang digunakan harus KONSISTEN dari awal penulisan isi buku"
+    ],
+    "Kover belakang: -": [
+      "Untuk publikasi buku yang sudah memiliki ISBN atau ISSN, wajib dicantumkan \nbarcode ISBN/ISSN.  Barcode ISBN/ISSN ditampilkan di sudut kanan bawah \ndengan ukuran yang proporsional dengan kover belakang"
+    ]
+  },
+  "Totikum Selatan": {
+    "Kover depan: -": [
+      "Perbaiki Penulisan JUDUL PUBLIKASI. Warna JUDUL PUBLIKASI diberi WARNA HITAM"
+    ],
+    "Halaman Judul Utama: -": [
+      "Pelanggaran format latar belakang Halaman Judul Utama: Memuat gambar/foto pemandangan alam (duplikasi visual kover depan). Merujuk pada Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.1 dan Template KCDA 2026 halaman 3, Halaman Judul Utama (halaman fisik 3 / Romawi i) WAJIB berlatar putih bersih tanpa ilustrasi.",
+      "Halaman Judul Utama dibuat tanpa Ilustrasi",
+      "Logo dan nama BPS Penerbit  HARUS DIBUAT BERWARNA",
+      "Ketentuan penulisan judul buku sama seperti pada kover depan",
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku.",
+      "Perbaiki Penulisan JUDUL PUBLIKASI. Warna JUDUL PUBLIKASI diberi WARNA HITAM"
+    ],
+    "Halaman katalog: -": [
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku. Lengkapi judul buku",
+      "Penulisan judul buku dalam Bahasa Asing harus di cetak miring",
+      "Edisi dicantumkan jika buku rutin atau memiliki ISSN. Ketentuan penulisan \nedisi sama seperti pada kover depan yaitu dibawah judul buku.",
+      "Perbaiki pencantuman Nomor ISSN pada halaman katalog seharusnya 2655-1012",
+      "Nomor Publikasi pada buku masih kosong. Seharusnya Nomor Publikasi sama dengan Nomor Publikasi pada website yaitu Nomor Publikasi: 72010.26008",
+      "Perbaiki penulisan jumlah halaman pada halaman katalog. Seharusnya Jumlah halaman romawi dan jumlah halaman arab adalah xx+64 halaman/pages",
+      "Penulisan Kata halaman pada halaman arab tidak boleh disingkat, Seharusnya halaman/pages",
+      "Catatan: Penulisan BPS HARUS LENGKAP. Seharusnya BADAN PUSAT STATSITIK, baik untuk Penyusun Naskah, Penyunting, Pembuat Kover, Penerbit",
+      "Perbaiki pencantuman Nomor Katalog pada halaman katalog seharusnya 1102001.7201031"
+    ],
+    "Halaman Tim Penyusun: -": [
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku.",
+      "Perbaiki pencantuman Nomor ISSN pada halaman katalog seharusnya 2655-1012",
+      "Perbaiki Penulisan JUDUL PUBLIKASI. Warna JUDUL PUBLIKASI diberi WARNA HITAM",
+      "CATATAN: Perbaiki JUDUL PUBLIKASI mulai dari Kover depan sd Judul Publikasi pada TIM PENYUSUN harus dibuat Konsisten baik UKURAN maupun JENIS HURUF"
+    ],
+    "Kata pengantar: -": [
+      "Kesalahan tahun pada narasi teks: Paragraf pertama teks Bahasa Indonesia tertulis \"Publikasi Kecamatan Totikum Selatan Dalam Angka 2025\" dan Bahasa Inggris tertulis \"... in Figures 2025\". Terjadi ketidaksinkronan tahun narasi dengan titimangsa \"Salakan, September 2026\". Koreksi seharusnya: Diselaraskan menjadi tahun 2026.",
+      "Wajib disertakan dengan tandan tangan pejabat baik kata pengantar dalam bahasa Indonesia maupun kata pengantar dalam bahasa Asing",
+      "Penulisan BPS dalam bahasa Asing dituliskan dengan lengkap, Seharusnya: Badan Pusat Statistik",
+      "Ruang tanda tangan pejabat masih kosong: Kolom tanda tangan Kepala BPS Kabupaten Banggai Kepulauan pada Kata Pengantar dan Preface belum dibubuhi tanda tangan. Wajib dibubuhi tanda tangan resmi sebelum publikasi dirilis."
+    ],
+    "Daftar Isi: -": [
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku.",
+      "Perbaiki Penulisan JUDUL PUBLIKASI. Warna JUDUL PUBLIKASI diberi WARNA HITAM",
+      "pada daftar isi terdapat keterangan halaman Daftar Gambar, akan tetapi dalam Buku pada Layout Isi tidak terdapat halaman Daftar Gambar, jadi perbaiki halaman Daftar ISI dengan menghapus 1 halaman daftar Gambar",
+      "Urutankan kembali pemberian halaman romawi pada Publikasi, dikarenakan ada 1 halaman daftar Gambar yang dihapus, sehingga penomoran halaman romawi berubah seharusnya total halaman romawi adalah xviii",
+      "Perbaiki pencantuman Nomor ISSN pada halaman katalog seharusnya 2655-1012"
+    ],
+    "Penjelasan Umum:": [
+      "Masih terdapat penulisan Kata dalam Bahasa Asing yang belum dicetak \nmiring. Seharusnya penulisannya: Not applicable, Estimated figure, Revised figures, Preliminary figures, Very preliminary figures, Very very preliminary figures"
+    ],
+    "Daftar Tabel/Gambar/Grafik/Lampiran:": [
+      "Kesalahan fatal visual gambar dummy/placeholder di seluruh bab: Ditemukan 14 lembar gambar (Gambar 1.1 s.d. Gambar 7.2) yang masih memuat kotak abu-abu placeholder ikon kamera bawaan template. Pada Gambar 1.1 (Peta Wilayah), gambar peta riil belum di-insert (masih kotak kamera kosong), judul Gambar 2.1 s.d. 7.2 masih berupa elipsis (\"...\"), dan keterangan sumber masih berupa titik-titik dummy (\"Sumber/Source : ....\"). Wajib dimasukkan visual gambar/peta riil beserta sumber valid, atau seluruh halaman gambar placeholder dihapus dari buku.",
+      "KETENTUAN DAFTAR GAMBAR ADALAH : Daftar gambar memuat urutan gambar (foto, grafik, diagram, ilustrasi, bagan, infografis, \ndan peta) yang berada di halaman isi, tidak termasuk gambar yang ada di halaman \npembatas, beserta nomor halamannya.",
+      "Hapus 1 Halaman DAFTAR GAMBAR Publikasi",
+      "Judul tabel bahasa indonesia dan bahasa inggis sudah benar dipisahkan barisnya, namun untuk nomor halamannya cukup diisikan pada bahasa inggrisnya saja, pada judul indonesia tidak perlu.",
+      "Perbaiki penulisan sumber dalam bahasa inggris seharusnya dicetak \nmiring. Cek kembali penulisan keterangan Sumber yang terdapat di bawah masing-masing tabel pada buku Publikasi mulai dari BAB 1 sd BAB akhir"
+    ],
+    "Layout Isi:": [
+      "Beberapa ketentuan running title:                                                                                      1. Running title terdiri atas judul buku dan judul Bab\nRunning title pada halaman genap berisi judul buku, sedangkan pada halaman ganjil berisi judul Bab\nRunning title dicantumkan mulai dari halaman isi sampai dengan halaman penutup(halaman arab)",
+      "Running title pada halaman ganjil berisi judul Bab, pada Publikasi judul BAB 1 adalah Geografi dan Iklim. Seharusnya penulisan Running title disesuaikan dengan Judul BAB yaitu Geografi dan Iklim demikian pula untuk penulisan Running title untuk bahasa Asing. Seharusnya Running title bahasa Asing adalah GEOGRAPHY AND CLIMATE",
+      "Perbaiki penulisan Penjelasan Teknis pada masing-masing BAB dalam Buku, Penjelasan teknis untuk Bahasa Indonesia dan Bahasa Asing urutan Penomorannya di buat sejajar",
+      "Perbaiki Penulisan Untuk jenis Huruf dan Ukuran Huruf pada Penjelasan Teknis harus sama baik jenis Huruf maupun Ukuran Huruf. Cek kembali Semua penjelasan teknis mulai dari BAB 1 sd BAB 7",
+      "Perbaiki penulisan Penjelasan Teknis pada masing-masing BAB dalam Buku, Penjelasan teknis untuk Bahasa Indonesia dan Bahasa Asing urutan Penomorannya di buat sejajar dan penomorannya harus KONSISTEN. Contoh Penjelasan Teknis pada BAB 1. untuk Bahasa Indonesia menggunakan Penomoran 1.1 sedangkan untuk pejelasan Bahasa Asing menggunakan penomoran 1. SEHARUSNYA PENOMORANNYA disamakan, apakah memakai 1.1 atau 1",
+      "Penulisan Pemisah angka desimal menggunakan tanda koma (,) perbaiki penulisan pemisah angka desimal pada Tabel 1.1 kolom 2 dan 3 sesuai ketentuan penulisan publikasi. CEK KEMBALI SEMUA ISIAN ANGKA UNTUK PEMISAH ANGKA DESIMAL PADA SETIAP TABEL DALAM BUKU",
+      "Perbaiki penulisan sumber pada setiap tabel dimulai dari BAB 1 sd BAB akhir dalam Buku. Seharusnya penulisan Sumber yang terdiri atas informasi nama instansi dituliskan Huruf pertama setiap kata dalam sumber tabel ditulis dengan huruf kapital (Capitalize Each Word), Seharusnya: Sumber/Source Dinas Pendidikan",
+      "CATATAN: Perbaiki PENULISAN SUMBER PADA SETIAP TABEL. APAKAH BENAR ADA DINAS TOTIKUM SELATAN?",
+      "Perbaiki halaman isi. Hapus 1 halaman kosong sesudah penjelasan teknis. Aturan penulisan Publikasi untuk halaman isi yang berada pada halaman ganjil hanyalah Pembatas BAB dan Penjelasan Teknis, Cek kembali BAB 2 sd BAB 7",
+      "Karena Publikasi menggunakan 2 (dua) bahasa maka semua isi Pubikasi wajib menggunakan 2 bahasa yaitu bahasa Indonesia dan bahasa Asing. Perbaiki judul kolom 2 dan kolom 3 pada tabel 2.1.1. lengkapi dengan tulisan bahasa Asing",
+      "jika datanya merupakan angka tidak ada atau 0 (Nol) maka menggunakan tanda En Dash “–“. Perbaiki semua penulisan angka 0 (nol) pada setiap angka-angka dalam tabel pada Publikasi. Contoh pada tabel 2.1.1 terdapat penulisan data angka 0 (nol) yang tidak menggunakan tanda En Dash “–“ Catatan: CEK KEMBALI dan Perbaiki untuk semua angka pada tabel dalam buku publikasi, dari BAB 1 sd BAB 7",
+      "Perbaiki Penempatan tabel 2.2.2 seharusnya antara Judul tabel dan Kolom Tabel berada dalam 1 halaman",
+      "Perbaiki judul Tabel 2.2.2 lengkapi Judul tabel dengan menyebutkan Kecamatan buku tidak dengan menggunakan KATA XX. SEHARUSNYA DI TULISKAN KECAMATAN TOTIKIM SELATAN. Cek kembali semua Judul Tabel dalam Publikasi, pastikan semua judul publikasi di tulis lengkap sesuai KECAMATAN",
+      "data pada Tabel 3.1 kolom 2 dan 4 kurang ke tengah. Perbaiki Margin kolom. Cek kembali data pada setiap tabel di setiap BAB perbaiki margin kolomnya",
+      "Perbaiki penulisan angka pada tabel lanjutan 3.1 kolom 2, satuan angka tidak perlu dituliskan di belakang angka, namun satuan angka diletakkan pada judul kolom seperti pada kolom 3",
+      "Perbaiki pemberian satuan pada tabel lanjutan 3.1 kolom 3. Judul kolom 3, seharusnya satuannya (jiwa per km2)",
+      "Keterangan waktu dalam sebuah rentang ditulis dengan notasi En Dash “–“ tanpa spasi. Perbaiki penulisan keterangan kelompok umur pada tabel 3.2 kolom 1 dengan menggunakan En Dash “–“ tanpa spasi. Seharusnya: 0–4, 5–9",
+      "Perbaiki penulisan Kelompok umur pada Tabel 3.2 Kolom 1. Seharusnya 0–4, 5–9",
+      "Perbaiki penulisan sumber. Belum terdapat penulisan sumber dalam bahasa Asing dan harus di cetak miring. Cek kembali penulisan keterangan Sumber yang terdapat di bawah masing-masing tabel pada buku Publikasi mulai dari BAB 1 sd BAB 7. Contoh, pada Bab 3.1 pada keterangan sumber yang berada di bawah tabel belum menuliskan dalam bahasa Asing",
+      "Penulisan Pemisah angka RIBUAN menggunakan tanda titik (.) perbaiki penulisan pemisah angka RIBUAN pada Tabel 3.1 kolom 2,3 dan 4 sesuai ketentuan penulisan publikasi. Seharusnya: menggunakan tanda titik (.) contoh 4.858. CEK KEMBALI SEMUA ISIAN ANGKA UNTUK PEMISAH ANGKA RIBUAN PADA SETIAP TABEL DALAM BUKU",
+      "Perbaiki judul Sub BAB pada masing-masing BAB, Ukuran dan jenis huruf judul bab/judul subbab harus sama dan konsisten di setiap BAB. Contoh pada penulisan judul sub BAB 4.1 PENDIDIKAN/EDUCATION. Cek kembali semua judul Sub BAB pada masing-masing BAB, mulai dari BAB 1 sd BAB 7",
+      "Perbaiki tabel 4.1.2 sd 4.1.4 untuk pemberian warnanya pada kolom 1",
+      "Perbaiki semua Jenis Huruf dan Ukuran jenis huruf yang digunakan dalam BUKU. Semua jenis Huruf dan Ukuran dalam Publikasi HARUS KONSISTEN dari BAB 1 sd BAB 7.",
+      "Kesalahan fatal pencantuman gambar placeholder ikon kamera: Pada halaman 29, 30, 37, 38, 47, 48, 58, 59, 74, 75, 88, 89, 98, 99 masih berupa kotak abu-abu placeholder ikon kamera bawaan template. Gambar Peta Wilayah Kecamatan (Gambar 1.1) belum dimasukkan, grafik Bab 2 s.d. Bab 7 belum dibuat, dan baris sumber masih berupa titik-titik (\"Sumber/Source : ....\"). Dilarang merilis publikasi yang masih memuat visual dummy template.",
+      "Kesalahan perataan data angka tabel (alignment): Seluruh sel data tabel berupa angka diatur rata tengah (center-aligned). Sesuai Pedoman Pembuatan Publikasi 2023 Hal. 110 poin h, isi tabel berupa angka wajib menggunakan rata kanan kemudian diatur di tengah kolom (right aligned with indent) agar digit satuan, puluhan, ratusan, serta tanda koma desimal sejajar lurus secara vertikal.",
+      "Data tabel belum diisi (masih kosong/elipsis): Seluruh sel data pada Tabel 2.2.1 (PNS Pemda), Tabel 3.1 (Penduduk per Desa), dan Tabel 3.2 (Kelompok Umur) masih berisi tanda titik-titik elipsis (\"...\") dan wajib dilengkapi sebelum dirilis.",
+      "Tabel pada halaman 5 (hal fisik 29): Baris Sumber/Source belum diisi (hanya memuat elipsis '...'). Wajib mencantumkan nama instansi resmi asal data.",
+      "Tabel pada halaman 6 (hal fisik 30): Saltik pada teks bahasa Inggris: Tertulis 'Subdistric' (kurang huruf 't', penulisan yang benar adalah 'Subdistrict').",
+      "Tabel pada halaman 6 (hal fisik 30): Penggunaan kata tidak baku 'ibukota'. Penulisan baku menurut KBBI dan pedoman BPS adalah 'ibu kota' (dipisah).",
+      "Tabel pada halaman 7 (hal fisik 31): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel pada halaman 7 (hal fisik 31): Baris Catatan/Note hanya memuat tanda elipsis '...' tanpa keterangan teknis apapun. Jika tidak ada catatan khusus, teks 'Catatan/Note:' wajib dihapus sepenuhnya.",
+      "Tabel pada halaman 7 (hal fisik 31): Kesalahan penulisan satuan luas '(km2)'. Sesuai kaidah baku tipografi BPS, wajib menggunakan simbol superskrip kuadrat '(km²)'.",
+      "Tabel pada halaman 8 (hal fisik 32): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 2.1.1 (hal 17): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 2.2.1 (hal 18): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 2.2.1 (hal 18): Data tabel kosong total / belum tersedia. Seluruh sel data numerik hanya menyajikan tanda elipsis ('…' atau '...'). Jika data tidak tersedia, tabel opsional sebaiknya tidak ditampilkan atau diisi data riil.",
+      "Tabel pada halaman 19 (hal fisik 41): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 3.1 (hal 27): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel Lanjutan 3.1 (hal 28): Posisi Catatan dan Sumber diletakkan di ATAS tabel sebelum header kolom. Sesuai standar BPS, blok Catatan dan Sumber wajib diletakkan di bagian bawah tabel.",
+      "Tabel Lanjutan 3.1 (hal 28): Penomoran kolom tabel melompat dari (1) langsung ke (5). Kolom (2) s.d. (4) hilang.",
+      "Tabel 3.2 (hal 29): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.1.1 (hal 38): Tanda superscript '1/' ditemukan pada header tabel tanpa penjelasan catatan kaki yang sesuai di bagian bawah tabel.",
+      "Tabel 4.1.2 (hal 39): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.1.3 (hal 40): Saltik pada judul tabel: Tertulis 'Kepalad Sekolah' (kelebihan huruf 'd', penulisan yang benar adalah 'Kepala Sekolah').",
+      "Tabel 4.3.1 (hal 43): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.3.2 (hal 44): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.4.1 (hal 45): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.1 (hal 54): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.3 (hal 56): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.5 (hal 58): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.7 (hal 60): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 6.1.1 (hal 68): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 6.2.1 (hal 69): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel."
+    ],
+    "Daftar Pustaka: -": [],
+    "Kover belakang: -": []
+  },
+  "Peling": {
+    "Kover depan: -": [],
+    "Halaman Judul Utama: -": [
+      "Pelanggaran format latar belakang Halaman Judul Utama: Memuat gambar/foto pemandangan alam (duplikasi visual kover depan). Merujuk pada Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.1 dan Template KCDA 2026 halaman 3, Halaman Judul Utama (halaman fisik 3 / Romawi i) WAJIB berlatar putih bersih tanpa ilustrasi.",
+      "Halaman Judul Utama dibuat tanpa Ilustrasi",
+      "Logo dan nama BPS Penerbit  HARUS DIBUAT BERWARNA",
+      "Ketentuan penulisan judul buku sama seperti pada kover depan",
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku."
+    ],
+    "Halaman katalog: -": [
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku. Lengkapi judul buku",
+      "Penulisan judul buku dalam Bahasa Asing harus di cetak miring",
+      "Edisi dicantumkan jika buku rutin atau memiliki ISSN. Ketentuan penulisan \nedisi sama seperti pada kover depan yaitu dibawah judul buku.",
+      "Nomor Publikasi pada buku masih kosong. Seharusnya Nomor Publikasi sama dengan Nomor Publikasi pada website yaitu Nomor Publikasi: 72010.26013",
+      "Perbaiki penulisan jumlah halaman pada halaman katalog. Seharusnya Jumlah halaman romawi adalah xviii",
+      "Penulisan Kata halaman pada halaman arab tidak boleh disingkat, Seharusnya halaman/pages",
+      "Catatan: Penulisan BPS HARUS LENGKAP. Seharusnya BADAN PUSAT STATSITIK, baik untuk Penyusun Naskah, Penyunting, Pembuat Kover, Penerbit"
+    ],
+    "Halaman Tim Penyusun: -": [
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku.",
+      "CATATAN: Perbaiki JUDUL PUBLIKASI mulai dari Kover depan sd Judul Publikasi pada TIM PENYUSUN harus dibuat Konsisten baik UKURAN maupun JENIS HURUF"
+    ],
+    "Kata pengantar: -": [
+      "Kesalahan tahun pada narasi teks: Paragraf pertama teks Bahasa Indonesia tertulis \"Publikasi Kecamatan Peling Dalam Angka 2025\" dan Bahasa Inggris tertulis \"... in Figures 2025\". Terjadi ketidaksinkronan tahun narasi dengan titimangsa \"Salakan, September 2026\". Koreksi seharusnya: Diselaraskan menjadi tahun 2026.",
+      "Wajib disertakan dengan tandan tangan pejabat baik kata pengantar dalam bahasa Indonesia maupun kata pengantar dalam bahasa Asing",
+      "Penulisan BPS dalam bahasa Asing dituliskan dengan lengkap, Seharusnya: Badan Pusat Statistik",
+      "Ruang tanda tangan pejabat masih kosong: Kolom tanda tangan Kepala BPS Kabupaten Banggai Kepulauan pada Kata Pengantar dan Preface belum dibubuhi tanda tangan. Wajib dibubuhi tanda tangan resmi sebelum publikasi dirilis."
+    ],
+    "Daftar Isi: -": [
+      "Penulisan judul buku harus konsisten di semua bagian publikasi, yaitu pada \nkover depan, halaman judul utama, halaman katalog, halaman tim penyusun, \nhalaman daftar isi, running title, dan halaman lain yang menyebutkan judul \nbuku.",
+      "pada daftar isi terdapat keterangan halaman Daftar Gambar, akan tetapi dalam Buku pada Layout Isi tidak terdapat halaman Daftar Gambar, jadi perbaiki halaman Daftar ISI dengan menghapus halaman daftar Gambar pada daftar ISI",
+      "Hapus halaman daftar Gambar pada halaman Daftar ISI",
+      "Perbaiki penulisan bahasa asing pada Daftar Isi, penulisan kata bahasa Inggirs HARUS DICETAK MIRING. Contoh: Penjelasan Umum/Explanatory Notes. Cek dan Pebaiki kembali semua penulisan Bahasa Asing pada daftar ISI"
+    ],
+    "Penjelasan Umum:": [
+      "Masih terdapat penulisan Kata dalam Bahasa Asing yang belum dicetak \nmiring. Seharusnya penulisannya: Not applicable, Estimated figure, Revised figures, Preliminary figures, Very preliminary figures, Very very preliminary figures"
+    ],
+    "Daftar Tabel/Gambar/Grafik/Lampiran:": [
+      "Kesalahan fatal visual gambar dummy/placeholder di seluruh bab: Ditemukan 14 lembar gambar (Gambar 1.1 s.d. Gambar 7.2) yang masih memuat kotak abu-abu placeholder ikon kamera bawaan template. Pada Gambar 1.1 (Peta Wilayah), gambar peta riil belum di-insert (masih kotak kamera kosong), judul Gambar 2.1 s.d. 7.2 masih berupa elipsis (\"...\"), dan keterangan sumber masih berupa titik-titik dummy (\"Sumber/Source : ....\"). Wajib dimasukkan visual gambar/peta riil beserta sumber valid, atau seluruh halaman gambar placeholder dihapus dari buku.",
+      "KETENTUAN DAFTAR GAMBAR ADALAH : Daftar gambar memuat urutan gambar (foto, grafik, diagram, ilustrasi, bagan, infografis, \ndan peta) yang berada di halaman isi, tidak termasuk gambar yang ada di halaman \npembatas, beserta nomor halamannya.",
+      "Judul tabel bahasa indonesia dan bahasa inggis sudah benar dipisahkan barisnya, namun untuk nomor halamannya cukup diisikan pada bahasa inggrisnya saja, pada judul indonesia tidak perlu.",
+      "Perbaiki penulisan sumber dalam bahasa inggris seharusnya dicetak \nmiring. Cek kembali penulisan keterangan Sumber yang terdapat di bawah masing-masing tabel pada buku Publikasi mulai dari BAB 1 sd BAB akhir"
+    ],
+    "Layout Isi:": [
+      "Beberapa ketentuan running title:                                                                                      1. Running title terdiri atas judul buku dan judul Bab\nRunning title pada halaman genap berisi judul buku, sedangkan pada halaman ganjil berisi judul Bab\nRunning title dicantumkan mulai dari halaman isi sampai dengan halaman penutup(halaman arab)",
+      "Running title pada halaman ganjil berisi judul Bab, pada Publikasi judul BAB 1 adalah Geografi dan Iklim. Seharusnya penulisan Running title disesuaikan dengan Judul BAB yaitu Geografi dan Iklim demikian pula untuk penulisan Running title untuk bahasa Asing. Seharusnya Running title bahasa Asing adalah GEOGRAPHY AND CLIMATE",
+      "Perbaiki penulisan Penjelasan Teknis pada masing-masing BAB dalam Buku, Penjelasan teknis untuk Bahasa Indonesia dan Bahasa Asing urutan Penomorannya di buat sejajar",
+      "Perbaiki halaman isi. Hapus 1 halaman kosong sesudah penjelasan teknis. Aturan penulisan Publikasi untuk halaman isi yang berada pada halaman ganjil hanyalah Pembatas BAB dan Penjelasan Teknis, Cek kembali BAB 1 sd BAB 7",
+      "Perbaiki Penulisan Untuk jenis Huruf dan Ukuran Huruf pada Penjelasan Teknis harus sama baik jenis Huruf maupun Ukuran Huruf. Cek kembali Semua penjelasan teknis mulai dari BAB 1 sd BAB 7",
+      "Perbaiki penulisan Penjelasan Teknis pada masing-masing BAB dalam Buku, Penjelasan teknis untuk Bahasa Indonesia dan Bahasa Asing urutan Penomorannya di buat sejajar, perhatikan semua penjelasan Teknis mulai dari BAB 1 sd BAB 7. Lihat contoh pada penjelasan Teknis BAB 1",
+      "jika datanya merupakan angka tidak ada atau 0 (Nol) maka menggunakan tanda En Dash “–“. Perbaiki semua penulisan angka 0 (nol) pada setiap angka-angka dalam tabel pada Publikasi. Contoh pada tabel 2.1.1 kolom 3 terdapat penulisan data angka 0 (nol) yang tidak menggunakan tanda En Dash “–“ Catatan: CEK KEMBALI dan Perbaiki untuk semua angka pada tabel dalam buku publikasi, dari BAB 1 sd BAB 7",
+      "Penulisan Pemisah angka desimal menggunakan tanda koma (,) perbaiki penulisan pemisah angka desimal pada Tabel 1.1 kolom 2 dan 3 sesuai ketentuan penulisan publikasi. CEK KEMBALI SEMUA ISIAN ANGKA UNTUK PEMISAH ANGKA DESIMAL PADA SETIAP TABEL DALAM BUKU",
+      "Karena Publikasi menggunakan 2 (dua) bahasa maka semua isi Pubikasi wajib menggunakan 2 bahasa yaitu bahasa Indonesia dan bahasa Asing. Perbaiki judul kolom 2 dan kolom 3 pada tabel 2.1.1. lengkapi dengan tulisan bahasa Asing",
+      "Keterangan waktu dalam sebuah rentang ditulis dengan notasi En Dash “–“ tanpa spasi. Perbaiki penulisan keterangan kelompok umur pada tabel 3.2 kolom 1 dengan menggunakan En Dash “–“ tanpa spasi. Seharusnya: 0–4, 5–9",
+      "Perbaiki penulisan Kelompok umur pada Tabel 3.2 Kolom 1. Seharusnya 0–4, 5–9",
+      "Perbaiki pemberian satuan pada tabel lanjutan 3.1 kolom 3. Judul kolom 3, seharusnya satuannya (jiwa per km2)",
+      "Perbaiki judul Sub BAB pada masing-masing BAB, Ukuran dan jenis huruf judul bab/judul subbab harus sama dan konsisten di setiap BAB. Contoh pada penulisan judul sub BAB 4.1 PENDIDIKAN/EDUCATION. Cek kembali semua judul Sub BAB pada masing-masing BAB, mulai dari BAB 1 sd BAB 7",
+      "Perbaiki semua Jenis Huruf dan Ukuran jenis huruf yang digunakan dalam BUKU. Semua jenis Huruf dan Ukuran dalam Publikasi HARUS KONSISTEN dari BAB 1 sd BAB 7.",
+      "Perbaiki tabel 4.1.2 sd 4.1.4 untuk pemberian warnanya pada kolom 1",
+      "Perbaiki peletakan kolom pada tabel 6.2.1 Pelatakan kolom harus rata sesuai dengan JUDUL TABEL",
+      "Perbaiki Tabel 6.1.1 kolom 1 untuk keterangan Akomodasi HOTEL, belum dilengkapi dengan penulisan bahasa Asing",
+      "Kesalahan fatal pencantuman gambar placeholder ikon kamera: Pada halaman 29, 30, 37, 38, 47, 48, 58, 59, 74, 75, 88, 89, 98, 99 masih berupa kotak abu-abu placeholder ikon kamera bawaan template. Gambar Peta Wilayah Kecamatan (Gambar 1.1) belum dimasukkan, grafik Bab 2 s.d. Bab 7 belum dibuat, dan baris sumber masih berupa titik-titik (\"Sumber/Source : ....\"). Dilarang merilis publikasi yang masih memuat visual dummy template.",
+      "Kesalahan perataan data angka tabel (alignment): Seluruh sel data tabel berupa angka diatur rata tengah (center-aligned). Sesuai Pedoman Pembuatan Publikasi 2023 Hal. 110 poin h, isi tabel berupa angka wajib menggunakan rata kanan kemudian diatur di tengah kolom (right aligned with indent) agar digit satuan, puluhan, ratusan, serta tanda koma desimal sejajar lurus secara vertikal.",
+      "Data tabel belum diisi (masih kosong/elipsis): Seluruh sel data pada Tabel 2.2.1 (PNS Pemda), Tabel 3.1 (Penduduk per Desa), dan Tabel 3.2 (Kelompok Umur) masih berisi tanda titik-titik elipsis (\"...\") dan wajib dilengkapi sebelum dirilis.",
+      "Tabel pada halaman 5 (hal fisik 29): Baris Sumber/Source belum diisi (hanya memuat elipsis '...'). Wajib mencantumkan nama instansi resmi asal data.",
+      "Tabel pada halaman 6 (hal fisik 30): Saltik pada teks bahasa Inggris: Tertulis 'Subdistric' (kurang huruf 't', penulisan yang benar adalah 'Subdistrict').",
+      "Tabel pada halaman 6 (hal fisik 30): Penggunaan kata tidak baku 'ibukota'. Penulisan baku menurut KBBI dan pedoman BPS adalah 'ibu kota' (dipisah).",
+      "Tabel pada halaman 7 (hal fisik 31): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel pada halaman 7 (hal fisik 31): Baris Catatan/Note hanya memuat tanda elipsis '...' tanpa keterangan teknis apapun. Jika tidak ada catatan khusus, teks 'Catatan/Note:' wajib dihapus sepenuhnya.",
+      "Tabel pada halaman 7 (hal fisik 31): Kesalahan penulisan satuan luas '(km2)'. Sesuai kaidah baku tipografi BPS, wajib menggunakan simbol superskrip kuadrat '(km²)'.",
+      "Tabel pada halaman 8 (hal fisik 32): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 2.1.1 (hal 15): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 2.2.1 (hal 16): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 2.2.1 (hal 16): Data tabel kosong total / belum tersedia. Seluruh sel data numerik hanya menyajikan tanda elipsis ('…' atau '...'). Jika data tidak tersedia, tabel opsional sebaiknya tidak ditampilkan atau diisi data riil.",
+      "Tabel pada halaman 17 (hal fisik 41): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 3.1 (hal 25): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel Lanjutan 3.1 (hal 26): Posisi Catatan dan Sumber diletakkan di ATAS tabel sebelum header kolom. Sesuai standar BPS, blok Catatan dan Sumber wajib diletakkan di bagian bawah tabel.",
+      "Tabel Lanjutan 3.1 (hal 26): Penomoran kolom tabel melompat dari (1) langsung ke (5). Kolom (2) s.d. (4) hilang.",
+      "Tabel 3.2 (hal 27): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.1.1 (hal 36): Tanda superscript '1/' ditemukan pada header tabel tanpa penjelasan catatan kaki yang sesuai di bagian bawah tabel.",
+      "Tabel 4.1.2 (hal 37): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.1.3 (hal 38): Saltik pada judul tabel: Tertulis 'Kepalad Sekolah' (kelebihan huruf 'd', penulisan yang benar adalah 'Kepala Sekolah').",
+      "Tabel 4.3.1 (hal 41): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.3.2 (hal 42): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.4.1 (hal 43): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.1 (hal 52): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.3 (hal 54): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.5 (hal 56): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.7 (hal 58): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 6.1.1 (hal 66): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 6.2.1 (hal 67): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel."
+    ],
+    "Daftar Pustaka: -": [
+      "Perbaiki penulisan Running title pada daftra pustaka. Penulisan Running title adalah judul Bab yaitu Daftar Pustaka demikian pula dengan Bahasa Asing. Seharusnya Running title BIBLIOGRAPHY diletakkan di pojok kanan bawah",
+      "Perhatikan JENIS HURUF DAN UKURAN yang digunakan harus KONSISTEN dari awal penulisan isi buku"
+    ],
+    "Kover belakang: -": [
+      "Untuk publikasi buku yang sudah memiliki ISBN atau ISSN, wajib dicantumkan \nbarcode ISBN/ISSN.  Barcode ISBN/ISSN ditampilkan di sudut kanan bawah \ndengan ukuran yang proporsional dengan kover belakang"
+    ]
+  },
+  "Liang": {
+    "Kover depan: -": [
+      "Kesalahan spasi pada nomor katalog: Tertulis \"Katalog/Catalogue : 1102001.7201050\" (terdapat spasi sebelum tanda titik dua). Koreksi seharusnya: \"Katalog/Catalogue: 1102001.7201050\".",
+      "Nomor ISSN tidak dicantumkan pada kover depan: Publikasi berkala yang memiliki ISSN resmi (2655-1039) wajib mencantumkan tulisan \"ISSN 2655-1039\" tanpa tanda titik dua di pojok kanan atas kover depan di atas nomor katalog (Pedoman hal. 35 & Instrumen baris 13).",
+      "Kesalahan tipografi judul bahasa Inggris: Terjemahan judul \"XXXXX DISTRICT IN FIGURES 2026\" pada kover depan belum dicetak miring (masih reguler/tegak). Sesuai kaidah publikasi dwibahasa BPS (Pedoman 2023 hal. 58 & Instrumen baris 8), terjemahan judul bahasa asing wajib dicetak miring (italic).",
+      "Terdapat teks placeholder template yang belum dihapus di bagian bawah kover depan: tertulis \"XXXXX Dalam Angka 2024\". Harap bersihkan seluruh teks sisa template tersebut."
+    ],
+    "Halaman Judul Utama: -": [
+      "Pelanggaran format latar belakang Halaman Judul Utama: Memuat gambar/foto latar belakang ilustrasi / pemandangan alam (duplikasi visual kover depan). Berdasarkan Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.1 (hal. 36), Template KCDA 2026 halaman 3, dan Instrumen Pemeriksaan Publikasi baris 17, Halaman Judul Utama (halaman fisik 3 / Romawi i) WAJIB berlatar putih bersih tanpa ilustrasi.",
+      "Kesalahan warna logo BPS: Logo BPS dan identitas BPS Penerbit pada Halaman Judul Utama ditampilkan monokrom/grayscale. Sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.1 (hal. 36) & Instrumen Pemeriksaan baris 21, logo dan nama BPS penerbit pada Halaman Judul Utama wajib ditampilkan berwarna (biru dan hijau BPS).",
+      "Nomor ISSN tidak dicantumkan di pojok kanan atas halaman judul utama: Publikasi berkala yang memiliki ISSN resmi (2655-1039) wajib mencantumkan tulisan \"ISSN 2655-1039\" di pojok kanan atas (di atas baris nomor katalog) tanpa tanda titik dua (Pedoman 2023 hal. 35 & Instrumen baris 18)."
+    ],
+    "Halaman katalog: -": [
+      "Kesalahan tanda baca pada baris Katalog: Tertulis \"Katalog /Catalogue: 1102001.7201050\" (terdapat spasi sebelum garis miring \"/\"). Penulisan baku ditulis rapat tanpa spasi sebelum dan sesudah garis miring (\"Katalog/Catalogue: 1102001.7201050\").",
+      "Nomor Publikasi belum diisi: Baris \"Nomor Publikasi/Publication Number\" masih berisi tanda strip (\"-\") atau kosong. Wajib mencantumkan nomor publikasi resmi BPS (contoh format: 72010.260xx).",
+      "Kesalahan penulisan Jumlah Halaman: Tertulis \"Jumlah Halaman/Number of Pages : xxii+82 hal/pages\". Terdapat beberapa kesalahan: (1) Kata \"halaman\" disingkat \"hal\", seharusnya ditulis lengkap \"halaman/pages\"; (2) Halaman terakhir yang memuat materi isi buku adalah halaman 81 (Daftar Pustaka), bukan 82 (halaman 82 adalah halaman kosong penyelarasan); (3) Terdapat spasi sebelum tanda titik dua (:). Penulisan yang benar adalah \"Jumlah Halaman/Number of Pages: xxii+81 halaman/pages\"."
+    ],
+    "Halaman Tim Penyusun: -": [
+      "Jabatan Persons in Charge dalam bahasa Inggris keliru bentuk jamak: tertulis \"Persons in Charge\", seharusnya bentuk tunggal standar BPS yaitu \"Person In Charge\".",
+      "Jabatan Editors dalam bahasa Inggris keliru bentuk jamak: tertulis \"Editors\", seharusnya bentuk tunggal standar BPS yaitu \"Editor\".",
+      "Jabatan Writers dalam bahasa Inggris keliru bentuk jamak: tertulis \"Writers\", seharusnya bentuk tunggal standar BPS yaitu \"Writer\".",
+      "Jabatan Layouters dalam bahasa Inggris keliru bentuk jamak: tertulis \"Layouters\", seharusnya bentuk tunggal standar BPS yaitu \"Layouter\".",
+      "Jabatan Translators dalam bahasa Inggris keliru bentuk jamak: tertulis \"Translators\", seharusnya bentuk tunggal standar BPS yaitu \"Translator\".",
+      "Jabatan Penulis Naskah dan Pengolah Data digabung: Sesuai Pedoman BPS 2023 (Instrumen baris 42), wajib dipisahkan menjadi \"Penulis Naskah/Writer\" dan \"Pengolah Data/Data Processor\"."
+    ],
+    "Kata pengantar: -": [
+      "Kesalahan tahun pada narasi teks: Paragraf pertama teks Bahasa Indonesia tertulis \"Publikasi Kecamatan Xxxxx Dalam Angka 2025\" dan teks Bahasa Inggris (Preface) tertulis \"The publication Xxxxx District in Figures 2025\". Terjadi ketidaksinkronan tahun narasi dengan titimangsa \"Salakan, September 2026\". Koreksi seharusnya: Tahun diselaraskan menjadi tahun 2026 (\"... Dalam Angka 2026\" dan \"... in Figures 2026\").",
+      "Ruang tanda tangan pejabat masih kosong: Kolom tanda tangan Kepala BPS pada Kata Pengantar dan Preface belum dibubuhi tanda tangan. Koreksi seharusnya: Wajib dibubuhi tanda tangan resmi (digital/basah) sebelum publikasi dirilis.",
+      "Penulisan jabatan penandatangan bahasa Indonesia disingkat: tertulis \"Kepala BPS Kabupaten...\". Sesuai aturan baku BPS (Instrumen baris 59), penulisan tidak boleh disingkat, yang benar adalah \"Kepala Badan Pusat Statistik Kabupaten...\"."
+    ],
+    "Daftar Isi: -": [
+      "Ketidaksinkronan nomor halaman pada Daftar Isi dengan halaman riil buku: (1) Daftar Gambar tertulis di hal xix, padahal di halaman riil buku tertulis hal xvii; (2) Penjelasan Umum tertulis di hal xxi, padahal di halaman riil tertulis hal xix; (3) Daftar Singkatan tertulis di hal xxiii, padahal di halaman riil tertulis hal xxi; (4) Daftar Pustaka tertulis di hal 83, padahal posisi riil berada di halaman 81.",
+      "Kesalahan tipografi istilah bahasa asing pada Daftar Isi: Kata \"Preface\" dan istilah bahasa Inggris lainnya belum dicetak miring (masih reguler/tegak). Sesuai kaidah dwibahasa BPS, istilah bahasa asing wajib dicetak miring (italic).",
+      "Placeholder titik-titik pada judul gambar: Judul Gambar 2.1 s.d. Gambar 7.2 pada Daftar Isi masih berupa tanda titik-titik (\"...\"). Sesuai Pedoman Pembuatan Publikasi BPS 2023 Hal. 86 poin 3, Daftar Gambar dibuat apabila minimal ada tiga gambar di dalam buku. Karena buku ini hanya memuat 2 gambar riil, maka baris \"Daftar Gambar/List of Figures\" pada Daftar Isi harus dihapus dan nomor halaman romawi disesuaikan.",
+      "Ketidaksinkronan rujukan nomor halaman pada Daftar Isi: \"Daftar Singkatan\" pada Daftar Isi merujuk ke halaman xxiii, tetapi halaman fisik riil adalah ix.",
+      "Rujukan nomor halaman bab di Daftar Isi keliru merujuk ke halaman pembatas bab (Bab 1 ke hal 1, Bab 2 ke hal 11, Bab 3 ke hal 21, Bab 4 ke hal 31, Bab 5 ke hal 49). Sesuai Pedoman BPS 2023, seluruh rujukan nomor halaman bab wajib merujuk ke halaman pertama materi isi bab, bukan ke halaman pembatas bab."
+    ],
+    "Penjelasan Umum:": [],
+    "Daftar Tabel/Gambar/Grafik/Lampiran:": [
+      "Kesalahan fatal visual gambar dummy/placeholder di seluruh bab: Ditemukan 14 lembar gambar (Gambar 1.1 s.d. Gambar 7.2) yang masih memuat kotak abu-abu placeholder ikon kamera bawaan template. Pada Gambar 1.1 (Peta Wilayah), gambar peta riil belum di-insert (masih kotak kamera kosong), judul Gambar 2.1 s.d. 7.2 masih berupa elipsis (\"...\"), dan keterangan sumber masih berupa titik-titik dummy (\"Sumber/Source : ....\"). Wajib dimasukkan visual gambar/peta riil beserta sumber valid, atau seluruh halaman gambar placeholder dihapus dari buku.",
+      "Pelanggaran batas minimal gambar pada Daftar Gambar: Merujuk pada Pedoman Pembuatan Publikasi 2023 Bab 4.3.9 poin 3 & Instrumen baris 87, lembar Daftar Gambar hanya disajikan jika terdapat minimal 3 gambar riil dalam publikasi. Karena publikasi ini belum memiliki gambar riil (seluruhnya masih berupa kotak placeholder), maka lembar halaman Daftar Gambar (halaman xvii–xviii) wajib ditiadakan/dihapus dari buku.",
+      "Judul gambar pada Daftar Gambar masih berupa placeholder titik-titik \"...\". Judul seluruh grafik dan infografis wajib didefinisikan secara substantif."
+    ],
+    "Layout Isi:": [
+      "Kesalahan fatal pencantuman gambar placeholder ikon kamera: Pada halaman 29, 30, 37, 38, 47, 48, 58, 59, 74, 75, 88, 89, 98, 99 masih berupa kotak abu-abu placeholder ikon kamera bawaan template. Gambar Peta Wilayah Kecamatan (Gambar 1.1) belum dimasukkan, grafik Bab 2 s.d. Bab 7 belum dibuat, dan baris sumber masih berupa titik-titik (\"Sumber/Source : ....\"). Dilarang merilis publikasi yang masih memuat visual dummy template.",
+      "Kesalahan perataan data angka tabel (alignment): Seluruh sel data tabel berupa angka diatur rata tengah (center-aligned). Sesuai Pedoman Pembuatan Publikasi 2023 Hal. 110 poin h, isi tabel berupa angka wajib menggunakan rata kanan kemudian diatur di tengah kolom (right aligned with indent) agar digit satuan, puluhan, ratusan, serta tanda koma desimal sejajar lurus secara vertikal.",
+      "Kesalahan posisi Catatan dan Sumber pada Lanjutan Tabel 3.1: Diletakkan terbalik di bagian atas tabel sebelum kepala kolom. Berdasarkan Gambar 40 Pedoman Publikasi BPS 2023, Catatan dan Sumber wajib diletakkan di bagian paling bawah tabel setelah seluruh baris data selesai.",
+      "Baris catatan tidak substantif: Ditemukan baris \"Catatan/Note: ...\" yang hanya memuat titik-titik kosong tanpa teks penjelasan pada beberapa tabel (contoh: Tabel 1.1, Tabel 1.2, Tabel 2.1.1). Baris tersebut wajib dihapus.",
+      "Kesalahan penulisan nilai nihil: Masih ditemukan penggunaan angka \"0\" untuk data nihil pada tabel, seharusnya menggunakan notasi En Dash \"–\" tanpa spasi sesuai standardisasi BPS.",
+      "Data tabel belum diisi (masih kosong/elipsis): Seluruh sel data pada Tabel 2.2.1 (PNS Pemda), Tabel 3.1 (Penduduk per Desa), dan Tabel 3.2 (Kelompok Umur) masih berisi tanda titik-titik elipsis (\"…\") dan wajib dilengkapi sebelum dirilis.",
+      "Tabel pada halaman 5 (hal fisik 29): Baris Sumber/Source belum diisi (hanya memuat elipsis '...'). Wajib mencantumkan nama instansi resmi asal data.",
+      "Tabel pada halaman 6 (hal fisik 30): Saltik pada teks bahasa Inggris: Tertulis 'Subdistric' (kurang huruf 't', penulisan yang benar adalah 'Subdistrict').",
+      "Tabel pada halaman 6 (hal fisik 30): Penggunaan kata tidak baku 'ibukota'. Penulisan baku menurut KBBI dan pedoman BPS adalah 'ibu kota' (dipisah).",
+      "Tabel pada halaman 7 (hal fisik 31): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel pada halaman 7 (hal fisik 31): Baris Catatan/Note hanya memuat tanda elipsis '...' tanpa keterangan teknis apapun. Jika tidak ada catatan khusus, teks 'Catatan/Note:' wajib dihapus sepenuhnya.",
+      "Tabel pada halaman 7 (hal fisik 31): Kesalahan penulisan satuan luas '(km2)'. Sesuai kaidah baku tipografi BPS, wajib menggunakan simbol superskrip kuadrat '(km²)'.",
+      "Tabel pada halaman 8 (hal fisik 32): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 2.1.1 (hal 15): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 2.2.1 (hal 16): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 2.2.1 (hal 16): Data tabel kosong total / belum tersedia. Seluruh sel data numerik hanya menyajikan tanda elipsis ('…' atau '...'). Jika data tidak tersedia, tabel opsional sebaiknya tidak ditampilkan atau diisi data riil.",
+      "Tabel pada halaman 17 (hal fisik 41): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 3.1 (hal 25): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel Lanjutan 3.1 (hal 26): Posisi Catatan dan Sumber diletakkan di ATAS tabel sebelum header kolom. Sesuai standar BPS, blok Catatan dan Sumber wajib diletakkan di bagian bawah tabel.",
+      "Tabel Lanjutan 3.1 (hal 26): Penomoran kolom tabel melompat dari (1) langsung ke (5). Kolom (2) s.d. (4) hilang.",
+      "Tabel 3.2 (hal 27): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.1.1 (hal 36): Tanda superscript '1/' ditemukan pada header tabel tanpa penjelasan catatan kaki yang sesuai di bagian bawah tabel.",
+      "Tabel 4.1.2 (hal 37): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.1.3 (hal 38): Saltik pada judul tabel: Tertulis 'Kepalad Sekolah' (kelebihan huruf 'd', penulisan yang benar adalah 'Kepala Sekolah').",
+      "Tabel 4.3.1 (hal 41): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.3.2 (hal 42): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 4.4.1 (hal 43): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.1 (hal 52): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.3 (hal 54): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.5 (hal 56): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 5.7 (hal 58): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 6.1.1 (hal 66): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Tabel 6.2.1 (hal 67): Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel.",
+      "Ulasan Halaman 4 (hal 4, fisik hal 28) KOSONG TOTAL: Halaman hanya memuat header tanpa narasi ulasan statistik sama sekali. Bab ulasan wajib menyajikan deskripsi tematik yang menguraikan fenomena perkembangan data di kecamatan.",
+      "Ulasan Halaman 12 (hal 12, fisik hal 36) KOSONG TOTAL: Halaman hanya memuat header tanpa narasi ulasan statistik sama sekali. Bab ulasan wajib menyajikan deskripsi tematik yang menguraikan fenomena perkembangan data di kecamatan.",
+      "Ulasan Halaman 22 (hal 22, fisik hal 46) KOSONG TOTAL: Halaman hanya memuat header tanpa narasi ulasan statistik sama sekali. Bab ulasan wajib menyajikan deskripsi tematik yang menguraikan fenomena perkembangan data di kecamatan.",
+      "Ulasan Halaman 33 (hal 33, fisik hal 57) KOSONG TOTAL: Halaman hanya memuat header tanpa narasi ulasan statistik sama sekali. Bab ulasan wajib menyajikan deskripsi tematik yang menguraikan fenomena perkembangan data di kecamatan.",
+      "Ulasan Halaman 49 (hal 49, fisik hal 73) KOSONG TOTAL: Halaman hanya memuat header tanpa narasi ulasan statistik sama sekali. Bab ulasan wajib menyajikan deskripsi tematik yang menguraikan fenomena perkembangan data di kecamatan.",
+      "Ulasan Halaman 63 (hal 63, fisik hal 87) KOSONG TOTAL: Halaman hanya memuat header tanpa narasi ulasan statistik sama sekali. Bab ulasan wajib menyajikan deskripsi tematik yang menguraikan fenomena perkembangan data di kecamatan.",
+      "Ulasan Halaman 73 (hal 73, fisik hal 97) KOSONG TOTAL: Halaman hanya memuat header tanpa narasi ulasan statistik sama sekali. Bab ulasan wajib menyajikan deskripsi tematik yang menguraikan fenomena perkembangan data di kecamatan.",
+      "Kesalahan format running title pada halaman batang tubuh (hal 3, hal 4, hal 5, hal 6, hal 7, hal 8, hal 11, hal 12, hal 13, hal 14): Sesuai Pedoman BPS 2023 hal. 49 & Instrumen baris 132, halaman GANJIL (kanan) wajib memuat judul BAB aktif, dan halaman GENAP (kiri) wajib memuat judul publikasi bahasa Indonesia."
+    ],
+    "Daftar Pustaka: -": [
+      "Ketidaksinkronan rujukan nomor halaman: Nomor halaman Daftar Pustaka pada Daftar Isi (tertulis hal 83) tidak sesuai dengan letak riil Daftar Pustaka yang berada di halaman 81 (halaman ganjil). Seharusnya disinkronkan ke halaman 81.",
+      "Format Daftar Pustaka wajib memenuhi standar Chicago Manual of Style (CMS): menggunakan hanging indent, judul buku/jurnal/prosiding dicetak miring (italic), dan daftar diurutkan secara alfabetis berdasarkan nama belakang penulis (Instrumen baris 183–187)."
+    ],
+    "Kover belakang: -": [
+      "Slogan \"DATA MENCERDASKAN BANGSA / DATA ENLIGHTEN THE NATION\" tidak ditemukan di kover belakang. Wajib dicantumkan di bagian tengah kover belakang.",
+      "Logo Sensus BPS, slogan BerAKHLAK, dan tagar #BanggaMelayaniBangsa wajib ditampilkan di pojok kanan atas kover belakang secara proporsional."
+    ]
+  }
+}

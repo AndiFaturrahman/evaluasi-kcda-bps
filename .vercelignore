@@ -1,0 +1,16 @@
+PUBLIKASI BANGKEP/
+__pycache__/
+*.pyc
+.git/
+.venv/
+cloudflared.exe
+*.bat
+scratch/
+tests/
+outputs/
+uploads/
+web_app/static/downloads/*.pdf
+*.xlsx
+.agents/
+arsip_pengujian_dan_versi_lama/
+dokumen_pedoman_dan_rujukan/
