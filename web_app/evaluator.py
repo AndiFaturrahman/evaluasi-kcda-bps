@@ -261,7 +261,21 @@ def extract_pdf_metadata(pdf_path):
 
     # ── HALAMAN JUDUL UTAMA (Halaman fisik 3) ──
     p3_images = doc[2].get_images() if num_pages > 2 else []
-    p3_has_image = len(p3_images) >= 1
+    p3_has_image = False
+    p3_logo_monochrome = False
+    if num_pages > 2:
+        try:
+            pix = doc[2].get_pixmap(dpi=100)
+            img = cv2.imdecode(np.frombuffer(pix.tobytes("png"), np.uint8), cv2.IMREAD_COLOR)
+            if img is not None:
+                h, w, _ = img.shape
+                center = img[int(h * 0.35):int(h * 0.65), int(w * 0.20):int(w * 0.80)]
+                center_hsv = cv2.cvtColor(center, cv2.COLOR_BGR2HSV)
+                non_white_mask = ~((center_hsv[:, :, 1] < 20) & (center_hsv[:, :, 2] > 235))
+                if (np.sum(non_white_mask) / non_white_mask.size) > 0.15:
+                    p3_has_image = True
+        except Exception:
+            pass
     p3_text_full = pages_text.get(2, "") if num_pages > 2 else ""
     p3_has_issn = bool(re.search(r'ISSN', p3_text_full, re.IGNORECASE))
     p3_issn_has_colon = bool(re.search(r'ISSN\s*:\s*\d{4}', p3_text_full))
@@ -319,9 +333,10 @@ def extract_pdf_metadata(pdf_path):
     catalog_arab = roman_match.group(2) if roman_match else "-"
     uses_hal_not_hlm = bool(roman_match and 'hal' in roman_match.group(3).lower() and 'halaman' not in roman_match.group(3).lower())
     space_before_slash_pages = bool(re.search(r'halaman\s+/pages', catalog_text, re.I))
+    space_before_colon_pages = bool(re.search(r'Jumlah\s+Halaman[^\n:]*?\s+:', catalog_text))
 
     # Cek sinkronisasi jumlah halaman katalog vs fisik
-    catalog_pages_mismatch = False
+    catalog_pages_mismatch = None
     if catalog_roman != "-" and catalog_arab != "-":
         last_arab = 0
         for p in range(num_pages - 1, 20, -1):
@@ -330,7 +345,7 @@ def extract_pdf_metadata(pdf_path):
                 last_arab = int(lines[0])
                 break
         if last_arab > 0 and str(last_arab) != str(catalog_arab):
-            catalog_pages_mismatch = True
+            catalog_pages_mismatch = (catalog_arab, last_arab)
 
     # ══════════════════════════════════════════════════════════════════════
     # CROSS-PAGE ISSN CONSISTENCY VALIDATOR (NEW: Ultra Deep)
@@ -742,6 +757,27 @@ def extract_pdf_metadata(pdf_path):
         pf_lines = pages_lines.get(preface_idx, [])
         preface_has_running_title = any('KATA PENGANTAR' in l.upper() and len(l) > 16 for l in pf_lines[:3])
 
+    preface_year_mismatch = None
+    if preface_idx >= 0:
+        pref_txt = pages_text.get(preface_idx, "")
+        m_pref_yrs = re.findall(r'Dalam\s+Angka\s+(\d{4})', pref_txt, re.I)
+        for y_found in m_pref_yrs:
+            if y_found != str(pub_year):
+                preface_year_mismatch = (y_found, pub_year)
+                break
+
+    preface_titimangsa_mismatch = None
+    if preface_idx >= 0:
+        pref_txt = pages_text.get(preface_idx, "")
+        m_titi = re.search(r'([A-Z][a-z]+),\s+([A-Za-z]+)\s+(\d{4})', pref_txt)
+        if m_titi:
+            t_city, t_month, t_year = m_titi.group(1), m_titi.group(2), m_titi.group(3)
+            if t_year != str(pub_year):
+                preface_titimangsa_mismatch = (
+                    f'Kesalahan tahun pada titimangsa Kata Pengantar: Tertulis "{t_city}, {t_month} {t_year}". '
+                    f'Tahun wajib diselaraskan dengan tahun publikasi ({pub_year}).'
+                )
+
     # Deteksi inkonsistensi gelar antara Tim Penyusun dan Kata Pengantar
     degree_mismatch = None
     if team_idx >= 0 and preface_idx >= 0:
@@ -842,6 +878,44 @@ def extract_pdf_metadata(pdf_path):
     if toc_figure_idx >= 0:
         fig_text_combined = "".join([pages_text.get(fi, "") for fi in range(toc_figure_idx, min(toc_figure_idx + 4, num_pages))])
         daftar_gambar_placeholder = bool(re.search(r'\.\.\s*\n', fig_text_combined)) or ("..." in fig_text_combined and "Gambar" in fig_text_combined)
+
+    toc_preface_not_italic = False
+    if toc_idx >= 0 and toc_idx < num_pages:
+        try:
+            t_dict = doc[toc_idx].get_text("dict")
+            for b in t_dict.get("blocks", []):
+                for l in b.get("lines", []):
+                    for s in l.get("spans", []):
+                        st = s.get("text", "").strip()
+                        if st.lower() in ["preface", "table of contents", "list of tables", "list of figures"]:
+                            font_n = s.get("font", "").lower()
+                            fl = s.get("flags", 0)
+                            if not ((fl & 2) or "italic" in font_n or "oblique" in font_n):
+                                toc_preface_not_italic = True
+                                break
+        except Exception:
+            pass
+
+    toc_figures_has_dots = False
+    if toc_idx >= 0 and toc_idx < num_pages:
+        toc_figures_has_dots = bool(re.search(r'Gambar\s+\d+\.\d+[^\n]*?\.\.\.\.+', toc_text))
+
+    penjelasan_english_not_italic = False
+    if penjelasan_idx >= 0 and penjelasan_idx < num_pages:
+        try:
+            p_dict = doc[penjelasan_idx].get_text("dict")
+            for b in p_dict.get("blocks", []):
+                for l in b.get("lines", []):
+                    for s in l.get("spans", []):
+                        st = s.get("text", "").strip()
+                        if any(term in st for term in ["Not applicable", "Data not available", "Estimated figure", "Preliminary figures", "Null or zero"]):
+                            font_n = s.get("font", "").lower()
+                            fl = s.get("flags", 0)
+                            if not ((fl & 2) or "italic" in font_n or "oblique" in font_n):
+                                penjelasan_english_not_italic = True
+                                break
+        except Exception:
+            pass
 
     # ── SCANNER GAMBAR DUMMY KAMERA (PER BAB) ──
     dummy_figures = []
@@ -1135,8 +1209,8 @@ def extract_pdf_metadata(pdf_path):
                     p3_issn_has_colon = True
                 if cv_hju.get("has_space_before_colon_catalog"):
                     hju_catalog_space_colon = True
-                if cv_hju.get("has_illustration_background"):
-                    p3_has_image = True
+                p3_has_image = cv_hju.get("has_illustration_background", False)
+                p3_logo_monochrome = cv_hju.get("logo_is_monochrome", False)
                 if "title_english_is_italic" in cv_hju:
                     hju_title_is_italic = cv_hju["title_english_is_italic"]
         except Exception as e:
@@ -1214,6 +1288,15 @@ def extract_pdf_metadata(pdf_path):
         "has_daftar_pustaka": has_daftar_pustaka,
         "kover_belakang_errors": kover_belakang_errors,
         # ── NEW: Cross-page consistency fields ──
+        "p3_has_bg_illustration": p3_has_image,
+        "p3_logo_monochrome": p3_logo_monochrome,
+        "space_before_colon_pages": space_before_colon_pages,
+        "preface_year_mismatch": preface_year_mismatch,
+        "preface_titimangsa_mismatch": preface_titimangsa_mismatch,
+        "toc_preface_not_italic": toc_preface_not_italic,
+        "toc_figures_has_dots": toc_figures_has_dots,
+        "penjelasan_english_not_italic": penjelasan_english_not_italic,
+        "toc_figure_idx": toc_figure_idx,
         "issn_cross_page_inconsistent": issn_cross_page_inconsistent,
         "issn_cross_page_details": issn_cross_page_details,
         "issn_registry_mismatch": issn_registry_mismatch,
@@ -1774,12 +1857,13 @@ def analyze_defects(meta, custom_api_key=None):
 
     # ── 2. HALAMAN JUDUL UTAMA: - ──
     halaman_judul = []
-    if meta.get("p3_has_image", True):
+    if meta.get("p3_has_bg_illustration", False):
         halaman_judul.append(
             'Pelanggaran format latar belakang Halaman Judul Utama: Memuat gambar/foto latar belakang ilustrasi / pemandangan alam (duplikasi visual kover depan). '
             'Berdasarkan Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.1 (hal. 36), Template KCDA 2026 halaman 3, '
             'dan Instrumen Pemeriksaan Publikasi baris 17, Halaman Judul Utama (halaman fisik 3 / Romawi i) WAJIB berlatar putih bersih tanpa ilustrasi.'
         )
+    if meta.get("p3_logo_monochrome", False):
         halaman_judul.append(
             'Kesalahan warna logo BPS: Logo BPS dan identitas BPS Penerbit pada Halaman Judul Utama ditampilkan monokrom/grayscale. '
             'Sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.1 (hal. 36) & Instrumen Pemeriksaan baris 21, '
@@ -1826,6 +1910,11 @@ def analyze_defects(meta, custom_api_key=None):
             'Kesalahan tanda baca pada baris Jumlah Halaman: Terdapat spasi sebelum garis miring pada label "Jumlah Halaman /Number of Pages". '
             'Penulisan baku ditulis rapat tanpa spasi sebelum garis miring ("Jumlah Halaman/Number of Pages").'
         )
+    if meta.get("space_before_colon_pages"):
+        halaman_katalog.append(
+            'Kesalahan tanda baca pada baris Jumlah Halaman: Terdapat spasi sebelum tanda titik dua pada label "Jumlah Halaman/Number of Pages :". '
+            'Penulisan baku ditulis rapat tanpa spasi sebelum titik dua ("Jumlah Halaman/Number of Pages:").'
+        )
     if not meta.get("catalog_issn_format_ok", True):
         halaman_katalog.append(
             f'Penulisan label ISSN salah: tertulis tanpa titik dua atau "ISSN/ISSN: {issn}". '
@@ -1842,12 +1931,18 @@ def analyze_defects(meta, custom_api_key=None):
             f'Nomor publikasi salah kode tahun: tertulis kode tahun "{code_yr}". '
             f'Untuk publikasi tahun {year}, kode tahun yang benar adalah "{exp_yr}".'
         )
-    halaman_katalog.append(
-        f'Kesalahan penulisan Jumlah Halaman: Tertulis "Jumlah Halaman/Number of Pages : {cat_roman}+{cat_arab} hal/pages". '
-        f'Terdapat beberapa kesalahan: (1) Kata "halaman" disingkat "hal", seharusnya ditulis lengkap "halaman/pages"; '
-        f'(2) Halaman terakhir yang memuat materi isi buku adalah halaman 81 (Daftar Pustaka), bukan {cat_arab} (halaman {cat_arab} adalah halaman kosong penyelarasan); '
-        f'(3) Terdapat spasi sebelum tanda titik dua (:). Penulisan yang benar adalah "Jumlah Halaman/Number of Pages: {cat_roman}+81 halaman/pages".'
-    )
+    if meta.get("uses_hal_not_hlm"):
+        halaman_katalog.append(
+            'Kesalahan singkatan kata halaman pada baris Jumlah Halaman: Tertulis "hal", '
+            'seharusnya ditulis lengkap "halaman/pages" sesuai standar Pedoman Pembuatan Publikasi BPS.'
+        )
+    if meta.get("catalog_pages_mismatch"):
+        cat_ar, act_ar = meta["catalog_pages_mismatch"]
+        halaman_katalog.append(
+            f'Ketidaksinkronan jumlah halaman batang tubuh pada Halaman Katalog: Tertulis "{cat_ar}" halaman, '
+            f'padahal halaman bernomor Arab terakhir pada buku adalah halaman {act_ar}. '
+            f'Jumlah halaman Arab pada "Jumlah Halaman/Number of Pages" wajib diselaraskan.'
+        )
     if meta.get("bps_abbreviated_id"):
         halaman_katalog.append(
             'Pelanggaran penulisan nama lembaga pada hak cipta: Tertulis "©BPS ..." atau "© BPS ...". '
@@ -1902,15 +1997,14 @@ def analyze_defects(meta, custom_api_key=None):
 
     # ── 5. KATA PENGANTAR: - ──
     kata_pengantar = []
-    kata_pengantar.append(
-        f'Kesalahan tahun pada narasi teks: Paragraf pertama teks Bahasa Indonesia tertulis "Publikasi Kecamatan {region} Dalam Angka 2025" '
-        f'dan teks Bahasa Inggris (Preface) tertulis "The publication {region} District in Figures 2025". '
-        f'Terjadi ketidaksinkronan tahun narasi dengan titimangsa "Salakan, September 2026". Koreksi seharusnya: Tahun diselaraskan menjadi tahun 2026 ("... Dalam Angka 2026" dan "... in Figures 2026").'
-    )
-    kata_pengantar.append(
-        f'Ruang tanda tangan pejabat masih kosong: Kolom tanda tangan Kepala BPS pada Kata Pengantar dan Preface '
-        f'belum dibubuhi tanda tangan. Koreksi seharusnya: Wajib dibubuhi tanda tangan resmi (digital/basah) sebelum publikasi dirilis.'
-    )
+    if meta.get("preface_year_mismatch"):
+        y_found, exp_y = meta["preface_year_mismatch"]
+        kata_pengantar.append(
+            f'Kesalahan tahun pada narasi teks Kata Pengantar: Teks menyebut tahun "{y_found}", '
+            f'padahal publikasi ini adalah edisi tahun {exp_y}. Koreksi seharusnya: Selaraskan tahun narasi menjadi tahun {exp_y}.'
+        )
+    if meta.get("preface_titimangsa_mismatch"):
+        kata_pengantar.append(meta["preface_titimangsa_mismatch"])
     if meta.get("preface_has_running_title"):
         kata_pengantar.append(
             'Running title tercetak di header atas halaman Kata Pengantar. Sesuai Pedoman 2023 hal. 49 & Instrumen baris 53, '
@@ -1951,22 +2045,18 @@ def analyze_defects(meta, custom_api_key=None):
 
     # ── 6. DAFTAR ISI: - ──
     daftar_isi = []
-    daftar_isi.append(
-        'Ketidaksinkronan nomor halaman pada Daftar Isi dengan halaman riil buku: '
-        '(1) Daftar Gambar tertulis di hal xix, padahal di halaman riil buku tertulis hal xvii; '
-        '(2) Penjelasan Umum tertulis di hal xxi, padahal di halaman riil tertulis hal xix; '
-        '(3) Daftar Singkatan tertulis di hal xxiii, padahal di halaman riil tertulis hal xxi; '
-        '(4) Daftar Pustaka tertulis di hal 83, padahal posisi riil berada di halaman 81.'
-    )
-    daftar_isi.append(
-        'Kesalahan tipografi istilah bahasa asing pada Daftar Isi: Kata "Preface" dan istilah bahasa Inggris lainnya '
-        'belum dicetak miring (masih reguler/tegak). Sesuai kaidah dwibahasa BPS, istilah bahasa asing wajib dicetak miring (italic).'
-    )
-    daftar_isi.append(
-        'Placeholder titik-titik pada judul gambar: Judul Gambar 2.1 s.d. Gambar 7.2 pada Daftar Isi masih berupa tanda titik-titik ("..."). '
-        'Sesuai Pedoman Pembuatan Publikasi BPS 2023 Hal. 86 poin 3, Daftar Gambar dibuat apabila minimal ada tiga gambar di dalam buku. '
-        'Karena buku ini hanya memuat 2 gambar riil, maka baris "Daftar Gambar/List of Figures" pada Daftar Isi harus dihapus dan nomor halaman romawi disesuaikan.'
-    )
+    for err in meta.get("toc_errors", []):
+        daftar_isi.append(f'Ketidaksinkronan rujukan nomor halaman pada Daftar Isi: {err}.')
+    if meta.get("toc_preface_not_italic"):
+        daftar_isi.append(
+            'Kesalahan tipografi istilah bahasa asing pada Daftar Isi: Entri "Preface" atau istilah bahasa Inggris lainnya '
+            'belum dicetak miring (masih reguler/tegak). Sesuai kaidah dwibahasa BPS, istilah bahasa asing wajib dicetak miring (italic).'
+        )
+    if meta.get("toc_figures_has_dots"):
+        daftar_isi.append(
+            'Placeholder titik-titik pada judul gambar di Daftar Isi: Judul entri gambar masih berupa tanda titik-titik ("..."). '
+            'Wajib dilengkapi dengan judul substantif gambar atau baris entri disesuaikan.'
+        )
     if meta.get("toc_issn_missing"):
         daftar_isi.append(
             f'Nomor ISSN tidak dicantumkan di pojok kanan atas halaman Daftar Isi: '
@@ -1977,8 +2067,6 @@ def analyze_defects(meta, custom_api_key=None):
             'Running title tercetak di header atas halaman Daftar Isi. Sesuai Pedoman 2023 hal. 49 & Instrumen baris 75, '
             'halaman pendahuluan (angka Romawi) dilarang mencantumkan running title.'
         )
-    for err in meta.get("toc_errors", []):
-        daftar_isi.append(f'Ketidaksinkronan rujukan nomor halaman pada Daftar Isi: {err}.')
     if meta.get("toc_chapters_point_to_dividers"):
         div_str = ", ".join(f"Bab {b} ke hal {p}" for b, p in meta["toc_chapters_point_to_dividers"])
         daftar_isi.append(
@@ -1987,22 +2075,30 @@ def analyze_defects(meta, custom_api_key=None):
         )
 
     # ── 7. PENJELASAN UMUM: ──
-    penjelasan_umum = [
-        'Cetak miring istilah bahasa asing pada Penjelasan Umum: Sesuai Pedoman Pembuatan Publikasi BPS 2023 Hal. 87 & Instrumen baris 91–94, '
-        'seluruh padanan istilah statistik bahasa Inggris (contoh: Not applicable, Estimated figure, Revised figures, Preliminary figures, '
-        'Very preliminary figures, Very very preliminary figures, Data not available, Null or zero) WAJIB dicetak miring (italic).'
-    ]
+    penjelasan_umum = []
+    if meta.get("penjelasan_english_not_italic"):
+        penjelasan_umum.append(
+            'Cetak miring istilah bahasa asing pada Penjelasan Umum: Sesuai Pedoman Pembuatan Publikasi BPS 2023 Hal. 87 & Instrumen baris 91–94, '
+            'padanan istilah statistik bahasa Inggris (contoh: Not applicable, Data not available, dll.) '
+            'terdeteksi belum dicetak miring (italic). Sesuai kaidah dwibahasa BPS, istilah bahasa asing WAJIB dicetak miring.'
+        )
 
     # ── 8. DAFTAR TABEL/GAMBAR/GRAFIK/LAMPIRAN: ──
-    daftar_tabel_gambar = [
-        'Kesalahan fatal visual gambar dummy/placeholder di seluruh bab: Ditemukan 14 lembar gambar (Gambar 1.1 s.d. Gambar 7.2) '
-        'yang masih memuat kotak abu-abu placeholder ikon kamera bawaan template. Pada Gambar 1.1 (Peta Wilayah), gambar peta riil belum di-insert '
-        '(masih kotak kamera kosong), judul Gambar 2.1 s.d. 7.2 masih berupa elipsis ("..."), dan keterangan sumber masih berupa titik-titik dummy ("Sumber/Source : ...."). '
-        'Wajib dimasukkan visual gambar/peta riil beserta sumber valid, atau seluruh halaman gambar placeholder dihapus dari buku.',
-        'Pelanggaran batas minimal gambar pada Daftar Gambar: Merujuk pada Pedoman Pembuatan Publikasi 2023 Bab 4.3.9 poin 3 '
-        '& Instrumen baris 87, lembar Daftar Gambar hanya disajikan jika terdapat minimal 3 gambar riil dalam publikasi. '
-        'Karena publikasi ini belum memiliki gambar riil (seluruhnya masih berupa kotak placeholder), maka lembar halaman Daftar Gambar (halaman xvii–xviii) wajib ditiadakan/dihapus dari buku.'
-    ]
+    daftar_tabel_gambar = []
+    dummy_figs = meta.get("dummy_figures", [])
+    if dummy_figs:
+        fig_nums = [df[0] for df in dummy_figs]
+        daftar_tabel_gambar.append(
+            f'Kesalahan visual gambar dummy/placeholder di seluruh bab: Ditemukan {len(dummy_figs)} lembar gambar '
+            f'(Gambar {", ".join(fig_nums[:8])}) yang masih memuat kotak placeholder ikon kamera / elipsis bawaan template. '
+            f'Wajib dimasukkan visual gambar/peta riil beserta sumber valid, atau seluruh halaman gambar placeholder dihapus dari buku.'
+        )
+        if len(dummy_figs) < 3 and meta.get("toc_figure_idx", -1) >= 0:
+            daftar_tabel_gambar.append(
+                'Pelanggaran batas minimal gambar pada Daftar Gambar: Merujuk pada Pedoman Pembuatan Publikasi 2023 Bab 4.3.9 poin 3 '
+                '& Instrumen baris 87, lembar Daftar Gambar hanya disajikan jika terdapat minimal 3 gambar riil dalam publikasi. '
+                'Karena publikasi ini belum memiliki minimal 3 gambar riil, maka lembar halaman Daftar Gambar wajib ditiadakan/dihapus dari buku.'
+            )
     if meta.get("daftar_tabel_running_title"):
         daftar_tabel_gambar.append(
             'Running title tercetak di header/footer halaman Daftar Tabel. Sesuai Pedoman 2023 hal. 49, '
@@ -2015,21 +2111,14 @@ def analyze_defects(meta, custom_api_key=None):
         )
 
     # ── 9. LAYOUT ISI: ──
-    layout_isi = [
-        'Kesalahan fatal pencantuman gambar placeholder ikon kamera: Pada halaman 29, 30, 37, 38, 47, 48, 58, 59, 74, 75, 88, 89, 98, 99 '
-        'masih berupa kotak abu-abu placeholder ikon kamera bawaan template. Gambar Peta Wilayah Kecamatan (Gambar 1.1) belum dimasukkan, '
-        'grafik Bab 2 s.d. Bab 7 belum dibuat, dan baris sumber masih berupa titik-titik ("Sumber/Source : ...."). Dilarang merilis publikasi yang masih memuat visual dummy template.',
-        'Kesalahan perataan data angka tabel (alignment): Seluruh sel data tabel berupa angka diatur rata tengah (center-aligned). '
-        'Sesuai Pedoman Pembuatan Publikasi 2023 Hal. 110 poin h, isi tabel berupa angka wajib menggunakan rata kanan '
-        'kemudian diatur di tengah kolom (right aligned with indent) agar digit satuan, puluhan, ratusan, serta tanda koma desimal sejajar lurus secara vertikal.',
-        'Kesalahan posisi Catatan dan Sumber pada Lanjutan Tabel 3.1: Diletakkan terbalik di bagian atas tabel sebelum kepala kolom. '
-        'Berdasarkan Gambar 40 Pedoman Publikasi BPS 2023, Catatan dan Sumber wajib diletakkan di bagian paling bawah tabel setelah seluruh baris data selesai.',
-        'Baris catatan tidak substantif: Ditemukan baris "Catatan/Note: ..." yang hanya memuat titik-titik kosong tanpa teks penjelasan pada beberapa tabel '
-        '(contoh: Tabel 1.1, Tabel 1.2, Tabel 2.1.1). Baris tersebut wajib dihapus.',
-        'Kesalahan penulisan nilai nihil: Masih ditemukan penggunaan angka "0" untuk data nihil pada tabel, seharusnya menggunakan notasi En Dash "–" tanpa spasi sesuai standardisasi BPS.',
-        'Data tabel belum diisi (masih kosong/elipsis): Seluruh sel data pada Tabel 2.2.1 (PNS Pemda), Tabel 3.1 (Penduduk per Desa), '
-        'dan Tabel 3.2 (Kelompok Umur) masih berisi tanda titik-titik elipsis ("…") dan wajib dilengkapi sebelum dirilis.'
-    ]
+    layout_isi = []
+    if dummy_figs:
+        pg_list = sorted(set(str(df[1]) for df in dummy_figs))[:10]
+        layout_isi.append(
+            f'Pencantuman visual gambar dummy/placeholder ikon kamera pada halaman batang tubuh ({", ".join(pg_list)}): '
+            f'Visual grafik/peta belum di-insert dan masih menyajikan visual placeholder template. '
+            f'Dilarang merilis publikasi yang masih memuat visual dummy template.'
+        )
     added_keys = set()
     for tf in meta.get("table_findings", []):
         if "KOSONG TOTAL" in tf:
@@ -2065,21 +2154,24 @@ def analyze_defects(meta, custom_api_key=None):
             f'halaman GANJIL (kanan) wajib memuat judul BAB aktif, dan halaman GENAP (kiri) wajib memuat judul publikasi '
             f'bahasa Indonesia.'
         )
+    for p_phys, p_lbl, txt_found, exp_y in meta.get("wrong_year_refs", []):
+        if int(p_phys) > 20: # Halaman isi
+            layout_isi.append(
+                f'Referensi tahun salah terdeteksi otomatis pada batang tubuh: Halaman {p_lbl}: tertulis "{txt_found}". '
+                f'Seluruh referensi tahun wajib diselaraskan ke tahun {exp_y}.'
+            )
+            break
+    for p_lbl, wrong_w, correct_w in meta.get("global_typos", [])[:10]:
+        layout_isi.append(
+            f'Saltik terdeteksi otomatis pada halaman {p_lbl}: Tertulis "{wrong_w}", penulisan yang benar adalah "{correct_w}".'
+        )
 
     # ── 10. DAFTAR PUSTAKA: - ──
-    daftar_pustaka = [
-        'Ketidaksinkronan rujukan nomor halaman: Nomor halaman Daftar Pustaka pada Daftar Isi (tertulis hal 83) '
-        'tidak sesuai dengan letak riil Daftar Pustaka yang berada di halaman 81 (halaman ganjil). Seharusnya disinkronkan ke halaman 81.'
-    ]
+    daftar_pustaka = []
     if not meta.get("has_daftar_pustaka"):
         daftar_pustaka.append(
             'Daftar Pustaka SAMA SEKALI TIDAK ADA di dalam buku (dokumen langsung berakhir tanpa lembar daftar pustaka). '
             'Pada publikasi hasil kegiatan dan kajian statistik BPS, Daftar Pustaka bersifat WAJIB dicantumkan (Instrumen baris 181).'
-        )
-    else:
-        daftar_pustaka.append(
-            'Format Daftar Pustaka wajib memenuhi standar Chicago Manual of Style (CMS): menggunakan hanging indent, '
-            'judul buku/jurnal/prosiding dicetak miring (italic), dan daftar diurutkan secara alfabetis berdasarkan nama belakang penulis (Instrumen baris 183–187).'
         )
 
     # ── 11. KOVER BELAKANG: - ──
