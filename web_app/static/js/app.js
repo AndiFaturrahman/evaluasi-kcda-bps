@@ -1146,59 +1146,73 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getPageForDefect(sectionName, defectText, meta) {
-        if (!defectText) return 1;
-        const text = defectText;
         const sec = (sectionName || '').toLowerCase();
         const sectionPages = (meta && meta.section_pages) || {};
+        const totalPages = parseInt((meta && meta.total_pages) || (meta && meta.totalPages) || 1, 10);
 
-        // 1. Direct explicit physical page regex in defect text
-        // E.g.: "halaman fisik 29", "hal fisik 4", "Halaman 18", "Hal. 12", "hal 5", "Halaman: 8"
-        const mPhys = text.match(/(?:halaman\s+fisik|hal\s+fisik|halaman|hal\.?)\s*[:#]?\s*(\d+)/i);
-        if (mPhys && mPhys[1]) {
-            const p = parseInt(mPhys[1], 10);
-            if (p > 0) return p;
-        }
-
-        // 2. Table label with page, e.g. "Tabel 3.1.2 (halaman 29)" or "(hal. 14)"
-        const mTbl = text.match(/\(hal(?:aman)?\.?\s*(\d+)\)/i);
-        if (mTbl && mTbl[1]) {
-            const p = parseInt(mTbl[1], 10);
-            if (p > 0) return p;
-        }
-
-        // 3. Multi-page dummy list: "Hal 24, 30, 42" -> take the first one
-        const mDummies = text.match(/Hal(?:aman)?\s+(\d+)(?:\s*,\s*\d+)/i);
-        if (mDummies && mDummies[1]) {
-            const p = parseInt(mDummies[1], 10);
-            if (p > 0) return p;
-        }
-
-        // 4. Roman numerals in defect text: e.g. "halaman v", "hal iii", "halaman xii"
-        const mRoman = text.match(/(?:halaman|hal)\s+([ivxlcdm]+)\b/i);
-        if (mRoman && mRoman[1]) {
-            const rVal = romanToInt(mRoman[1]);
-            if (rVal > 0) {
-                if (sectionPages.kata_pengantar) {
-                    return sectionPages.kata_pengantar;
-                }
-                return rVal + 2;
-            }
-        }
-
-        // 5. Section-based mapping if no explicit page is found in text
+        // 1. Structural Fixed Sections (Cover, Catalog, Front Matter) ALWAYS have definitive pages in publication PDF
         if (sec.includes('kover depan') || sec.includes('cover depan')) return 1;
         if (sec.includes('halaman kosong') && sec.includes('kover')) return 2;
         if (sec.includes('judul utama') || sec.includes('hju')) return sectionPages.hju || 3;
         if (sec.includes('katalog') || sec.includes('catalog')) return sectionPages.katalog || 4;
         if (sec.includes('tim penyusun') || sec.includes('team')) return sectionPages.tim_penyusun || 5;
         if (sec.includes('kata pengantar') || sec.includes('preface')) return sectionPages.kata_pengantar || 6;
+        if (sec.includes('kover belakang') || sec.includes('cover belakang')) return totalPages > 1 ? totalPages : 1;
+
+        if (!defectText) return 1;
+
+        // 2. Sanitize citations to external guidelines (Pedoman, Template, Juknis, Instrumen, Perka, Kaidah)
+        // These refer to external BPS guideline documents/rules, NEVER to publication PDF pages!
+        let cleanText = defectText
+            .replace(/\((?:pedoman|template|juknis|perka|kaidah|panduan|instrumen)[^)]*?\)/gi, '')
+            .replace(/(?:pedoman|template|juknis|perka|kaidah|panduan)\s*(?:\d{4})?\s*(?:hal(?:aman)?\.?|hlm\.?)\s*\d+/gi, '')
+            .replace(/instrumen[^;,\)\.\n]*?baris\s*\d+/gi, '');
+
+        // 3. Direct explicit physical page regex in defect text (e.g. "halaman fisik 29", "hal fisik 4")
+        const mPhys = cleanText.match(/(?:halaman\s+fisik|hal\s+fisik)\s*[:#]?\s*(\d+)/i);
+        if (mPhys && mPhys[1]) {
+            const p = parseInt(mPhys[1], 10);
+            if (p > 0) return p;
+        }
+
+        // 4. Table label with page, e.g. "Tabel 3.1.2 (halaman 29)" or "(hal. 14)"
+        const mTbl = cleanText.match(/\(hal(?:aman)?\.?\s*(\d+)\)/i);
+        if (mTbl && mTbl[1]) {
+            const p = parseInt(mTbl[1], 10);
+            if (p > 0) return p;
+        }
+
+        // 5. Multi-page list: e.g. "Hal 24, 30, 42" -> take the first one
+        const mDummies = cleanText.match(/hal(?:aman)?\.?\s+(\d+)(?:\s*,\s*\d+)/i);
+        if (mDummies && mDummies[1]) {
+            const p = parseInt(mDummies[1], 10);
+            if (p > 0) return p;
+        }
+
+        // 6. Generic "halaman 18" or "hal. 12" on cleaned text
+        const mGen = cleanText.match(/(?:halaman|hal\.?)\s*[:#]?\s*(\d+)/i);
+        if (mGen && mGen[1]) {
+            const p = parseInt(mGen[1], 10);
+            if (p > 0) return p;
+        }
+
+        // 7. Roman numerals in defect text: e.g. "halaman v", "hal iii"
+        const mRoman = cleanText.match(/(?:halaman|hal)\s+([ivxlcdm]+)\b/i);
+        if (mRoman && mRoman[1]) {
+            const rVal = romanToInt(mRoman[1]);
+            if (rVal > 0) {
+                if (sectionPages.kata_pengantar) return sectionPages.kata_pengantar;
+                return rVal + 2;
+            }
+        }
+
+        // 8. Dynamic preliminary and back matter sections
         if (sec.includes('daftar isi') || sec.includes('contents')) return sectionPages.daftar_isi || 8;
         if (sec.includes('daftar tabel') || sec.includes('list of tables')) return sectionPages.daftar_tabel || 10;
         if (sec.includes('daftar gambar') || sec.includes('list of figures')) return sectionPages.daftar_gambar || 12;
         if (sec.includes('penjelasan umum') || sec.includes('penjelasan teknis') || sec.includes('singkatan')) return sectionPages.penjelasan_umum || 14;
-        if (sec.includes('batang tubuh') || sec.includes('tabel')) return 16;
-        if (sec.includes('daftar pustaka') || sec.includes('bibliography')) return sectionPages.daftar_pustaka || Math.max(1, (meta && meta.total_pages ? meta.total_pages - 1 : 100));
-        if (sec.includes('kover belakang') || sec.includes('cover belakang')) return (meta && meta.total_pages) ? meta.total_pages : 1;
+        if (sec.includes('batang tubuh') || sec.includes('tabel') || sec.includes('infografis')) return 16;
+        if (sec.includes('daftar pustaka') || sec.includes('bibliography')) return sectionPages.daftar_pustaka || Math.max(1, totalPages - 1);
 
         return 1;
     }
