@@ -1173,6 +1173,19 @@ def extract_pdf_metadata(pdf_path):
         "roman_page_mismatch": roman_page_mismatch,
         "district_mismatch_info": district_mismatch_info,
         "cv_audit": cv_audit,
+        "section_pages": {
+            "kover_depan": 1,
+            "hju": 3,
+            "katalog": (catalog_idx + 1) if catalog_idx >= 0 else 4,
+            "tim_penyusun": (team_idx + 1) if team_idx >= 0 else 5,
+            "kata_pengantar": (preface_idx + 1) if preface_idx >= 0 else 6,
+            "daftar_isi": (toc_idx + 1) if toc_idx >= 0 else 8,
+            "daftar_tabel": (toc_table_idx + 1) if toc_table_idx >= 0 else 10,
+            "daftar_gambar": (toc_figure_idx + 1) if toc_figure_idx >= 0 else 12,
+            "penjelasan_umum": (penjelasan_idx + 1) if penjelasan_idx >= 0 else 14,
+            "daftar_pustaka": (biblio_idx + 1) if biblio_idx >= 0 else max(1, num_pages - 1),
+            "kover_belakang": num_pages
+        }
     }
 
 

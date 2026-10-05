@@ -453,6 +453,47 @@
                     </div>
                 </div>
             </div>
+        <!-- Direct PDF Viewer Modal -->
+        <div class="pdf-modal-overlay" id="pdf-viewer-modal" style="display: none;">
+            <div class="pdf-modal-card">
+                <div class="pdf-modal-header">
+                    <div class="pdf-modal-title-group">
+                        <span class="pdf-modal-icon">📑</span>
+                        <div class="pdf-modal-title-text">
+                            <h4 id="pdf-modal-doc-title">Pratinjau PDF Publikasi</h4>
+                            <p id="pdf-modal-sub-title">Navigasi Langsung ke Halaman Temuan</p>
+                        </div>
+                    </div>
+                    <div class="pdf-modal-controls">
+                        <button type="button" class="pdf-page-btn" id="btn-pdf-prev-page" title="Halaman Sebelumnya">
+                            <span>◀ Sebelumnya</span>
+                        </button>
+                        <div class="pdf-modal-page-badge">
+                            Hal. <span id="pdf-modal-cur-page">1</span> / <span id="pdf-modal-total-page">1</span>
+                        </div>
+                        <button type="button" class="pdf-page-btn" id="btn-pdf-next-page" title="Halaman Berikutnya">
+                            <span>Berikutnya ▶</span>
+                        </button>
+                        <a id="btn-pdf-open-tab" class="btn-open-tab-pdf" href="#" target="_blank" title="Buka PDF di Tab Baru Peramban">
+                            <span>Buka Tab Baru ↗</span>
+                        </a>
+                        <button type="button" class="btn-close-pdf-modal" id="btn-close-pdf-modal" title="Tutup Pratinjau (Esc)">✕</button>
+                    </div>
+                </div>
+
+                <!-- Defect Banner with Rule / Context -->
+                <div class="pdf-modal-defect-banner" id="pdf-modal-defect-banner">
+                    <span class="pdf-modal-defect-banner-icon" id="pdf-modal-defect-icon">⚠️</span>
+                    <div class="pdf-modal-defect-banner-text">
+                        <div id="pdf-modal-defect-msg"><strong>Temuan:</strong> Memuat catatan evaluasi...</div>
+                    </div>
+                </div>
+
+                <!-- Iframe Viewer Body -->
+                <div class="pdf-modal-iframe-wrap">
+                    <iframe id="pdf-modal-iframe" class="pdf-modal-iframe" src="" title="Penampil PDF"></iframe>
+                </div>
+            </div>
         </div>
     </div>
 

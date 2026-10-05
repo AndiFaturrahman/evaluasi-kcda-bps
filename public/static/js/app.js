@@ -755,14 +755,29 @@ document.addEventListener('DOMContentLoaded', () => {
             cvCard.style.display = 'none';
         }
 
-        // 4. Download Excel & PDF Buttons
-        if (btnDownloadPdf && data.pdf_download_url) {
-            btnDownloadPdf.href = data.pdf_download_url;
-            btnDownloadPdf.setAttribute('download', '');
+        // 4. Download Excel & PDF Buttons (Anti undefined.json Fallback)
+        const distName = (meta && meta.region) ? meta.region.replace(/\s+/g, '_') : 'Evaluasi';
+        const docYear = (meta && meta.year) || '2026';
+
+        if (btnDownloadPdf) {
+            if (data.pdf_download_url) {
+                btnDownloadPdf.href = data.pdf_download_url;
+                btnDownloadPdf.setAttribute('download', `Laporan_Evaluasi_${distName}_${docYear}.pdf`);
+                btnDownloadPdf.style.display = 'inline-flex';
+            } else {
+                btnDownloadPdf.style.display = 'none';
+            }
         }
+
+        const excelUrl = data.excel_download_url || data.download_url || (currentBatchData && currentBatchData.master_excel_download_url);
         if (btnDownloadExcel) {
-            btnDownloadExcel.href = data.excel_download_url || data.download_url;
-            btnDownloadExcel.setAttribute('download', '');
+            if (excelUrl) {
+                btnDownloadExcel.href = excelUrl;
+                btnDownloadExcel.setAttribute('download', `Evaluasi_${distName}_${docYear}.xlsx`);
+                btnDownloadExcel.style.display = 'inline-flex';
+            } else {
+                btnDownloadExcel.style.display = 'none';
+            }
         }
 
         // Reset search
@@ -789,14 +804,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // 6. Render Section Cards & Apply Filters
-        renderSectionCards(defects);
+        renderSectionCards(defects, meta);
         applyFilters();
 
         // Smooth scroll to results
         resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    function renderSectionCards(defects) {
+    function renderSectionCards(defects, meta) {
         if (!sectionsWrapper) {
             console.error('sectionsWrapper tidak ditemukan pada DOM!');
             return;
@@ -852,6 +867,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     itemContent.className = 'defect-content';
                     itemContent.innerHTML = `<span class="defect-num">[${idx + 1}]</span> <span class="defect-text">${defect}</span>`;
 
+                    const actionsWrap = document.createElement('div');
+                    actionsWrap.className = 'defect-actions-wrap';
+
+                    // Direct Page Jump Button
+                    const targetPage = getPageForDefect(cleanTitle, defect, meta);
+                    const btnViewPdf = document.createElement('button');
+                    btnViewPdf.type = 'button';
+                    btnViewPdf.className = 'btn-view-pdf';
+                    btnViewPdf.title = `Buka PDF langsung ke Halaman ${targetPage}`;
+                    btnViewPdf.innerHTML = `👁️ Hal. ${targetPage}`;
+                    btnViewPdf.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        openPdfViewer(currentAnalysisData, targetPage, cleanTitle, defect, idx + 1);
+                    });
+
                     const btnCopySingle = document.createElement('button');
                     btnCopySingle.type = 'button';
                     btnCopySingle.className = 'btn-copy-defect';
@@ -864,8 +894,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         });
                     });
 
+                    actionsWrap.appendChild(btnViewPdf);
+                    actionsWrap.appendChild(btnCopySingle);
+
                     defectItem.appendChild(itemContent);
-                    defectItem.appendChild(btnCopySingle);
+                    defectItem.appendChild(actionsWrap);
                     list.appendChild(defectItem);
                 });
             }
@@ -981,4 +1014,238 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast('Siap melakukan evaluasi dokumen baru.', 'info', 2000);
         });
     }
+
+    // ── 13. DIRECT PDF VIEWER MODAL CONTROLLER ──
+    const pdfViewerModal = document.getElementById('pdf-viewer-modal');
+    const pdfModalDocTitle = document.getElementById('pdf-modal-doc-title');
+    const pdfModalSubTitle = document.getElementById('pdf-modal-sub-title');
+    const pdfModalCurPage = document.getElementById('pdf-modal-cur-page');
+    const pdfModalTotalPage = document.getElementById('pdf-modal-total-page');
+    const btnPdfPrevPage = document.getElementById('btn-pdf-prev-page');
+    const btnPdfNextPage = document.getElementById('btn-pdf-next-page');
+    const btnPdfOpenTab = document.getElementById('btn-pdf-open-tab');
+    const btnClosePdfModal = document.getElementById('btn-close-pdf-modal');
+    const pdfModalDefectBanner = document.getElementById('pdf-modal-defect-banner');
+    const pdfModalDefectIcon = document.getElementById('pdf-modal-defect-icon');
+    const pdfModalDefectMsg = document.getElementById('pdf-modal-defect-msg');
+    const pdfModalIframe = document.getElementById('pdf-modal-iframe');
+
+    let pdfViewerState = {
+        pdfUrl: '',
+        currentPage: 1,
+        totalPages: 1
+    };
+
+    function romanToInt(s) {
+        if (!s) return 0;
+        const roman = { i: 1, v: 5, x: 10, l: 50, c: 100, d: 500, m: 1000 };
+        let num = 0;
+        const str = s.toLowerCase();
+        for (let i = 0; i < str.length; i++) {
+            const curr = roman[str[i]] || 0;
+            const next = roman[str[i + 1]] || 0;
+            if (curr < next) {
+                num -= curr;
+            } else {
+                num += curr;
+            }
+        }
+        return num;
+    }
+
+    function getPageForDefect(sectionName, defectText, meta) {
+        if (!defectText) return 1;
+        const text = defectText;
+        const sec = (sectionName || '').toLowerCase();
+        const sectionPages = (meta && meta.section_pages) || {};
+
+        // 1. Direct explicit physical page regex in defect text
+        // E.g.: "halaman fisik 29", "hal fisik 4", "Halaman 18", "Hal. 12", "hal 5", "Halaman: 8"
+        const mPhys = text.match(/(?:halaman\s+fisik|hal\s+fisik|halaman|hal\.?)\s*[:#]?\s*(\d+)/i);
+        if (mPhys && mPhys[1]) {
+            const p = parseInt(mPhys[1], 10);
+            if (p > 0) return p;
+        }
+
+        // 2. Table label with page, e.g. "Tabel 3.1.2 (halaman 29)" or "(hal. 14)"
+        const mTbl = text.match(/\(hal(?:aman)?\.?\s*(\d+)\)/i);
+        if (mTbl && mTbl[1]) {
+            const p = parseInt(mTbl[1], 10);
+            if (p > 0) return p;
+        }
+
+        // 3. Multi-page dummy list: "Hal 24, 30, 42" -> take the first one
+        const mDummies = text.match(/Hal(?:aman)?\s+(\d+)(?:\s*,\s*\d+)/i);
+        if (mDummies && mDummies[1]) {
+            const p = parseInt(mDummies[1], 10);
+            if (p > 0) return p;
+        }
+
+        // 4. Roman numerals in defect text: e.g. "halaman v", "hal iii", "halaman xii"
+        const mRoman = text.match(/(?:halaman|hal)\s+([ivxlcdm]+)\b/i);
+        if (mRoman && mRoman[1]) {
+            const rVal = romanToInt(mRoman[1]);
+            if (rVal > 0) {
+                if (sectionPages.kata_pengantar) {
+                    return sectionPages.kata_pengantar;
+                }
+                return rVal + 2;
+            }
+        }
+
+        // 5. Section-based mapping if no explicit page is found in text
+        if (sec.includes('kover depan') || sec.includes('cover depan')) return 1;
+        if (sec.includes('halaman kosong') && sec.includes('kover')) return 2;
+        if (sec.includes('judul utama') || sec.includes('hju')) return sectionPages.hju || 3;
+        if (sec.includes('katalog') || sec.includes('catalog')) return sectionPages.katalog || 4;
+        if (sec.includes('tim penyusun') || sec.includes('team')) return sectionPages.tim_penyusun || 5;
+        if (sec.includes('kata pengantar') || sec.includes('preface')) return sectionPages.kata_pengantar || 6;
+        if (sec.includes('daftar isi') || sec.includes('contents')) return sectionPages.daftar_isi || 8;
+        if (sec.includes('daftar tabel') || sec.includes('list of tables')) return sectionPages.daftar_tabel || 10;
+        if (sec.includes('daftar gambar') || sec.includes('list of figures')) return sectionPages.daftar_gambar || 12;
+        if (sec.includes('penjelasan umum') || sec.includes('penjelasan teknis') || sec.includes('singkatan')) return sectionPages.penjelasan_umum || 14;
+        if (sec.includes('batang tubuh') || sec.includes('tabel')) return 16;
+        if (sec.includes('daftar pustaka') || sec.includes('bibliography')) return sectionPages.daftar_pustaka || Math.max(1, (meta && meta.total_pages ? meta.total_pages - 1 : 100));
+        if (sec.includes('kover belakang') || sec.includes('cover belakang')) return (meta && meta.total_pages) ? meta.total_pages : 1;
+
+        return 1;
+    }
+
+    function openPdfViewer(data, targetPage, sectionTitle, defectText, defectIndex) {
+        if (!pdfViewerModal) return;
+
+        const meta = (data && data.metadata) || {};
+        const totalPages = parseInt(meta.total_pages || (data && data.total_pages) || 100, 10);
+        const region = meta.region || (data && data.district_name) || 'Kecamatan';
+        const year = meta.year || (data && data.year) || '2026';
+        const title = meta.title || (data && data.title) || `Publikasi Kecamatan ${region} Dalam Angka ${year}`;
+
+        // Cari file lokal jika pengguna mengunggah berkas di sesi ini
+        let localFile = null;
+        if (selectedPdfFile) {
+            localFile = selectedPdfFile;
+        } else if (selectedPdfFiles && selectedPdfFiles.length > 0) {
+            const regClean = region.toLowerCase().replace(/\s+/g, '');
+            for (const f of selectedPdfFiles) {
+                const fname = f.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+                if (fname.includes(regClean)) {
+                    localFile = f;
+                    break;
+                }
+            }
+        }
+
+        let pdfSourceUrl = '';
+        if (localFile) {
+            if (!localFile._blobUrl) {
+                localFile._blobUrl = URL.createObjectURL(localFile);
+            }
+            pdfSourceUrl = localFile._blobUrl;
+        } else if (data && data.source_pdf_url) {
+            pdfSourceUrl = data.source_pdf_url;
+        } else if (data && data.source_pdf_filename) {
+            pdfSourceUrl = `/api/view-pdf/${encodeURIComponent(data.source_pdf_filename)}`;
+        } else if (data && data.pdf_download_url) {
+            pdfSourceUrl = data.pdf_download_url;
+        }
+
+        if (!pdfSourceUrl) {
+            showToast('Berkas PDF belum tersedia untuk pratinjau langsung.', 'warning');
+            return;
+        }
+
+        pdfViewerState = {
+            pdfUrl: pdfSourceUrl,
+            currentPage: Math.max(1, Math.min(totalPages, targetPage || 1)),
+            totalPages: totalPages,
+            title: title
+        };
+
+        if (pdfModalDocTitle) pdfModalDocTitle.textContent = title;
+        if (pdfModalSubTitle) pdfModalSubTitle.textContent = `Wilayah: ${region} • ${totalPages} Halaman Dokumen`;
+
+        const isAesthetic = defectText && defectText.includes('[SARAN ESTETIKA');
+        if (pdfModalDefectBanner) {
+            pdfModalDefectBanner.className = `pdf-modal-defect-banner ${isAesthetic ? 'is-aesthetic' : ''}`;
+        }
+        if (pdfModalDefectIcon) {
+            pdfModalDefectIcon.textContent = isAesthetic ? '💡' : '⚠️';
+        }
+        if (pdfModalDefectMsg) {
+            pdfModalDefectMsg.innerHTML = `<strong>[${sectionTitle}] Catatan #${defectIndex}:</strong> ${defectText}`;
+        }
+
+        updatePdfModalPage(pdfViewerState.currentPage);
+
+        pdfViewerModal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function updatePdfModalPage(page) {
+        if (!pdfViewerState || !pdfViewerState.pdfUrl) return;
+
+        pdfViewerState.currentPage = Math.max(1, Math.min(pdfViewerState.totalPages, page));
+        const curPage = pdfViewerState.currentPage;
+
+        if (pdfModalCurPage) pdfModalCurPage.textContent = curPage;
+        if (pdfModalTotalPage) pdfModalTotalPage.textContent = pdfViewerState.totalPages;
+
+        if (btnPdfPrevPage) btnPdfPrevPage.disabled = (curPage <= 1);
+        if (btnPdfNextPage) btnPdfNextPage.disabled = (curPage >= pdfViewerState.totalPages);
+
+        const targetUrlWithHash = `${pdfViewerState.pdfUrl}#page=${curPage}&zoom=100`;
+
+        if (btnPdfOpenTab) {
+            btnPdfOpenTab.href = targetUrlWithHash;
+        }
+
+        if (pdfModalIframe) {
+            pdfModalIframe.src = targetUrlWithHash;
+        }
+    }
+
+    function closePdfViewer() {
+        if (!pdfViewerModal) return;
+        pdfViewerModal.style.display = 'none';
+        document.body.style.overflow = '';
+        if (pdfModalIframe) {
+            pdfModalIframe.src = '';
+        }
+    }
+
+    if (btnPdfPrevPage) {
+        btnPdfPrevPage.addEventListener('click', () => {
+            updatePdfModalPage(pdfViewerState.currentPage - 1);
+        });
+    }
+
+    if (btnPdfNextPage) {
+        btnPdfNextPage.addEventListener('click', () => {
+            updatePdfModalPage(pdfViewerState.currentPage + 1);
+        });
+    }
+
+    if (btnClosePdfModal) {
+        btnClosePdfModal.addEventListener('click', closePdfViewer);
+    }
+
+    if (pdfViewerModal) {
+        pdfViewerModal.addEventListener('click', (e) => {
+            if (e.target === pdfViewerModal) {
+                closePdfViewer();
+            }
+        });
+    }
+
+    window.addEventListener('keydown', (e) => {
+        if (pdfViewerModal && pdfViewerModal.style.display === 'flex') {
+            if (e.key === 'Escape') {
+                closePdfViewer();
+            } else if (e.key === 'ArrowLeft') {
+                updatePdfModalPage(pdfViewerState.currentPage - 1);
+            } else if (e.key === 'ArrowRight') {
+                updatePdfModalPage(pdfViewerState.currentPage + 1);
+            }
+        }
+    });
 });

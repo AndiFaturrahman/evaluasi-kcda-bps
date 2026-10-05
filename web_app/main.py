@@ -147,7 +147,9 @@ async def analyze_sample(
         "defects": defects,
         "download_url": f"/api/download/{excel_filename}",
         "excel_download_url": f"/api/download/{excel_filename}",
-        "pdf_download_url": f"/api/download/{pdf_filename}"
+        "pdf_download_url": f"/api/download/{pdf_filename}",
+        "source_pdf_filename": filename,
+        "source_pdf_url": f"/api/view-pdf/{filename}"
     }
 
 @app.post("/api/analyze-upload")
@@ -201,7 +203,9 @@ async def analyze_upload(
         "defects": defects,
         "download_url": f"/api/download/{excel_filename}",
         "excel_download_url": f"/api/download/{excel_filename}",
-        "pdf_download_url": f"/api/download/{pdf_filename}"
+        "pdf_download_url": f"/api/download/{pdf_filename}",
+        "source_pdf_filename": saved_pdf_name,
+        "source_pdf_url": f"/api/view-pdf/{saved_pdf_name}"
     }
 
 @app.post("/api/analyze-batch-bangkep")
@@ -241,6 +245,10 @@ async def analyze_batch_bangkep(custom_api_key: Optional[str] = Form(None)):
         generate_pdf_report(meta, defects, pdf_out_path)
         zip_items.append((pdf_out_path, pdf_fn))
 
+        excel_fn = f"Evaluasi_{meta['region'].replace(' ', '_')}_{meta['year']}_{task_id}.xlsx"
+        excel_out_path = os.path.join(OUTPUT_DIR, excel_fn)
+        generate_excel_report(meta, defects, excel_out_path, base_template_path=None)
+
         eval_results.append({
             "district_name": meta["region"],
             "region": meta["region"],
@@ -256,7 +264,12 @@ async def analyze_batch_bangkep(custom_api_key: Optional[str] = Form(None)):
             "metadata": meta,
             "defects": defects,
             "pdf_filename": pdf_fn,
-            "pdf_download_url": f"/api/download/{pdf_fn}"
+            "pdf_download_url": f"/api/download/{pdf_fn}",
+            "excel_filename": excel_fn,
+            "excel_download_url": f"/api/download/{excel_fn}",
+            "download_url": f"/api/download/{excel_fn}",
+            "source_pdf_filename": os.path.basename(pdf_path),
+            "source_pdf_url": f"/api/view-pdf/{os.path.basename(pdf_path)}"
         })
 
     master_excel_fn = f"Evaluasi_Publikasi_KcDA_MASTER_{task_id}.xlsx"
@@ -326,6 +339,10 @@ async def analyze_batch_upload(
         generate_pdf_report(meta, defects, pdf_out_path)
         zip_items.append((pdf_out_path, pdf_fn))
 
+        excel_fn = f"Evaluasi_{meta['region'].replace(' ', '_')}_{meta['year']}_{task_id}.xlsx"
+        excel_out_path = os.path.join(OUTPUT_DIR, excel_fn)
+        generate_excel_report(meta, defects, excel_out_path, base_template_path=None)
+
         eval_results.append({
             "district_name": meta["region"],
             "region": meta["region"],
@@ -341,7 +358,12 @@ async def analyze_batch_upload(
             "metadata": meta,
             "defects": defects,
             "pdf_filename": pdf_fn,
-            "pdf_download_url": f"/api/download/{pdf_fn}"
+            "pdf_download_url": f"/api/download/{pdf_fn}",
+            "excel_filename": excel_fn,
+            "excel_download_url": f"/api/download/{excel_fn}",
+            "download_url": f"/api/download/{excel_fn}",
+            "source_pdf_filename": saved_name,
+            "source_pdf_url": f"/api/view-pdf/{saved_name}"
         })
 
     if not eval_results:
@@ -388,6 +410,33 @@ async def download_file(filename: str):
         path=file_path,
         filename=filename,
         media_type=media_type
+    )
+
+@app.get("/api/view-pdf/{filename}")
+async def view_pdf(filename: str):
+    clean_fn = os.path.basename(filename)
+    candidate_paths = [
+        os.path.join(UPLOAD_DIR, clean_fn),
+        os.path.join(SAMPLE_DIR, clean_fn),
+        os.path.join(OUTPUT_DIR, clean_fn),
+        os.path.join(BASE_DIR, clean_fn)
+    ]
+    target_path = None
+    for cp in candidate_paths:
+        if os.path.exists(cp):
+            target_path = cp
+            break
+            
+    if not target_path:
+        raise HTTPException(status_code=404, detail="Berkas PDF tidak ditemukan.")
+        
+    return FileResponse(
+        path=target_path,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f"inline; filename=\"{clean_fn}\"",
+            "Cache-Control": "public, max-age=3600"
+        }
     )
 
 if __name__ == "__main__":
