@@ -246,6 +246,12 @@ def extract_pdf_metadata(pdf_path):
             cover_has_issn = True
 
     cover_catalog_space_colon = cover_raster_info.get("catalog_space_colon", False)
+    cover_title_is_italic = True
+    if cv_auditor and num_pages > 0:
+        try:
+            cover_title_is_italic = cv_auditor.check_title_english_is_italic(doc[0])
+        except Exception:
+            pass
 
     # ── HALAMAN KOSONG SETELAH KOVER DEPAN (Halaman fisik 2) ──
     p2_lines = pages_lines.get(1, [])
@@ -270,6 +276,12 @@ def extract_pdf_metadata(pdf_path):
             p3_has_issn = True
 
     hju_catalog_space_colon = hju_raster_info.get("catalog_space_colon", False)
+    hju_title_is_italic = True
+    if cv_auditor and num_pages > 2:
+        try:
+            hju_title_is_italic = cv_auditor.check_title_english_is_italic(doc[2])
+        except Exception:
+            pass
 
     p3_lines = pages_lines.get(2, [])
     # Abaikan watermark web portal BPS (bps.go.id), hanya deteksi running title riil
@@ -1115,6 +1127,8 @@ def extract_pdf_metadata(pdf_path):
                     cover_catalog_space_colon = True
                 if cv_cov.get("has_template_letter_a"):
                     cover_has_letter_a = True
+                if "title_english_is_italic" in cv_cov:
+                    cover_title_is_italic = cv_cov["title_english_is_italic"]
             if cv_audit.get("hju_visual"):
                 cv_hju = cv_audit["hju_visual"]
                 if cv_hju.get("has_colon_on_issn"):
@@ -1123,6 +1137,8 @@ def extract_pdf_metadata(pdf_path):
                     hju_catalog_space_colon = True
                 if cv_hju.get("has_illustration_background"):
                     p3_has_image = True
+                if "title_english_is_italic" in cv_hju:
+                    hju_title_is_italic = cv_hju["title_english_is_italic"]
         except Exception as e:
             print(f"[CV Auditor] Error in audit_document: {e}")
 
@@ -1156,6 +1172,8 @@ def extract_pdf_metadata(pdf_path):
         "cover_has_issn": cover_has_issn,
         "cover_has_template_leak": cover_has_template_leak,
         "cover_has_letter_a": cover_has_letter_a,
+        "cover_title_is_italic": cover_title_is_italic,
+        "hju_title_is_italic": hju_title_is_italic,
         "p2_has_leak": p2_has_leak,
         "p3_has_image": p3_has_image,
         "p3_text_full": p3_text_full,
@@ -1453,7 +1471,7 @@ def analyze_defects(meta, custom_api_key=None):
             )
             
         # 3. Tipografi judul bahasa Inggris belum dicetak miring
-        if not any("dicetak miring" in x.lower() or "italic" in x.lower() for x in cov_list):
+        if not meta.get("cover_title_is_italic", True) and not any("dicetak miring" in x.lower() or "italic" in x.lower() for x in cov_list):
             cov_list.append(
                 f'Kesalahan tipografi judul bahasa Inggris: Terjemahan judul "{region_up} DISTRICT IN FIGURES {year}" '
                 f'pada kover depan belum dicetak miring (masih reguler/tegak). Sesuai kaidah publikasi dwibahasa BPS '
@@ -1500,7 +1518,7 @@ def analyze_defects(meta, custom_api_key=None):
                 f'Kesalahan spasi pada nomor katalog Halaman Judul Utama: Tertulis "Katalog/Catalogue : {catalog_no}" '
                 f'(terdapat spasi sebelum tanda titik dua). Seharusnya ditulis tanpa spasi "Katalog/Catalogue: {catalog_no}".'
             )
-        if not any("dicetak miring" in x.lower() or "italic" in x.lower() for x in hju):
+        if not meta.get("hju_title_is_italic", True) and not any("dicetak miring" in x.lower() or "italic" in x.lower() for x in hju):
             hju.append(
                 f'Kesalahan tipografi judul bahasa Inggris pada Halaman Judul Utama: Terjemahan judul "{region_up} DISTRICT IN FIGURES {year}" '
                 f'belum dicetak miring (masih reguler/tegak). Sesuai Pedoman Publikasi BPS 2023 Bab 4.3.1 (hal. 36) & Instrumen baris 18, '
@@ -1738,11 +1756,12 @@ def analyze_defects(meta, custom_api_key=None):
             f'wajib mencantumkan tulisan "ISSN {issn}" tanpa tanda titik dua di pojok kanan atas kover depan di atas nomor katalog (Pedoman hal. 35 & Instrumen baris 13).'
         )
     region_up = region.upper()
-    kover_depan.append(
-        f'Kesalahan tipografi judul bahasa Inggris: Terjemahan judul "{region_up} DISTRICT IN FIGURES {year}" '
-        f'pada kover depan belum dicetak miring (masih reguler/tegak). Sesuai kaidah publikasi dwibahasa BPS '
-        f'(Pedoman 2023 hal. 58 & Instrumen baris 8), terjemahan judul bahasa asing wajib dicetak miring (italic).'
-    )
+    if not meta.get("cover_title_is_italic", True):
+        kover_depan.append(
+            f'Kesalahan tipografi judul bahasa Inggris: Terjemahan judul "{region_up} DISTRICT IN FIGURES {year}" '
+            f'pada kover depan belum dicetak miring (masih reguler/tegak). Sesuai kaidah publikasi dwibahasa BPS '
+            f'(Pedoman 2023 hal. 58 & Instrumen baris 8), terjemahan judul bahasa asing wajib dicetak miring (italic).'
+        )
     if meta.get("cover_has_template_leak"):
         kover_depan.append(
             'Terdapat teks placeholder template yang belum dihapus di bagian bawah kover depan: '
@@ -1783,11 +1802,12 @@ def analyze_defects(meta, custom_api_key=None):
             f'Kesalahan spasi pada nomor katalog Halaman Judul Utama: Tertulis "Katalog/Catalogue : {catalog_no}" '
             f'(terdapat spasi sebelum tanda titik dua). Seharusnya ditulis tanpa spasi "Katalog/Catalogue: {catalog_no}".'
         )
-    halaman_judul.append(
-        f'Kesalahan tipografi judul bahasa Inggris pada Halaman Judul Utama: Terjemahan judul "{region_up} DISTRICT IN FIGURES {year}" '
-        f'belum dicetak miring (masih reguler/tegak). Sesuai Pedoman Publikasi BPS 2023 Bab 4.3.1 (hal. 36) & Instrumen baris 18, '
-        f'terjemahan judul bahasa asing wajib dicetak miring (italic).'
-    )
+    if not meta.get("hju_title_is_italic", True):
+        halaman_judul.append(
+            f'Kesalahan tipografi judul bahasa Inggris pada Halaman Judul Utama: Terjemahan judul "{region_up} DISTRICT IN FIGURES {year}" '
+            f'belum dicetak miring (masih reguler/tegak). Sesuai Pedoman Publikasi BPS 2023 Bab 4.3.1 (hal. 36) & Instrumen baris 18, '
+            f'terjemahan judul bahasa asing wajib dicetak miring (italic).'
+        )
     if meta.get("p3_has_rt"):
         halaman_judul.append(
             'Running title atau nomor halaman fisik tercetak pada Halaman Judul Utama. '

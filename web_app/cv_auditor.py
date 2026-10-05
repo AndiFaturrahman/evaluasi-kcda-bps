@@ -52,6 +52,93 @@ class CVPublicationAuditor:
         except Exception as e:
             print(f"[CV Auditor] Warning loading Haar cascade: {e}")
 
+    def check_title_english_is_italic(self, page):
+        """
+        Mendeteksi apakah terjemahan judul bahasa Inggris ('... DISTRICT IN FIGURES')
+        pada halaman kover depan atau HJU dicetak miring (italic).
+        Mendukung pengecekan teks berbasis font-flags PyMuPDF dan pemindaian kemiringan visual (moment slant) OpenCV.
+        Mengembalikan True jika miring (italic), False jika tegak (reguler).
+        """
+        # 1. Cek Text Layer (PyMuPDF blocks/spans jika tersedia)
+        try:
+            blocks = page.get_text("dict").get("blocks", [])
+            for b in blocks:
+                if "lines" in b:
+                    for l in b["lines"]:
+                        for s in l["spans"]:
+                            txt = s.get("text", "").strip()
+                            if "DISTRICT IN FIGURES" in txt.upper() or "IN FIGURES" in txt.upper():
+                                font_name = s.get("font", "").lower()
+                                flags = s.get("flags", 0)
+                                if (flags & 2) or "italic" in font_name or "oblique" in font_name or "slanted" in font_name:
+                                    return True
+                                else:
+                                    return False
+        except Exception:
+            pass
+
+        # 2. Pemindaian Visual OpenCV (Slant / Shear moment analysis)
+        try:
+            pix = page.get_pixmap(dpi=200)
+            img = cv2.imdecode(np.frombuffer(pix.tobytes("png"), np.uint8), cv2.IMREAD_COLOR)
+            if img is None:
+                return True
+            h, w, _ = img.shape
+            crop = img[int(h * 0.15):int(h * 0.55), int(w * 0.08):int(w * 0.80)]
+            gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
+            _, thresh = cv2.threshold(gray, 180, 255, cv2.THRESH_BINARY_INV)
+            num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(thresh)
+
+            lines = {}
+            for i in range(1, num_labels):
+                x, y, cw, ch, area = stats[i]
+                if 10 < area < 5000 and 8 < ch < 100:
+                    cy = y + ch // 2
+                    assigned = False
+                    for lk in lines:
+                        if abs(cy - lk) < 15:
+                            lines[lk].append((x, y, cw, ch, area, i))
+                            assigned = True
+                            break
+                    if not assigned:
+                        lines[cy] = [(x, y, cw, ch, area, i)]
+
+            candidate_lines = []
+            for cy in sorted(lines.keys()):
+                comps = lines[cy]
+                if len(comps) >= 15:
+                    candidate_lines.append((cy, comps))
+
+            if not candidate_lines:
+                for cy in sorted(lines.keys()):
+                    comps = lines[cy]
+                    if len(comps) >= 8:
+                        candidate_lines.append((cy, comps))
+
+            if candidate_lines:
+                target_line = candidate_lines[-1][1]
+                slants = []
+                for c in target_line:
+                    idx = c[5]
+                    mask = (labels == idx).astype(np.uint8)
+                    x, y, cw, ch = c[0], c[1], c[2], c[3]
+                    char_roi = mask[y:y+ch, x:x+cw]
+                    M = cv2.moments(char_roi)
+                    if M['mu02'] > 0 and M['m00'] > 20:
+                        shear = M['mu11'] / M['mu02']
+                        slants.append(np.degrees(np.arctan(shear)))
+
+                if slants:
+                    med_slant = np.median(slants)
+                    if med_slant <= -5.0:
+                        return True
+                    else:
+                        return False
+        except Exception as e:
+            print(f"[check_title_english_is_italic] Error: {e}")
+
+        return True
+
     def audit_document(self, doc, region_name="Wilayah", year="2026", catalog_no="-", issn_val="-"):
         """
         Menjalankan audit visual lengkap dari halaman pertama hingga kover belakang.
@@ -276,7 +363,8 @@ class CVPublicationAuditor:
             "logo_color_ratio": 0.0,
             "logo_mean_saturation": 0.0,
             "logo_is_monochrome": False,
-            "title_english_is_upright": True,
+            "title_english_is_upright": False,
+            "title_english_is_italic": True,
             "has_template_letter_a": False,
             "defects": []
         }
@@ -369,12 +457,16 @@ class CVPublicationAuditor:
 
         # C. Inspeksi Tipografi Subtitle Bahasa Asing (Italic vs Reguler)
         # Sesuai pedoman dwibahasa, judul bahasa asing wajib dicetak miring
-        reg_up = region_name.upper()
-        info["defects"].append(
-            f'Kesalahan tipografi judul bahasa Inggris: Terjemahan judul "{reg_up} DISTRICT IN FIGURES {year}" '
-            f'pada kover depan belum dicetak miring (masih reguler/tegak). Sesuai kaidah publikasi dwibahasa BPS '
-            f'(Pedoman 2023 hal. 58 & Instrumen baris 8), terjemahan judul bahasa asing wajib dicetak miring (italic).'
-        )
+        is_italic = self.check_title_english_is_italic(page)
+        info["title_english_is_italic"] = is_italic
+        info["title_english_is_upright"] = not is_italic
+        if not is_italic:
+            reg_up = region_name.upper()
+            info["defects"].append(
+                f'Kesalahan tipografi judul bahasa Inggris: Terjemahan judul "{reg_up} DISTRICT IN FIGURES {year}" '
+                f'pada kover depan belum dicetak miring (masih reguler/tegak). Sesuai kaidah publikasi dwibahasa BPS '
+                f'(Pedoman 2023 hal. 58 & Instrumen baris 8), terjemahan judul bahasa asing wajib dicetak miring (italic).'
+            )
 
         # D. Deteksi Residu Huruf Template 'A'
         cover_txt = page.get_text("text")
@@ -524,12 +616,16 @@ class CVPublicationAuditor:
                         break
 
         # D. Judul Terjemahan Inggris HJU
-        reg_up = region_name.upper()
-        info["defects"].append(
-            f'Kesalahan tipografi judul bahasa Inggris pada Halaman Judul Utama: Terjemahan judul "{reg_up} DISTRICT IN FIGURES {year}" '
-            f'belum dicetak miring (masih reguler/tegak). Sesuai Pedoman Publikasi BPS 2023 Bab 4.3.1 (hal. 36) & Instrumen baris 18, '
-            f'terjemahan judul bahasa asing wajib dicetak miring (italic).'
-        )
+        is_italic = self.check_title_english_is_italic(page)
+        info["title_english_is_italic"] = is_italic
+        info["title_english_is_upright"] = not is_italic
+        if not is_italic:
+            reg_up = region_name.upper()
+            info["defects"].append(
+                f'Kesalahan tipografi judul bahasa Inggris pada Halaman Judul Utama: Terjemahan judul "{reg_up} DISTRICT IN FIGURES {year}" '
+                f'belum dicetak miring (masih reguler/tegak). Sesuai Pedoman Publikasi BPS 2023 Bab 4.3.1 (hal. 36) & Instrumen baris 18, '
+                f'terjemahan judul bahasa asing wajib dicetak miring (italic).'
+            )
 
         return info
 
