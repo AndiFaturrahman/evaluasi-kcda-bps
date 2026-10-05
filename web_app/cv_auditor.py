@@ -473,7 +473,9 @@ class CVPublicationAuditor:
         if "A\n" in cover_txt[:30] or "\nA\n" in cover_txt[:50]:
             info["has_template_letter_a"] = True
             info["defects"].append(
-                'Terdapat residu huruf sisa template/huruf "A" di bagian kover depan yang belum dibersihkan.'
+                'Terdapat residu teks template tersembunyi (huruf "A") di pojok kanan bawah kover depan: '
+                'Huruf "A" (kode varian Template A master BPS) masih tertanam di text layer PDF bersama teks "XXXXX Dalam Angka 2024". '
+                'Meskipun secara visual tercetak putih/tertutup latar, kotak teks sisa template ini wajib dihapus dari desain asli.'
             )
 
         return info

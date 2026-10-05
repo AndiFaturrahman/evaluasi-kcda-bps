@@ -1615,12 +1615,14 @@ def analyze_defects(meta, custom_api_key=None):
         )
     if meta.get("cover_has_template_leak"):
         kover_depan.append(
-            'Terdapat teks placeholder template yang belum dihapus di bagian bawah kover depan: '
-            'tertulis "XXXXX Dalam Angka 2024". Harap bersihkan seluruh teks sisa template tersebut.'
+            'Terdapat residu teks placeholder template pada kover depan: Tertulis teks sisa template "XXXXX Dalam Angka 2024" '
+            'di text layer pojok bawah kover depan. Kotak teks sisa template master tersebut wajib dihapus dari dokumen desain asli.'
         )
     if meta.get("cover_has_letter_a"):
         kover_depan.append(
-            'Terdapat sisa huruf template "A" di pojok kanan bawah kover depan yang belum dihapus.'
+            'Terdapat residu teks template tersembunyi (huruf "A") di pojok kanan bawah kover depan: '
+            'Huruf "A" (kode varian Template A master BPS) masih tertanam di text layer PDF pada koordinat pojok bawah bersama teks "XXXXX Dalam Angka 2024". '
+            'Meskipun secara visual tercetak putih/tertutup gambar latar, objek teks sisa template ini wajib dihapus dari file desain asli agar tidak terbaca oleh sistem pengindeks repositori publikasi BPS.'
         )
 
     # ── 2. HALAMAN JUDUL UTAMA: - ──
