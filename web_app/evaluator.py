@@ -336,6 +336,17 @@ def extract_pdf_metadata(pdf_path):
     space_before_slash_unit_pages = bool(re.search(r'(?:halaman|hlm|hal)\s+/pages', catalog_text, re.I))
     space_before_slash_pages = space_before_slash_label_pages or space_before_slash_unit_pages
     space_before_colon_pages = bool(re.search(r'Jumlah\s+Halaman[^\n:]*?\s+:', catalog_text))
+    space_around_plus_pages = bool(re.search(r'([ivxlcdmIVXLCDM]+)\s+\+|\+\s+(\d+)', catalog_text))
+    copyright_space_after_symbol = bool(re.search(r'©\s+[^\n]+', catalog_text))
+
+    book_size_format_error = None
+    m_bsize = re.search(r'(?:Ukuran\s+Buku|Book\s+Size)[^\n:]*:\s*([^\n]+)', catalog_text, re.I)
+    if m_bsize:
+        bsize_str = m_bsize.group(1).strip()
+        if re.search(r'14\.8', bsize_str):
+            book_size_format_error = f'Tertulis menggunakan tanda titik ("{bsize_str}"). Sesuai standar BPS (Instrumen baris 27), koma desimal wajib menggunakan tanda koma: "14,8 cm x 21 cm".'
+        elif not re.search(r'14,8\s*cm\s*[x×]\s*21\s*cm', bsize_str, re.I) and not re.search(r'17,6\s*cm\s*[x×]\s*25\s*cm', bsize_str, re.I):
+            book_size_format_error = f'Format penulisan dimensi tidak baku: Tertulis "{bsize_str}". Format baku BPS untuk publikasi buku A5 adalah "14,8 cm x 21 cm" (menggunakan spasi di sekitar tanda "x" dan spasi sebelum "cm").'
 
     # Cek sinkronisasi jumlah halaman katalog vs fisik
     catalog_pages_mismatch = None
@@ -729,12 +740,40 @@ def extract_pdf_metadata(pdf_path):
                 roman_page_mismatch = (catalog_roman, catalog_roman_int, expected_roman_count)
 
     catalog_label_errors = []
-    for label_id, label_en in [
-        ("Ukuran Buku", "Book Size"), ("Dicetak oleh", "Printed by"),
-        ("Penerbit", "Publisher"), ("Sumber Ilustrasi", "Illustration Source"),
-    ]:
-        if re.search(rf'{label_id}\s+:', catalog_text):
-            catalog_label_errors.append(f'"{label_id}/{label_en} :" (terdapat spasi sebelum titik dua)')
+    standard_catalog_labels = [
+        ("Katalog", "Catalogue"),
+        ("Nomor Publikasi", "Publication Number"),
+        ("Ukuran Buku", "Book Size"),
+        ("Jumlah Halaman", "Number of Pages"),
+        ("Penyusun Naskah", "Manuscript Drafter"),
+        ("Penyunting", "Editor"),
+        ("Pembuat Kover", "Cover Designer"),
+        ("Penerbit", "Publisher"),
+        ("Dicetak oleh", "Printed by"),
+        ("Sumber Ilustrasi", "Illustration Source"),
+    ]
+    for label_id, label_en in standard_catalog_labels:
+        # 1. Spasi sebelum titik dua pada label
+        m_col = re.search(rf'(?:{label_id}/{label_en}|{label_id}|{label_en})\s+:', catalog_text, re.I)
+        if m_col:
+            if label_id != "Jumlah Halaman":  # Sudah memiliki deteksi mandiri
+                catalog_label_errors.append(
+                    f'Terdapat spasi sebelum tanda titik dua pada label "{label_id}/{label_en} :". '
+                    f'Penulisan baku ditulis rapat tanpa spasi sebelum titik dua ("{label_id}/{label_en}:").'
+                )
+        # 2. Spasi sebelum garis miring pada label
+        if re.search(rf'{label_id}\s+/{label_en}', catalog_text, re.I):
+            if label_id not in ["Katalog", "Jumlah Halaman"]:  # Sudah memiliki deteksi mandiri
+                catalog_label_errors.append(
+                    f'Terdapat spasi sebelum garis miring pada label "{label_id} /{label_en}". '
+                    f'Penulisan baku dwibahasa BPS ditulis rapat tanpa spasi sebelum garis miring ("{label_id}/{label_en}").'
+                )
+        # 3. Spasi setelah garis miring pada label
+        if re.search(rf'{label_id}/\s+{label_en}', catalog_text, re.I):
+            catalog_label_errors.append(
+                f'Terdapat spasi setelah garis miring pada label "{label_id}/ {label_en}". '
+                f'Penulisan baku dwibahasa BPS ditulis rapat setelah garis miring ("{label_id}/{label_en}").'
+            )
 
     # ── TIM PENYUSUN ──
     team_has_issn = bool(re.search(r'ISSN', team_text, re.IGNORECASE))
@@ -940,6 +979,7 @@ def extract_pdf_metadata(pdf_path):
     # ── PEMBATAS BAB & AWAL BAB GANJIL ──
     even_start_chapters = []
     divider_has_running_title = False
+    divider_has_page_num = False
     for p in range(20, num_pages - 3):
         txt = pages_text.get(p, "").strip()
         txt_no_web = re.sub(r'https?://\S+', '', txt).strip()
@@ -947,6 +987,9 @@ def extract_pdf_metadata(pdf_path):
         if is_divider:
             if any("DALAM ANGKA" in l.upper() or "IN FIGURES" in l.upper() for l in pages_lines.get(p, [])):
                 divider_has_running_title = True
+            div_lines = pages_lines.get(p, [])
+            if div_lines and div_lines[0].isdigit():
+                divider_has_page_num = True
             if p + 1 < num_pages:
                 next_lines = pages_lines.get(p + 1, [])
                 if next_lines and next_lines[0].isdigit():
@@ -987,12 +1030,18 @@ def extract_pdf_metadata(pdf_path):
         pg_num = lines[0] if lines[0].isdigit() else str(p + 1)
 
         current_tbl_num = None
+        candidate_title = None
         for idx_l, line in enumerate(lines):
-            num_match = re.match(r'^([1-7](?:\.\d+)+)$', line)
+            num_match = re.match(r'^([1-7](?:\.\d+)+)(\.)?$', line)
             if num_match and idx_l + 1 < len(lines):
-                candidate_title = lines[idx_l + 1]
-                if len(candidate_title) > 5 and not candidate_title.isdigit() and 'KECAMATAN' not in candidate_title.upper():
+                c_cand = lines[idx_l + 1]
+                if len(c_cand) > 5 and not c_cand.isdigit() and 'KECAMATAN' not in c_cand.upper():
                     current_tbl_num = num_match.group(1)
+                    candidate_title = c_cand
+                    if num_match.group(2) == '.':
+                        table_findings.append(
+                            f"Tabel {current_tbl_num} (hal {pg_num}): Terdapat tanda titik (.) di akhir nomor tabel ('{line}'). Sesuai Pedoman Publikasi BPS 2023 hal. 40 & Instrumen baris 141, nomor tabel tidak boleh diakhiri tanda titik."
+                        )
                     if current_tbl_num.count('.') >= 2:
                         break
         if not current_tbl_num:
@@ -1001,6 +1050,24 @@ def extract_pdf_metadata(pdf_path):
                 current_tbl_num = "Lanjutan " + m_lanj.group(1)
         
         tbl_label = f"Tabel {current_tbl_num} (hal {pg_num})" if current_tbl_num else f"Tabel pada halaman {pg_num} (hal fisik {p+1})"
+
+        # Titik di akhir judul tabel (Instrumen Row 141)
+        if candidate_title and candidate_title.endswith('.'):
+            table_findings.append(
+                f"{tbl_label}: Terdapat tanda titik (.) di akhir judul tabel ('{candidate_title}'). Sesuai Pedoman Publikasi BPS 2023 hal. 40 & Instrumen baris 141, nomor dan judul tabel tidak boleh diakhiri tanda titik."
+            )
+
+        # Kata "Tahun" pada judul tabel (Instrumen Row 145)
+        if candidate_title and re.search(r'\bTahun\s+(?:202\d|201\d)\b', candidate_title, re.I) and not re.search(r'Tahun\s+Ajaran', candidate_title, re.I):
+            table_findings.append(
+                f"{tbl_label}: Judul tabel memuat kata 'Tahun' sebelum angka tahun ('{candidate_title}'). Sesuai Pedoman Publikasi BPS 2023 hal. 41 & Instrumen baris 145, judul tabel tidak perlu menampilkan kata 'Tahun', melainkan didahului tanda koma sebelum keterangan waktu (contoh: '..., 2024')."
+            )
+
+        # "Keterangan:" alih-alih "Catatan:" di bawah tabel (Instrumen Row 158)
+        if re.search(r'^\s*Keterangan\s*[:/]', txt, re.MULTILINE | re.IGNORECASE) and ('Tabel' in txt or 'Table' in txt or has_continuation):
+            table_findings.append(
+                f"{tbl_label}: Penjelasan di bawah tabel menggunakan kata 'Keterangan:'. Sesuai Pedoman BPS 2023 hal. 43 & Instrumen baris 158, penjelasan di bawah tabel wajib didahului dengan kata 'Catatan:' bukan 'Keterangan:'."
+            )
 
         # Judul terbalik di bawah data
         has_tabel_word = any(l.upper() in ["TABEL", "TABLE"] for l in lines)
@@ -1239,6 +1306,10 @@ def extract_pdf_metadata(pdf_path):
         "space_before_slash_pages": space_before_slash_pages,
         "space_before_slash_label_pages": space_before_slash_label_pages,
         "space_before_slash_unit_pages": space_before_slash_unit_pages,
+        "space_around_plus_pages": space_around_plus_pages,
+        "copyright_space_after_symbol": copyright_space_after_symbol,
+        "book_size_format_error": book_size_format_error,
+        "divider_has_page_num": divider_has_page_num,
         "bps_abbreviated_id": bps_abbreviated_id,
         "bps_of_en": bps_of_en,
         "copyright_typo_regency": copyright_typo_regency,
@@ -1513,316 +1584,9 @@ def analyze_defects(meta, custom_api_key=None):
     cat_arab = meta["catalog_arab"]
     preface_year = meta.get("preface_year", year)
 
-    # 1. PERIKSA APAKAH KECAMATAN MEMILIKI CACHE FORMULASI RESMI (12 Kecamatan Bangkep)
-    cache_key = "Peling" if region == "Peling Tengah" else (region if region in VARIATION_CACHE else None)
-    if not cache_key and any(k.lower() in region.lower() for k in VARIATION_CACHE):
-        for k in VARIATION_CACHE:
-            if k.lower() in region.lower():
-                cache_key = k
-                break
-
-    if cache_key and cache_key in VARIATION_CACHE:
-        cached = copy.deepcopy(VARIATION_CACHE[cache_key])
-        
-        # ── Sanitasi runtime: Pastikan false-positive edisi terbitan & catatan salah seksi tidak bocor ──
-        for sec in ["Kover depan: -", "Halaman Judul Utama: -"]:
-            if sec in cached:
-                cached[sec] = [
-                    x for x in cached[sec]
-                    if "Wajib mencantumkan Edisi Terbitan" not in x and "pada halaman katalog" not in x
-                ]
-        
-        # ── KOVER DEPAN: Evaluasi dinamis berbasis pemindaian riil PDF ──
-        cov_list = cached.get("Kover depan: -", [])
-        region_up = region.upper()
-        
-        # 1. Spasi sebelum titik dua pada nomor katalog kover depan
-        if meta.get("cover_catalog_space_colon") and not any("nomor katalog" in x.lower() and "spasi" in x.lower() for x in cov_list):
-            cov_list.append(
-                f'Kesalahan spasi pada nomor katalog: Tertulis "Katalog/Catalogue : {catalog_no}" '
-                f'(terdapat spasi sebelum tanda titik dua). Sesuai kaidah tata tulis baku BPS, tidak boleh ada spasi sebelum tanda titik dua. '
-                f'Koreksi seharusnya: "Katalog/Catalogue: {catalog_no}".'
-            )
-            
-        # 2. Format penulisan nomor ISSN (dengan tanda titik dua vs tanpa tanda titik dua)
-        if meta.get("cover_has_colon") and not any("titik dua" in x.lower() and "issn" in x.lower() for x in cov_list):
-            cov_list.append(
-                f'Kesalahan format penulisan nomor ISSN: Tertulis "ISSN : {issn}" (menggunakan tanda titik dua setelah kata ISSN). '
-                f'Sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.1 (hal. 35) & Instrumen Pemeriksaan Publikasi baris 13, publikasi berkala yang memiliki ISSN '
-                f'wajib mencantumkan tulisan "ISSN {issn}" TANPA tanda titik dua di pojok kanan atas kover depan di atas nomor katalog.'
-            )
-        elif issn and issn != "-" and not meta.get("cover_has_issn") and not any("tidak dicantumkan" in x.lower() for x in cov_list):
-            cov_list.append(
-                f'Nomor ISSN tidak dicantumkan pada kover depan: Publikasi berkala yang memiliki ISSN resmi ({issn}) '
-                f'wajib mencantumkan tulisan "ISSN {issn}" tanpa tanda titik dua di pojok kanan atas kover depan di atas nomor katalog (Pedoman hal. 35 & Instrumen baris 13).'
-            )
-            
-        # 3. Tipografi judul bahasa Inggris belum dicetak miring
-        if not meta.get("cover_title_is_italic", True) and not any("dicetak miring" in x.lower() or "italic" in x.lower() for x in cov_list):
-            cov_list.append(
-                f'Kesalahan tipografi judul bahasa Inggris: Terjemahan judul "{region_up} DISTRICT IN FIGURES {year}" '
-                f'pada kover depan belum dicetak miring (masih reguler/tegak). Sesuai kaidah publikasi dwibahasa BPS '
-                f'(Pedoman 2023 hal. 58 & Instrumen baris 8), terjemahan judul bahasa asing wajib dicetak miring (italic).'
-            )
-            
-        # 4. Kebocoran placeholder template
-        if meta.get("cover_has_template_leak") and not any("placeholder" in x.lower() or "xxxxx" in x.lower() for x in cov_list):
-            cov_list.append(
-                'Terdapat teks placeholder template yang belum dihapus di bagian bawah kover depan: '
-                'tertulis "XXXXX Dalam Angka 2024". Harap bersihkan seluruh teks sisa template tersebut.'
-            )
-            
-        # 5. Kebocoran huruf A sisa template
-        if meta.get("cover_has_letter_a") and not any("huruf \"a\"" in x.lower() or "residu huruf" in x.lower() for x in cov_list):
-            cov_list.append(
-                'Terdapat sisa huruf template "A" di pojok kanan bawah kover depan yang belum dibersihkan.'
-            )
-            
-        cached["Kover depan: -"] = cov_list
-
-        # ── HALAMAN JUDUL UTAMA: Wajib memuat teguran bebas ilustrasi & logo berwarna serta ISSN/Katalog/Tipografi ──
-        hju = cached.get("Halaman Judul Utama: -", [])
-        if meta.get("p3_has_image", True) and not any("latar belakang" in x.lower() or "ilustrasi" in x.lower() for x in hju):
-            hju.insert(0,
-                'Pelanggaran format latar belakang Halaman Judul Utama: Memuat gambar/foto pemandangan alam (duplikasi visual kover depan). '
-                'Berdasarkan Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.1 (hal. 36), Template KCDA 2026 halaman 3, '
-                'dan Instrumen Pemeriksaan Publikasi baris 17, Halaman Judul Utama (halaman fisik 3 / Romawi i) WAJIB berlatar putih bersih tanpa ilustrasi.'
-            )
-        if not any("logo" in x.lower() for x in hju):
-            hju.append(
-                'Kesalahan warna logo BPS: Logo BPS dan identitas BPS Penerbit pada Halaman Judul Utama ditampilkan monokrom/grayscale. '
-                'Sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.1 (hal. 36) & Instrumen Pemeriksaan baris 21, '
-                'logo dan nama BPS penerbit pada Halaman Judul Utama wajib ditampilkan berwarna (biru dan hijau BPS).'
-            )
-        if meta.get("p3_issn_has_colon") and not any("titik dua" in x.lower() and "issn" in x.lower() for x in hju):
-            hju.append(
-                f'Kesalahan format penulisan nomor ISSN pada Halaman Judul Utama: Tertulis "ISSN : {issn}" (menggunakan tanda titik dua setelah kata ISSN). '
-                f'Sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.1 (hal. 36) & Instrumen baris 19, penulisan nomor ISSN pada Halaman Judul Utama '
-                f'wajib ditulis "ISSN {issn}" tanpa tanda titik dua.'
-            )
-        if meta.get("hju_catalog_space_colon") and not any("nomor katalog" in x.lower() and "spasi" in x.lower() for x in hju):
-            hju.append(
-                f'Kesalahan spasi pada nomor katalog Halaman Judul Utama: Tertulis "Katalog/Catalogue : {catalog_no}" '
-                f'(terdapat spasi sebelum tanda titik dua). Seharusnya ditulis tanpa spasi "Katalog/Catalogue: {catalog_no}".'
-            )
-        if not meta.get("hju_title_is_italic", True) and not any("dicetak miring" in x.lower() or "italic" in x.lower() for x in hju):
-            hju.append(
-                f'Kesalahan tipografi judul bahasa Inggris pada Halaman Judul Utama: Terjemahan judul "{region_up} DISTRICT IN FIGURES {year}" '
-                f'belum dicetak miring (masih reguler/tegak). Sesuai Pedoman Publikasi BPS 2023 Bab 4.3.1 (hal. 36) & Instrumen baris 18, '
-                f'terjemahan judul bahasa asing wajib dicetak miring (italic).'
-            )
-        cached["Halaman Judul Utama: -"] = hju
-
-        # ── LAYOUT ISI: Gabungkan temuan dinamis tabel (seperti tabel kosong total, dsb.) ──
-        layout_items = cached.get("Layout Isi:", [])
-        added_keys = set()
-        for tf in meta.get("table_findings", []):
-            if "KOSONG TOTAL" in tf:
-                if not any("KOSONG TOTAL" in x for x in layout_items):
-                    layout_items.append(tf)
-            elif any(k in tf for k in ["terbalik", "terpotong", "Kesalahan fatal header"]):
-                if tf not in layout_items:
-                    layout_items.append(tf)
-            else:
-                cat = tf.split(':')[1][:35] if ':' in tf else tf[:35]
-                if cat not in added_keys and not any(cat in x for x in layout_items):
-                    added_keys.add(cat)
-                    layout_items.append(tf)
-        cached["Layout Isi:"] = layout_items
-
-        # ══════════════════════════════════════════════════════════════════
-        # DYNAMIC CROSS-PAGE OVERLAY (applied on TOP of cached results)
-        # These detections run live on every evaluation, even for cached districts
-        # ══════════════════════════════════════════════════════════════════
-
-        # ── ISSN CROSS-PAGE INCONSISTENCY (e.g. Buko 2655 vs 2065) ──
-        if meta.get("issn_cross_page_inconsistent"):
-            details = meta.get("issn_cross_page_details", [])
-            correct_issn = meta.get("issn_correct_from_registry")
-            detail_parts = []
-            for d in details:
-                issn_v = d["issn"]
-                label_list = ", ".join(d["labels"])
-                is_correct = correct_issn and issn_v == correct_issn
-                marker = " (BENAR/resmi terdaftar)" if is_correct else " (SALAH/typo)"
-                detail_parts.append(f'ISSN "{issn_v}"{marker} ditemukan pada: {label_list}')
-            
-            cross_page_msg = (
-                f'Inkonsistensi dan kesalahan penulisan nomor ISSN antar-halaman (terdeteksi otomatis dari pemindaian lintas halaman): '
-                + '; '.join(detail_parts) + '. '
-            )
-            if correct_issn:
-                cross_page_msg += (
-                    f'Koreksi seharusnya: Selaraskan seluruh halaman menggunakan nomor ISSN resmi terdaftar '
-                    f'"ISSN {correct_issn}" (tanpa tanda titik dua).'
-                )
-            
-            # Inject into relevant sections
-            for sec_key in ["Kover depan: -", "Halaman Judul Utama: -", "Halaman katalog: -", "Halaman Tim Penyusun: -"]:
-                sec_items = cached.get(sec_key, [])
-                if not any("antar-halaman" in x.lower() or "inkonsistensi" in x.lower() for x in sec_items):
-                    sec_items.insert(0, cross_page_msg)
-                cached[sec_key] = sec_items
-
-        # ── ISSN REGISTRY MISMATCH (typo vs official registry) ──
-        if meta.get("issn_registry_mismatch"):
-            rm = meta["issn_registry_mismatch"]
-            registry_msg = (
-                f'Kesalahan nomor ISSN terdeteksi dari cross-reference registri resmi: '
-                f'Tertulis "{rm["found"]}" pada dokumen, padahal nomor ISSN resmi terdaftar untuk Kecamatan {region} '
-                f'adalah "{rm["correct"]}". Terdapat saltik/typo pada digit ISSN. '
-                f'Koreksi seharusnya: Seluruh halaman menggunakan "ISSN {rm["correct"]}" tanpa tanda titik dua.'
-            )
-            for sec_key in ["Kover depan: -", "Halaman katalog: -"]:
-                sec_items = cached.get(sec_key, [])
-                if not any("registri resmi" in x.lower() for x in sec_items):
-                    sec_items.insert(0, registry_msg)
-                cached[sec_key] = sec_items
-
-        # ── WRONG YEAR REFERENCES (stale years across document) ──
-        wrong_yr_refs = meta.get("wrong_year_refs", [])
-        if wrong_yr_refs:
-            # Group by section context
-            preface_wrong = [r for r in wrong_yr_refs if r[0] <= 15]
-            body_wrong = [r for r in wrong_yr_refs if r[0] > 15]
-            
-            if preface_wrong and not any("tahun salah terdeteksi otomatis" in x.lower() for x in cached.get("Kata pengantar: -", [])):
-                yr_details = "; ".join([f'Halaman {r[1]}: tertulis "{r[2]}" (seharusnya tahun {r[3]})' for r in preface_wrong[:5]])
-                cached.setdefault("Kata pengantar: -", []).append(
-                    f'Referensi tahun salah terdeteksi otomatis pada halaman pendahuluan: {yr_details}.'
-                )
-            if body_wrong and not any("tahun salah terdeteksi otomatis" in x.lower() for x in cached.get("Layout Isi:", [])):
-                yr_details = "; ".join([f'Halaman {r[1]}: tertulis "{r[2]}"' for r in body_wrong[:5]])
-                cached.setdefault("Layout Isi:", []).append(
-                    f'Referensi tahun salah terdeteksi otomatis pada batang tubuh: {yr_details}. '
-                    f'Seluruh referensi tahun wajib diselaraskan ke tahun {year}.'
-                )
-
-        # ── GLOBAL TYPO FINDINGS (document-wide typo scan) ──
-        g_typos = meta.get("global_typos", [])
-        if g_typos:
-            unique_typos = {}
-            for pg, wrong, correct in g_typos:
-                key = f"{wrong}->{correct}"
-                if key not in unique_typos:
-                    unique_typos[key] = {"wrong": wrong, "correct": correct, "pages": []}
-                unique_typos[key]["pages"].append(pg)
-            
-            for key, info in unique_typos.items():
-                pg_list = ", ".join(info["pages"][:5])
-                more = f' (dan {len(info["pages"])-5} halaman lainnya)' if len(info["pages"]) > 5 else ''
-                typo_msg = (
-                    f'Saltik terdeteksi otomatis pada halaman {pg_list}{more}: '
-                    f'Tertulis "{info["wrong"]}", penulisan yang benar adalah "{info["correct"]}".'
-                )
-                layout_items = cached.get("Layout Isi:", [])
-                if not any(info["wrong"] in x for x in layout_items):
-                    layout_items.append(typo_msg)
-                cached["Layout Isi:"] = layout_items
-
-        # ── ROMAN NUMERAL PAGE MISMATCH ──
-        if meta.get("roman_page_mismatch"):
-            rom_str, rom_int, expected_count = meta["roman_page_mismatch"]
-            def _to_roman_str(n):
-                val = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1]
-                syb = ["m", "cm", "d", "cd", "c", "xc", "l", "xl", "x", "ix", "v", "iv", "i"]
-                r = ''
-                i = 0
-                while n > 0:
-                    for _ in range(n // val[i]):
-                        r += syb[i]
-                        n -= val[i]
-                    i += 1
-                return r
-            expected_rom_str = _to_roman_str(expected_count)
-            rom_msg = (
-                f'Kesalahan jumlah halaman romawi pada Halaman Katalog: Tertulis "{rom_str}" '
-                f'({rom_int} halaman), padahal urutan halaman romawi riil pada bagian pendahuluan '
-                f'(termasuk halaman kosong/pembatas tanpa footer sesuai pedoman baku) adalah {expected_count} halaman ({expected_rom_str}). '
-                f'Jumlah halaman romawi pada "Jumlah Halaman/Number of Pages" wajib disesuaikan menjadi "{expected_rom_str}".'
-            )
-            kat_items = cached.get("Halaman katalog: -", [])
-            if not any("jumlah halaman romawi" in x.lower() for x in kat_items):
-                kat_items.append(rom_msg)
-            cached["Halaman katalog: -"] = kat_items
-
-        # ── DISTRICT IDENTITY MISMATCH (Indikasi Kasus Tolitoli: Hanya Ganti Kover) ──
-        if meta.get("district_mismatch_info", {}).get("is_mismatch"):
-            d_info = meta["district_mismatch_info"]
-            cov_d = d_info.get("cover_district", region)
-            inner_d = d_info.get("dominant_inner_district") or d_info.get("catalog_district") or "Kecamatan Lain"
-            r_details = " | ".join(d_info.get("reasons", []))
-            
-            cached.setdefault("Kover depan: -", []).insert(0,
-                f'[FATAL KETIDAKSESUAIAN WILAYAH] Indikasi kelalaian fatal hanya mengganti kover (Copy-Paste dari publikasi lain): '
-                f'Kover depan memuat "Kecamatan {cov_d}", namun isi dokumen merupakan publikasi "Kecamatan {inner_d}". '
-                f'Rincian: {r_details}. Wajib mengganti seluruh isi dokumen dengan data dan naskah asli Kecamatan {cov_d}.'
-            )
-            cached.setdefault("Halaman Judul Utama: -", []).insert(0,
-                f'[FATAL KETIDAKSESUAIAN WILAYAH] Judul pada Halaman Judul Utama tidak selaras dengan kover depan: '
-                f'Terdeteksi identitas publikasi "Kecamatan {inner_d}", berbeda dengan kover depan ("Kecamatan {cov_d}").'
-            )
-            cached.setdefault("Halaman katalog: -", []).insert(0,
-                f'[FATAL KETIDAKSESUAIAN WILAYAH] Identitas publikasi pada Halaman Katalog keliru: '
-                f'Dokumen katalog mencantumkan atau terhubung dengan "Kecamatan {inner_d}", bukan "Kecamatan {cov_d}".'
-            )
-            cached.setdefault("Kata pengantar: -", []).insert(0,
-                f'[FATAL KETIDAKSESUAIAN WILAYAH] Narasi Kata Pengantar menyebut wilayah yang salah: '
-                f'Paragraf teks pengantar menyebut "Kecamatan {inner_d}", padahal buku ini adalah publikasi "Kecamatan {cov_d}".'
-            )
-            cached.setdefault("Layout Isi:", []).insert(0,
-                f'[FATAL KETIDAKSESUAIAN WILAYAH] Batang Tubuh & Narasi Salah Wilayah: '
-                f'Ulasan geografi Bab 1, nama desa, running title, dan data tabel memuat identitas "Kecamatan {inner_d}". '
-                f'Publikasi dilarang dirilis dengan data kecamatan yang tertukar.'
-            )
-
-        # ── PENGGABUNGAN TEMUAN HASIL INSPEKSI COMPUTER VISION TINGKAT TINGGI ──
-        cv_audit = meta.get("cv_audit", {})
-        if cv_audit:
-            for d in cv_audit.get("cover_visual", {}).get("defects", []):
-                sec_cov = cached.setdefault("Kover depan: -", [])
-                if not any(d[:35].lower() in x.lower() for x in sec_cov):
-                    sec_cov.append(d)
-            for d in cv_audit.get("hju_visual", {}).get("defects", []):
-                sec_hju = cached.setdefault("Halaman Judul Utama: -", [])
-                if not any(d[:35].lower() in x.lower() for x in sec_hju):
-                    sec_hju.append(d)
-            for d in cv_audit.get("preface_visual", {}).get("defects", []):
-                sec_pref = cached.setdefault("Kata pengantar: -", [])
-                if not any(d[:35].lower() in x.lower() for x in sec_pref):
-                    sec_pref.append(d)
-            for d in cv_audit.get("tables_figures_visual", {}).get("defects", []):
-                sec_li = cached.setdefault("Layout Isi:", [])
-                if not any(d[:35].lower() in x.lower() for x in sec_li):
-                    sec_li.append(d)
-            for d in cv_audit.get("back_cover_visual", {}).get("defects", []):
-                sec_kb = cached.setdefault("Kover belakang: -", [])
-                if not any(d[:35].lower() in x.lower() for x in sec_kb):
-                    sec_kb.append(d)
-
-        # ── SARAN ESTETIKA, TATA LETAK VISUAL & PRAKTIK TERBAIK BPS (Disarikan dari Pedoman 2023 & Evaluasi 7206) ──
-        sug = get_aesthetic_and_standard_suggestions()
-        kp_list = cached.setdefault("Kata pengantar: -", [])
-        if not any("FOTO PIMPINAN" in x for x in kp_list):
-            kp_list.append(sug["foto_pimpinan"])
-        if not any("TANDA TANGAN PEJABAT" in x for x in kp_list):
-            kp_list.append(sug["ruang_ttd"])
-        cached["Kata pengantar: -"] = kp_list
-
-        li_list = cached.setdefault("Layout Isi:", [])
-        if not any("DATA TABEL STATISTIK" in x for x in li_list):
-            li_list.append(sug["tabel_estetika"])
-        cached["Layout Isi:"] = li_list
-
-        kb_list = cached.setdefault("Kover belakang: -", [])
-        if not any("ELEMEN KOVER BELAKANG" in x for x in kb_list):
-            kb_list.append(sug["kover_belakang"])
-        cached["Kover belakang: -"] = kb_list
-
-        return deduplicate_all_defects(cached)
-
-    # 2. EVALUASI DINAMIS LENGKAP 1 + 1 (Untuk file PDF yang diunggah / di luar cache Bangkep)
+    # EVALUASI DINAMIS TINGKAT TINGGI & MANDIRI (INDEPENDENT AUDIT BERBASIS INSTRUMEN BPS 2023)
     # Susunan persis mengikuti 11 bagian resmi Anatomi Publikasi BPS
+    region_up = region.upper()
 
     # ── 1. KOVER DEPAN: - ──
     kover_depan = []
@@ -1967,7 +1731,21 @@ def analyze_defects(meta, custom_api_key=None):
             'Saltik pada klausul Hak Cipta bahasa Inggris: tertulis "Regenency" (kelebihan huruf "en", penulisan yang benar adalah "Regency").'
         )
     for err in meta.get("catalog_label_errors", []):
-        halaman_katalog.append(f'Kesalahan tanda baca pada baris katalog: {err}.')
+        halaman_katalog.append(f'Kesalahan tanda baca pada baris katalog: {err}')
+    if meta.get("space_around_plus_pages"):
+        halaman_katalog.append(
+            'Kesalahan tanda baca pada baris Jumlah Halaman: Terdapat spasi di sekitar tanda tambah ("+"). '
+            'Sesuai Pedoman Publikasi BPS 2023 & Instrumen baris 28 poin 6, penulisan format halaman ditulis rapat tanpa spasi sebelum dan sesudah tanda "+" (contoh: xii+90 halaman/pages).'
+        )
+    if meta.get("book_size_format_error"):
+        halaman_katalog.append(
+            f'Kesalahan format penulisan pada baris Ukuran Buku: {meta["book_size_format_error"]}'
+        )
+    if meta.get("copyright_space_after_symbol"):
+        halaman_katalog.append(
+            'Kesalahan spasi pada klausul Hak Cipta / Penerbit: Terdapat spasi setelah simbol hak cipta "©". '
+            'Sesuai Pedoman Pembuatan Publikasi BPS 2023 & Instrumen baris 32 poin 4, setelah simbol hak cipta tidak perlu ada spasi ("©Badan Pusat Statistik...").'
+        )
 
     # ── 4. HALAMAN TIM PENYUSUN: - ──
     tim_penyusun = []
@@ -2128,19 +1906,22 @@ def analyze_defects(meta, custom_api_key=None):
             f'Visual grafik/peta belum di-insert dan masih menyajikan visual placeholder template. '
             f'Dilarang merilis publikasi yang masih memuat visual dummy template.'
         )
-    added_keys = set()
     for tf in meta.get("table_findings", []):
-        if "KOSONG TOTAL" in tf:
-            if not any("KOSONG TOTAL" in x for x in layout_isi):
-                layout_isi.append(tf)
-        elif any(k in tf for k in ["terbalik", "terpotong", "Kesalahan fatal header"]):
-            if tf not in layout_isi:
-                layout_isi.append(tf)
-        else:
-            cat = tf.split(':')[1][:35] if ':' in tf else tf[:35]
-            if cat not in added_keys and not any(cat in x for x in layout_isi):
-                added_keys.add(cat)
-                layout_isi.append(tf)
+        if tf not in layout_isi:
+            layout_isi.append(tf)
+
+    if meta.get("divider_has_page_num"):
+        layout_isi.append(
+            'Nomor halaman fisik tercetak pada lembar pembatas bab. '
+            'Sesuai Pedoman Publikasi BPS 2023 hal. 53 & Instrumen baris 124, '
+            'lembar pembatas bab dilarang memuat nomor halaman fisik dan running title.'
+        )
+    if meta.get("divider_has_running_title"):
+        layout_isi.append(
+            'Running title tercetak pada lembar pembatas bab. '
+            'Sesuai Pedoman Publikasi BPS 2023 hal. 53 & Instrumen baris 124, '
+            'lembar pembatas bab dilarang mencantumkan running title.'
+        )
 
     if meta.get("even_start_chapters"):
         ch_str = ", ".join(f"Bab {b} pada hal {p} (GENAP)" for b, p in meta["even_start_chapters"])
