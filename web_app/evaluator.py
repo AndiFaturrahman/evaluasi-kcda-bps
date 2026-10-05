@@ -1213,6 +1213,144 @@ def get_aesthetic_and_standard_suggestions():
         )
     }
 
+def classify_cover_finding(it):
+    it_l = it.lower()
+    if 'kesalahan format penulisan nomor issn' in it_l or (
+        'issn' in it_l and ('titik dua' in it_l or 'tanpa tanda titik dua' in it_l or 'kata issn' in it_l)
+        and not 'spasi pada nomor katalog' in it_l and not it_l.startswith('penulisan nomor katalog')
+    ):
+        return 'issn_format'
+    if 'kesalahan spasi pada nomor katalog' in it_l or (
+        'katalog' in it_l and ('spasi' in it_l or 'titik dua' in it_l)
+        and not 'penulisan nomor issn' in it_l and not it_l.startswith('format penulisan issn')
+    ):
+        return 'katalog_spasi'
+    if 'huruf "a"' in it_l or 'huruf a' in it_l or 'residu huruf' in it_l or 'sisa huruf template' in it_l:
+        return 'letter_a'
+    if ('miring' in it_l or 'italic' in it_l) and ('judul' in it_l or 'district' in it_l or 'bahasa inggris' in it_l or 'bahasa asing' in it_l):
+        return 'italic_title'
+    if 'placeholder' in it_l or 'xxxxx' in it_l:
+        return 'placeholder'
+    return 'other'
+
+def classify_hju_finding(it):
+    it_l = it.lower()
+    if 'latar belakang' in it_l or 'tanpa ilustrasi' in it_l or 'bebas ilustrasi' in it_l or 'ilustrasi' in it_l:
+        return 'hju_background'
+    if 'logo' in it_l and ('warna' in it_l or 'berwarna' in it_l or 'monokrom' in it_l):
+        return 'hju_logo'
+    if 'kesalahan format penulisan nomor issn' in it_l or (
+        'issn' in it_l and ('titik dua' in it_l or 'tanpa tanda titik dua' in it_l or 'kata issn' in it_l)
+        and not 'spasi pada nomor katalog' in it_l and not it_l.startswith('penulisan nomor katalog')
+    ):
+        return 'hju_issn'
+    if 'kesalahan spasi pada nomor katalog' in it_l or (
+        'katalog' in it_l and ('spasi' in it_l or 'titik dua' in it_l)
+        and not 'penulisan nomor issn' in it_l and not it_l.startswith('format penulisan issn')
+    ):
+        return 'hju_katalog'
+    if ('miring' in it_l or 'italic' in it_l) and ('judul' in it_l or 'district' in it_l or 'bahasa inggris' in it_l):
+        return 'hju_italic'
+    if 'ketentuan penulisan judul buku sama' in it_l:
+        return 'hju_judul_ketentuan'
+    return 'other'
+
+def deduplicate_section_items(sec_name, items):
+    if not items:
+        return []
+    
+    seen = set()
+    cleaned = []
+    for it in items:
+        it_clean = it.strip()
+        if it_clean and it_clean not in seen:
+            seen.add(it_clean)
+            cleaned.append(it_clean)
+            
+    # Semantic deduplication for Kover Depan
+    if 'kover depan' in sec_name.lower():
+        topics = {}
+        for it in cleaned:
+            topic = classify_cover_finding(it)
+            if topic == 'other':
+                topics.setdefault('other', []).append(it)
+            else:
+                topics.setdefault(topic, []).append(it)
+        
+        result = []
+        for topic, group in topics.items():
+            if topic == 'other':
+                result.extend(group)
+            else:
+                best = max(group, key=lambda x: (
+                    1 if 'tertulis "' in x.lower() or 'sesuai pedoman' in x.lower() or 'kesalahan' in x.lower() else 0,
+                    len(x)
+                ))
+                result.append(best)
+        return result
+
+    # Semantic deduplication for Halaman Judul Utama
+    if 'judul utama' in sec_name.lower():
+        topics = {}
+        for it in cleaned:
+            topic = classify_hju_finding(it)
+            if topic == 'other':
+                topics.setdefault('other', []).append(it)
+            else:
+                topics.setdefault(topic, []).append(it)
+        
+        if 'hju_italic' in topics and 'hju_judul_ketentuan' in topics:
+            del topics['hju_judul_ketentuan']
+
+        result = []
+        for topic, group in topics.items():
+            if topic == 'other':
+                result.extend(group)
+            else:
+                best = max(group, key=lambda x: (
+                    1 if 'tertulis "' in x.lower() or 'berdasarkan pedoman' in x.lower() or 'kesalahan' in x.lower() or 'pelanggaran' in x.lower() else 0,
+                    len(x)
+                ))
+                result.append(best)
+        return result
+
+    # Semantic deduplication for Kata Pengantar
+    if 'kata pengantar' in sec_name.lower():
+        result = []
+        has_ttd_detailed = any(('ruang tanda tangan pejabat masih kosong' in x.lower() or 'kolom tanda tangan' in x.lower()) for x in cleaned)
+        seen_topics = set()
+        for it in cleaned:
+            it_l = it.lower()
+            if ('tanda tangan' in it_l or 'tandan tangan' in it_l or 'ttd' in it_l) and not '[saran' in it_l:
+                if has_ttd_detailed and not ('ruang tanda tangan pejabat masih kosong' in it_l or 'kolom tanda tangan' in it_l):
+                    continue
+                if 'pref_ttd' in seen_topics:
+                    continue
+                seen_topics.add('pref_ttd')
+            result.append(it)
+        return result
+
+    # Semantic deduplication for Daftar Isi
+    if 'daftar isi' in sec_name.lower():
+        result = []
+        seen_topics = set()
+        for it in cleaned:
+            it_l = it.lower()
+            if 'daftar gambar' in it_l:
+                if 'toc_dg' in seen_topics:
+                    continue
+                seen_topics.add('toc_dg')
+            result.append(it)
+        return result
+
+    return cleaned
+
+def deduplicate_all_defects(defects_dict):
+    deduped = {}
+    for sec, items in defects_dict.items():
+        deduped[sec] = deduplicate_section_items(sec, items)
+    return deduped
+
 def analyze_defects(meta, custom_api_key=None):
     load_variation_cache()
     region = meta["region"]
@@ -1517,7 +1655,7 @@ def analyze_defects(meta, custom_api_key=None):
             kb_list.append(sug["kover_belakang"])
         cached["Kover belakang: -"] = kb_list
 
-        return cached
+        return deduplicate_all_defects(cached)
 
     # 2. EVALUASI DINAMIS LENGKAP 1 + 1 (Untuk file PDF yang diunggah / di luar cache Bangkep)
     # Susunan persis mengikuti 11 bagian resmi Anatomi Publikasi BPS
@@ -2013,7 +2151,7 @@ def analyze_defects(meta, custom_api_key=None):
     if not any("ELEMEN KOVER BELAKANG" in x for x in kover_belakang):
         kover_belakang.append(sug["kover_belakang"])
 
-    return {
+    raw_res = {
         "Kover depan: -": kover_depan,
         "Halaman Judul Utama: -": halaman_judul,
         "Halaman katalog: -": halaman_katalog,
@@ -2026,6 +2164,7 @@ def analyze_defects(meta, custom_api_key=None):
         "Daftar Pustaka: -": daftar_pustaka,
         "Kover belakang: -": kover_belakang,
     }
+    return deduplicate_all_defects(raw_res)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
