@@ -17,3 +17,6 @@ web_app/static/downloads/*.pdf
 .agents/
 arsip_pengujian_dan_versi_lama/
 dokumen_pedoman_dan_rujukan/
+
+.vercel
+.env*
