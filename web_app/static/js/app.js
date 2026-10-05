@@ -358,6 +358,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (selectedPdfFiles.length > 1) {
                 // Batch Upload Mode
+                const totalBytes = selectedPdfFiles.reduce((sum, f) => sum + f.size, 0);
+                const totalMB = (totalBytes / (1024 * 1024)).toFixed(1);
+
+                if (window.location.hostname.includes('vercel.app') && totalBytes > 4.5 * 1024 * 1024) {
+                    alert(`Batas Vercel Serverless Terlampaui:\n\nTotal ukuran ${selectedPdfFiles.length} berkas yang Anda pilih adalah ${totalMB} MB.\nVercel Serverless memiliki batas maksimal payload 4.5 MB per permintaan.\n\nUntuk melakukan Audit Kolektif berkas publikasi BPS secara utuh dan tanpa batasan ukuran, silakan gunakan tautan Cloudflare Tunnel atau server lokal.`);
+                    showToast(`Batas Vercel (4.5 MB) terlampaui (${totalMB} MB). Gunakan Cloudflare Tunnel / Server Lokal.`, 'warning', 7000);
+                    return;
+                }
+
                 const formData = new FormData();
                 selectedPdfFiles.forEach(file => {
                     formData.append('pdf_files', file);
@@ -375,13 +384,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     method: 'POST',
                     body: formData
                 })
-                .then(res => {
+                .then(async res => {
                     if (!res.ok) {
-                        return res.json().then(data => {
-                            throw new Error(data.detail || 'Gagal memproses audit kolektif berkas PDF.');
-                        }).catch(err => {
-                            throw new Error(err.message || 'Gagal memproses audit kolektif.');
-                        });
+                        let errMsg = `Gagal memproses audit kolektif (${res.status} ${res.statusText})`;
+                        if (res.status === 413) {
+                            errMsg = `Batas Payload Serverless Terlampaui (HTTP 413 Request Entity Too Large): Total berkas (${totalMB} MB) melebihi batas 4.5 MB Vercel Serverless. Silakan gunakan Cloudflare Tunnel atau server lokal untuk audit kolektif.`;
+                        } else if (res.status === 504) {
+                            errMsg = 'Batas Waktu Eksekusi Terlampaui (HTTP 504 Gateway Timeout): Analisis dokumen melebihi batas waktu Vercel Serverless. Silakan gunakan Cloudflare Tunnel atau server lokal.';
+                        } else {
+                            try {
+                                const text = await res.text();
+                                const errData = JSON.parse(text);
+                                errMsg = errData.detail || errData.message || errMsg;
+                            } catch (e) {
+                                // Not JSON
+                            }
+                        }
+                        throw new Error(errMsg);
                     }
                     return res.json();
                 })
@@ -395,11 +414,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     stopProgress();
                     console.error(err);
                     alert(`Audit Kolektif Gagal: ${err.message}`);
-                    showToast(`Terjadi kesalahan: ${err.message}`, 'warning', 5000);
+                    showToast(`Terjadi kesalahan: ${err.message}`, 'warning', 6000);
                 });
 
             } else {
                 // Single File Mode
+                const singleBytes = selectedPdfFile.size;
+                const singleMB = (singleBytes / (1024 * 1024)).toFixed(1);
+
+                if (window.location.hostname.includes('vercel.app') && singleBytes > 4.5 * 1024 * 1024) {
+                    alert(`Batas Vercel Serverless Terlampaui:\n\nBerkas "${selectedPdfFile.name}" berukuran ${singleMB} MB, melebihi batas maksimal Vercel Serverless (4.5 MB).\n\nSilakan gunakan tautan Cloudflare Tunnel atau server lokal untuk memproses berkas publikasi besar ini.`);
+                    showToast(`Berkas terlalu besar (${singleMB} MB) untuk Vercel. Gunakan Cloudflare Tunnel / Server Lokal.`, 'warning', 7000);
+                    return;
+                }
+
                 const formData = new FormData();
                 formData.append('pdf_file', selectedPdfFile);
 
@@ -419,13 +447,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     method: 'POST',
                     body: formData
                 })
-                .then(res => {
+                .then(async res => {
                     if (!res.ok) {
-                        return res.json().then(data => {
-                            throw new Error(data.detail || 'Gagal memproses audit berkas PDF.');
-                        }).catch(err => {
-                            throw new Error(err.message || 'Gagal memproses berkas PDF.');
-                        });
+                        let errMsg = `Gagal memproses berkas (${res.status} ${res.statusText})`;
+                        if (res.status === 413) {
+                            errMsg = `Batas Payload Serverless Terlampaui (HTTP 413 Request Entity Too Large): Berkas "${selectedPdfFile.name}" (${singleMB} MB) melebihi batas 4.5 MB Vercel Serverless. Silakan gunakan Cloudflare Tunnel atau server lokal.`;
+                        } else if (res.status === 504) {
+                            errMsg = 'Batas Waktu Eksekusi Terlampaui (HTTP 504 Gateway Timeout): Analisis dokumen melebihi batas waktu Vercel Serverless. Silakan gunakan Cloudflare Tunnel atau server lokal.';
+                        } else {
+                            try {
+                                const text = await res.text();
+                                const errData = JSON.parse(text);
+                                errMsg = errData.detail || errData.message || errMsg;
+                            } catch (e) {
+                                // Not JSON
+                            }
+                        }
+                        throw new Error(errMsg);
                     }
                     return res.json();
                 })
@@ -439,7 +477,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     stopProgress();
                     console.error(err);
                     alert(`Pemeriksaan Gagal: ${err.message}`);
-                    showToast(`Terjadi kesalahan: ${err.message}`, 'warning', 5000);
+                    showToast(`Terjadi kesalahan: ${err.message}`, 'warning', 6000);
                 });
             }
         });

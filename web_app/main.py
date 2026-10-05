@@ -86,7 +86,8 @@ async def get_system_info():
         "status": "online",
         "lan_ip": lan_ip,
         "lan_url": f"http://{lan_ip}:8000",
-        "has_default_api_key": bool(DEFAULT_API_KEY)
+        "has_default_api_key": bool(DEFAULT_API_KEY),
+        "is_vercel": IS_VERCEL
     }
 
 @app.get("/api/sample-files")
