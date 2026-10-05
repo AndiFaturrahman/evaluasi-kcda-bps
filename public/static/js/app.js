@@ -74,6 +74,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const chosenFileName = document.getElementById('chosen-file-name');
     const chosenFileSize = document.getElementById('chosen-file-size');
     const btnRemoveFile = document.getElementById('btn-remove-file');
+    const btnAddMorePdf = document.getElementById('btn-add-more-pdf');
+    const pdfAddInput = document.getElementById('pdf-add-input');
+    const chosenFilesList = document.getElementById('chosen-files-list');
+    const fileChosenMainIcon = document.getElementById('file-chosen-main-icon');
 
     const btnToggleSettings = document.getElementById('btn-toggle-settings');
     const settingsContent = document.getElementById('settings-content');
@@ -224,12 +228,26 @@ document.addEventListener('DOMContentLoaded', () => {
     if (pdfInput) {
         pdfInput.addEventListener('change', (e) => {
             if (e.target.files && e.target.files.length > 0) {
-                handlePdfsSelected(e.target.files);
+                handlePdfsSelected(e.target.files, false);
             }
         });
     }
 
-    function handlePdfsSelected(fileList) {
+    if (btnAddMorePdf && pdfAddInput) {
+        btnAddMorePdf.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            pdfAddInput.click();
+        });
+        pdfAddInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files.length > 0) {
+                handlePdfsSelected(e.target.files, true);
+                e.target.value = '';
+            }
+        });
+    }
+
+    function handlePdfsSelected(fileList, isAppend = false) {
         if (!fileList || fileList.length === 0) return;
         const validFiles = Array.from(fileList).filter(f => f.name && f.name.toLowerCase().endsWith('.pdf'));
         if (validFiles.length === 0) {
@@ -237,14 +255,52 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        selectedPdfFiles = validFiles;
-        selectedPdfFile = validFiles[0];
+        if (isAppend && selectedPdfFiles && selectedPdfFiles.length > 0) {
+            let addedCount = 0;
+            validFiles.forEach(newF => {
+                const exists = selectedPdfFiles.some(cur => cur.name === newF.name && cur.size === newF.size);
+                if (!exists) {
+                    selectedPdfFiles.push(newF);
+                    addedCount++;
+                }
+            });
+            if (addedCount === 0) {
+                showToast('Berkas PDF tersebut sudah ada di antrean.', 'info', 2500);
+                return;
+            }
+            showToast(`✓ Ditambahkan ${addedCount} berkas PDF baru ke antrean!`, 'success', 3000);
+        } else {
+            selectedPdfFiles = validFiles;
+            showToast(`✓ ${validFiles.length} berkas PDF dipilih. Klik "Mulai Audit" sekarang!`, 'success', 3500);
+        }
 
-        if (validFiles.length === 1) {
-            const file = validFiles[0];
-            const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
-            if (chosenFileName) chosenFileName.textContent = file.name;
-            if (chosenFileSize) chosenFileSize.textContent = `${sizeMb} MB • Berkas Tunggal Siap Diperiksa`;
+        selectedPdfFile = selectedPdfFiles[0] || null;
+        renderChosenFilesUI();
+    }
+
+    function renderChosenFilesUI() {
+        if (!selectedPdfFiles || selectedPdfFiles.length === 0) {
+            if (fileChosen) fileChosen.style.display = 'none';
+            if (btnAnalyze) {
+                btnAnalyze.disabled = true;
+                btnAnalyze.innerHTML = `<span>🔍 Mulai Audit Kepatuhan & Ekstraksi Kesalahan</span>`;
+            }
+            if (chosenFilesList) {
+                chosenFilesList.innerHTML = '';
+                chosenFilesList.style.display = 'none';
+            }
+            return;
+        }
+
+        const count = selectedPdfFiles.length;
+        const totalBytes = selectedPdfFiles.reduce((acc, f) => acc + f.size, 0);
+        const totalMb = (totalBytes / (1024 * 1024)).toFixed(2);
+
+        if (count === 1) {
+            const single = selectedPdfFiles[0];
+            if (fileChosenMainIcon) fileChosenMainIcon.textContent = '📄';
+            if (chosenFileName) chosenFileName.textContent = single.name;
+            if (chosenFileSize) chosenFileSize.textContent = `${totalMb} MB • Berkas Tunggal Siap Diperiksa`;
             if (btnAnalyze) {
                 btnAnalyze.innerHTML = `<span>🔍 Mulai Audit Kepatuhan & Ekstraksi Kesalahan</span>`;
                 btnAnalyze.disabled = false;
@@ -252,16 +308,48 @@ document.addEventListener('DOMContentLoaded', () => {
             if (btnInstantAnalyze) {
                 btnInstantAnalyze.innerHTML = `<span>🚀 Mulai Audit Sekarang</span>`;
             }
+            if (chosenFilesList) {
+                chosenFilesList.style.display = 'none';
+                chosenFilesList.innerHTML = '';
+            }
         } else {
-            const totalMb = (validFiles.reduce((acc, f) => acc + f.size, 0) / (1024 * 1024)).toFixed(2);
-            if (chosenFileName) chosenFileName.textContent = `${validFiles.length} Berkas PDF Terpilih`;
+            if (fileChosenMainIcon) fileChosenMainIcon.textContent = '📚';
+            if (chosenFileName) chosenFileName.textContent = `${count} Berkas PDF Terpilih (Kolektif)`;
             if (chosenFileSize) chosenFileSize.textContent = `Total ${totalMb} MB • Mode Audit Kolektif Multi-Kecamatan`;
             if (btnAnalyze) {
-                btnAnalyze.innerHTML = `<span>⚡ Mulai Audit Kolektif (${validFiles.length} Berkas PDF Sekaligus)</span>`;
+                btnAnalyze.innerHTML = `<span>⚡ Mulai Audit Kolektif (${count} Berkas PDF Sekaligus)</span>`;
                 btnAnalyze.disabled = false;
             }
             if (btnInstantAnalyze) {
-                btnInstantAnalyze.innerHTML = `<span>⚡ Mulai Audit Kolektif (${validFiles.length} PDF)</span>`;
+                btnInstantAnalyze.innerHTML = `<span>⚡ Mulai Audit Kolektif (${count} PDF)</span>`;
+            }
+
+            if (chosenFilesList) {
+                chosenFilesList.innerHTML = '';
+                chosenFilesList.style.display = 'flex';
+
+                selectedPdfFiles.forEach((f, idx) => {
+                    const chip = document.createElement('div');
+                    chip.className = 'chosen-file-chip';
+                    const fMb = (f.size / (1024 * 1024)).toFixed(2);
+                    chip.innerHTML = `
+                        <div class="chosen-chip-info" title="${f.name}">
+                            <span>📄</span>
+                            <span class="chosen-chip-name">${idx + 1}. ${f.name}</span>
+                            <span class="chosen-chip-size">${fMb} MB</span>
+                        </div>
+                        <button type="button" class="btn-chip-del" title="Hapus berkas ini dari antrean">✕</button>
+                    `;
+                    const delBtn = chip.querySelector('.btn-chip-del');
+                    delBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        selectedPdfFiles.splice(idx, 1);
+                        selectedPdfFile = selectedPdfFiles[0] || null;
+                        renderChosenFilesUI();
+                        showToast(`Berkas "${f.name}" dihapus dari antrean.`, 'info', 2000);
+                    });
+                    chosenFilesList.appendChild(chip);
+                });
             }
         }
 
@@ -269,7 +357,6 @@ document.addEventListener('DOMContentLoaded', () => {
             fileChosen.style.display = 'flex';
             fileChosen.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
-        showToast(`✓ ${validFiles.length} berkas PDF dipilih. Klik "Mulai Audit" sekarang!`, 'success', 3500);
     }
 
     if (btnInstantAnalyze) {
@@ -288,12 +375,17 @@ document.addEventListener('DOMContentLoaded', () => {
             selectedPdfFiles = [];
             selectedPdfFile = null;
             if (pdfInput) pdfInput.value = '';
+            if (pdfAddInput) pdfAddInput.value = '';
             if (fileChosen) fileChosen.style.display = 'none';
+            if (chosenFilesList) {
+                chosenFilesList.innerHTML = '';
+                chosenFilesList.style.display = 'none';
+            }
             if (btnAnalyze) {
                 btnAnalyze.disabled = true;
                 btnAnalyze.innerHTML = `<span>🔍 Mulai Audit Kepatuhan & Ekstraksi Kesalahan</span>`;
             }
-            showToast('Pilihan berkas PDF dibatalkan.', 'info', 1500);
+            showToast('Seluruh pilihan berkas PDF dibersihkan.', 'info', 1500);
         });
     }
 
@@ -879,7 +971,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     btnViewPdf.innerHTML = `👁️ Hal. ${targetPage}`;
                     btnViewPdf.addEventListener('click', (e) => {
                         e.stopPropagation();
-                        openPdfViewer(currentAnalysisData, targetPage, cleanTitle, defect, idx + 1);
+                        openPdfViewer(currentAnalysisData || data, targetPage, cleanTitle, defect, idx + 1);
                     });
 
                     const btnCopySingle = document.createElement('button');
@@ -1112,7 +1204,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function openPdfViewer(data, targetPage, sectionTitle, defectText, defectIndex) {
-        if (!pdfViewerModal) return;
+        const modal = pdfViewerModal || document.getElementById('pdf-viewer-modal');
+        if (!modal) {
+            console.error('Modal element #pdf-viewer-modal not found in DOM');
+            showToast('Komponen penampil PDF tidak ditemukan di halaman.', 'warning');
+            return;
+        }
 
         const meta = (data && data.metadata) || {};
         const totalPages = parseInt(meta.total_pages || (data && data.total_pages) || 100, 10);
@@ -1133,6 +1230,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     break;
                 }
             }
+            if (!localFile) localFile = selectedPdfFiles[0];
         }
 
         let pdfSourceUrl = '';
@@ -1177,7 +1275,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         updatePdfModalPage(pdfViewerState.currentPage);
 
-        pdfViewerModal.style.display = 'flex';
+        modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
     }
 

@@ -82,7 +82,7 @@
 
             <div id="file-chosen" class="file-chosen-info" style="display: none;">
                 <div class="file-chosen-content">
-                    <span class="file-icon">📄</span>
+                    <span class="file-icon" id="file-chosen-main-icon">📄</span>
                     <div class="file-details">
                         <div class="file-name" id="chosen-file-name">-</div>
                         <div class="file-meta" id="chosen-file-size">-</div>
@@ -91,9 +91,14 @@
                         <button type="button" class="btn-instant-analyze" id="btn-instant-analyze">
                             <span>🚀 Mulai Audit Sekarang</span>
                         </button>
-                        <button type="button" class="btn-remove-file" id="btn-remove-file" title="Ganti berkas">✕ Ganti</button>
+                        <button type="button" class="btn-add-more-pdf" id="btn-add-more-pdf" title="Tambah berkas PDF publikasi lainnya ke antrean">
+                            <span>➕ Tambah PDF</span>
+                        </button>
+                        <input type="file" id="pdf-add-input" class="visually-hidden-file-input" accept=".pdf" multiple>
+                        <button type="button" class="btn-remove-file" id="btn-remove-file" title="Bersihkan dan pilih ulang berkas">✕ Bersihkan</button>
                     </div>
                 </div>
+                <div id="chosen-files-list" class="chosen-files-list" style="display: none;"></div>
             </div>
 
             <!-- Advanced Config Toggle -->
@@ -453,6 +458,8 @@
                     </div>
                 </div>
             </div>
+        </div>
+
         <!-- Direct PDF Viewer Modal -->
         <div class="pdf-modal-overlay" id="pdf-viewer-modal" style="display: none;">
             <div class="pdf-modal-card">
@@ -500,6 +507,6 @@
     <!-- Notification Toast -->
     <div id="toast" class="toast-notification" style="display: none;"></div>
 
-    <script src="/static/js/app.js?v=6.0"></script>
+    <script src="/static/js/app.js?v=6.2"></script>
 </body>
 </html>
