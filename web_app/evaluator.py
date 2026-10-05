@@ -1432,7 +1432,7 @@ def analyze_defects(meta, custom_api_key=None):
         region_up = region.upper()
         
         # 1. Spasi sebelum titik dua pada nomor katalog kover depan
-        if (meta.get("cover_catalog_space_colon") or meta.get("catalog_slash") or meta.get("space_before_slash_pages")) and not any("nomor katalog" in x.lower() and "spasi" in x.lower() for x in cov_list):
+        if meta.get("cover_catalog_space_colon") and not any("nomor katalog" in x.lower() and "spasi" in x.lower() for x in cov_list):
             cov_list.append(
                 f'Kesalahan spasi pada nomor katalog: Tertulis "Katalog/Catalogue : {catalog_no}" '
                 f'(terdapat spasi sebelum tanda titik dua). Sesuai kaidah tata tulis baku BPS, tidak boleh ada spasi sebelum tanda titik dua. '
@@ -1495,7 +1495,7 @@ def analyze_defects(meta, custom_api_key=None):
                 f'Sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.1 (hal. 36) & Instrumen baris 19, penulisan nomor ISSN pada Halaman Judul Utama '
                 f'wajib ditulis "ISSN {issn}" tanpa tanda titik dua.'
             )
-        if (meta.get("hju_catalog_space_colon") or meta.get("cover_catalog_space_colon") or meta.get("catalog_slash") or meta.get("space_before_slash_pages")) and not any("nomor katalog" in x.lower() and "spasi" in x.lower() for x in hju):
+        if meta.get("hju_catalog_space_colon") and not any("nomor katalog" in x.lower() and "spasi" in x.lower() for x in hju):
             hju.append(
                 f'Kesalahan spasi pada nomor katalog Halaman Judul Utama: Tertulis "Katalog/Catalogue : {catalog_no}" '
                 f'(terdapat spasi sebelum tanda titik dua). Seharusnya ditulis tanpa spasi "Katalog/Catalogue: {catalog_no}".'
@@ -1721,7 +1721,7 @@ def analyze_defects(meta, custom_api_key=None):
 
     # ── 1. KOVER DEPAN: - ──
     kover_depan = []
-    if meta.get("cover_catalog_space_colon") or meta.get("catalog_slash") or meta.get("space_before_slash_pages"):
+    if meta.get("cover_catalog_space_colon"):
         kover_depan.append(
             f'Kesalahan spasi pada nomor katalog: Tertulis "Katalog/Catalogue : {catalog_no}" '
             f'(terdapat spasi sebelum tanda titik dua). Koreksi seharusnya: "Katalog/Catalogue: {catalog_no}".'
@@ -1778,7 +1778,7 @@ def analyze_defects(meta, custom_api_key=None):
                 f'Publikasi berkala yang memiliki ISSN resmi ({issn}) wajib mencantumkan tulisan "ISSN {issn}" '
                 f'di pojok kanan atas (di atas baris nomor katalog) tanpa tanda titik dua (Pedoman 2023 hal. 35 & Instrumen baris 18).'
             )
-    if (meta.get("hju_catalog_space_colon") or meta.get("cover_catalog_space_colon") or meta.get("catalog_slash") or meta.get("space_before_slash_pages")):
+    if meta.get("hju_catalog_space_colon"):
         halaman_judul.append(
             f'Kesalahan spasi pada nomor katalog Halaman Judul Utama: Tertulis "Katalog/Catalogue : {catalog_no}" '
             f'(terdapat spasi sebelum tanda titik dua). Seharusnya ditulis tanpa spasi "Katalog/Catalogue: {catalog_no}".'
@@ -1796,10 +1796,15 @@ def analyze_defects(meta, custom_api_key=None):
 
     # ── 3. HALAMAN KATALOG: - ──
     halaman_katalog = []
-    if meta.get("catalog_slash") or meta.get("space_before_slash_pages"):
+    if meta.get("catalog_slash"):
         halaman_katalog.append(
             f'Kesalahan tanda baca pada baris Katalog: Tertulis "Katalog /Catalogue: {catalog_no}" '
             f'(terdapat spasi sebelum garis miring "/"). Penulisan baku ditulis rapat tanpa spasi sebelum dan sesudah garis miring ("Katalog/Catalogue: {catalog_no}").'
+        )
+    if meta.get("space_before_slash_pages"):
+        halaman_katalog.append(
+            'Kesalahan tanda baca pada baris Jumlah Halaman: Terdapat spasi sebelum garis miring pada label "Jumlah Halaman /Number of Pages". '
+            'Penulisan baku ditulis rapat tanpa spasi sebelum garis miring ("Jumlah Halaman/Number of Pages").'
         )
     if not meta.get("catalog_issn_format_ok", True):
         halaman_katalog.append(
