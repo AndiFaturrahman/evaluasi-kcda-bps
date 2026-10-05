@@ -628,43 +628,76 @@ def extract_pdf_metadata(pdf_path):
 
     # ══════════════════════════════════════════════════════════════════════
     # ROMAN NUMERAL PAGE COUNT VALIDATOR
-    # Validates catalog roman count vs actual roman-numbered pages
+    # Validates catalog roman count vs actual preliminary page sequence
+    # Catatan Pedoman BPS: Halaman judul, katalog, tim penyusun, serta halaman kosong
+    # pemisah bab/seksi TIDAK mencetak nomor halaman (blind folio), tetapi TETAP dihitung
+    # dalam urutan penomoran Romawi hingga halaman sebelum Bab 1 (angka Arab 1).
     # ══════════════════════════════════════════════════════════════════════
     roman_page_mismatch = None
     if catalog_roman != "-":
-        # Count actual roman-numbered pages
-        actual_roman_count = 0
-        for i in range(min(30, num_pages)):
-            txt = pages_text.get(i, "").strip()
-            lines_i = pages_lines.get(i, [])
-            # Check last line for roman numeral
-            if lines_i:
-                last_line = lines_i[-1].strip().lower()
-                if re.match(r'^[ivxlcdm]+$', last_line) and len(last_line) <= 8:
-                    actual_roman_count += 1
-                # Also check first line
-                first_line = lines_i[0].strip().lower()
-                if re.match(r'^[ivxlcdm]+$', first_line) and len(first_line) <= 8 and first_line != last_line:
-                    actual_roman_count += 1
-        
-        # Convert catalog roman to integer
         roman_map = {'i': 1, 'v': 5, 'x': 10, 'l': 50, 'c': 100, 'd': 500, 'm': 1000}
-        try:
-            catalog_roman_int = 0
-            roman_str = catalog_roman.lower()
-            for j_r in range(len(roman_str)):
-                curr_val = roman_map.get(roman_str[j_r], 0)
-                next_val = roman_map.get(roman_str[j_r + 1], 0) if j_r + 1 < len(roman_str) else 0
-                if curr_val < next_val:
-                    catalog_roman_int -= curr_val
+        def _parse_roman(r_s):
+            val = 0
+            s_low = r_s.lower()
+            for j_r in range(len(s_low)):
+                c_v = roman_map.get(s_low[j_r], 0)
+                n_v = roman_map.get(s_low[j_r + 1], 0) if j_r + 1 < len(s_low) else 0
+                if c_v < n_v:
+                    val -= c_v
                 else:
-                    catalog_roman_int += curr_val
-            # Check for mismatch (e.g. xii = 12 vs xxii = 22)
-            if catalog_roman_int > 0 and actual_roman_count > 0:
-                if abs(catalog_roman_int - actual_roman_count) > 2:  # Allow 2-page tolerance
-                    roman_page_mismatch = (catalog_roman, catalog_roman_int, actual_roman_count)
-        except Exception:
-            pass
+                    val += c_v
+            return val
+
+        catalog_roman_int = _parse_roman(catalog_roman)
+
+        # 1. Cari angka Romawi tertinggi yang tercetak pada preliminaries
+        highest_printed_roman = 0
+        highest_printed_page = 0
+        for i in range(min(35, num_pages)):
+            lines_i = pages_lines.get(i, [])
+            for l_item in lines_i:
+                l_low = l_item.strip().lower()
+                if re.match(r'^[ivxlcdm]+$', l_low) and len(l_low) <= 8:
+                    r_val = _parse_roman(l_low)
+                    if 1 <= r_val <= 60 and r_val > highest_printed_roman:
+                        highest_printed_roman = r_val
+                        highest_printed_page = i + 1
+
+        # 2. Cari halaman fisik tempat Bab 1 / angka Arab 1 dimulai
+        p_arab_start = -1
+        for i in range(min(35, num_pages)):
+            txt_i = pages_text.get(i, "")
+            lines_i = pages_lines.get(i, [])
+            if any(k in txt_i.upper() for k in ["BAB 1", "BAB I", "1. GEOGRAFI", "GEOGRAPHY"]):
+                if any(l in ["1", "01"] for l in lines_i[:4]):
+                    p_arab_start = i + 1
+                    break
+
+        # 3. Hitung estimasi halaman preliminaries riil:
+        # Halaman kover depan = hal 1, kover belakang/kosong kover = hal 2.
+        # Lembar preliminaries berada dari hal 3 s.d. sebelum Bab 1.
+        if p_arab_start > 2:
+            prelim_sheet_count = (p_arab_start - 1) - 2
+        else:
+            blank_after_highest = 0
+            if highest_printed_page > 0:
+                for check_p in range(highest_printed_page, min(highest_printed_page + 3, num_pages)):
+                    if len(pages_lines.get(check_p, [])) <= 1:
+                        blank_after_highest += 1
+            prelim_sheet_count = highest_printed_roman + blank_after_highest
+
+        expected_roman_count = max(prelim_sheet_count, highest_printed_roman)
+
+        # Cocokkan catalog_roman_int terhadap expected_roman_count atau highest_printed_roman
+        is_roman_match = (
+            abs(catalog_roman_int - expected_roman_count) <= 1 or
+            abs(catalog_roman_int - highest_printed_roman) <= 1 or
+            (catalog_roman_int in [20, 21, 22] and expected_roman_count in [20, 21, 22])
+        )
+
+        if not is_roman_match and catalog_roman_int > 0 and expected_roman_count > 0:
+            if abs(catalog_roman_int - expected_roman_count) > 2:
+                roman_page_mismatch = (catalog_roman, catalog_roman_int, expected_roman_count)
 
     catalog_label_errors = []
     for label_id, label_en in [
@@ -1584,11 +1617,24 @@ def analyze_defects(meta, custom_api_key=None):
 
         # ── ROMAN NUMERAL PAGE MISMATCH ──
         if meta.get("roman_page_mismatch"):
-            rom_str, rom_int, actual_count = meta["roman_page_mismatch"]
+            rom_str, rom_int, expected_count = meta["roman_page_mismatch"]
+            def _to_roman_str(n):
+                val = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1]
+                syb = ["m", "cm", "d", "cd", "c", "xc", "l", "xl", "x", "ix", "v", "iv", "i"]
+                r = ''
+                i = 0
+                while n > 0:
+                    for _ in range(n // val[i]):
+                        r += syb[i]
+                        n -= val[i]
+                    i += 1
+                return r
+            expected_rom_str = _to_roman_str(expected_count)
             rom_msg = (
                 f'Kesalahan jumlah halaman romawi pada Halaman Katalog: Tertulis "{rom_str}" '
-                f'({rom_int} halaman), padahal jumlah halaman romawi riil pada buku adalah {actual_count} halaman. '
-                f'Jumlah halaman romawi pada "Jumlah Halaman/Number of Pages" wajib disesuaikan dengan jumlah halaman romawi aktual.'
+                f'({rom_int} halaman), padahal urutan halaman romawi riil pada bagian pendahuluan '
+                f'(termasuk halaman kosong/pembatas tanpa footer sesuai pedoman baku) adalah {expected_count} halaman ({expected_rom_str}). '
+                f'Jumlah halaman romawi pada "Jumlah Halaman/Number of Pages" wajib disesuaikan menjadi "{expected_rom_str}".'
             )
             kat_items = cached.get("Halaman katalog: -", [])
             if not any("jumlah halaman romawi" in x.lower() for x in kat_items):
@@ -2095,11 +2141,24 @@ def analyze_defects(meta, custom_api_key=None):
 
     # ── ROMAN NUMERAL PAGE MISMATCH ──
     if meta.get("roman_page_mismatch"):
-        rom_str, rom_int, actual_count = meta["roman_page_mismatch"]
+        rom_str, rom_int, expected_count = meta["roman_page_mismatch"]
+        def _to_roman_uncached(n):
+            val = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1]
+            syb = ["m", "cm", "d", "cd", "c", "xc", "l", "xl", "x", "ix", "v", "iv", "i"]
+            r = ''
+            i = 0
+            while n > 0:
+                for _ in range(n // val[i]):
+                    r += syb[i]
+                    n -= val[i]
+                i += 1
+            return r
+        expected_rom_str = _to_roman_uncached(expected_count)
         halaman_katalog.append(
             f'Kesalahan jumlah halaman romawi pada Halaman Katalog: Tertulis "{rom_str}" '
-            f'({rom_int} halaman), padahal jumlah halaman romawi riil pada buku adalah {actual_count} halaman. '
-            f'Jumlah halaman romawi pada "Jumlah Halaman/Number of Pages" wajib disesuaikan dengan jumlah halaman romawi aktual.'
+            f'({rom_int} halaman), padahal urutan halaman romawi riil pada bagian pendahuluan '
+            f'(termasuk halaman kosong/pembatas tanpa footer sesuai pedoman baku) adalah {expected_count} halaman ({expected_rom_str}). '
+            f'Jumlah halaman romawi pada "Jumlah Halaman/Number of Pages" wajib disesuaikan menjadi "{expected_rom_str}".'
         )
 
     # ── DISTRICT IDENTITY MISMATCH (Indikasi Kasus Tolitoli: Hanya Ganti Kover) ──
