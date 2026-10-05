@@ -328,11 +328,13 @@ def extract_pdf_metadata(pdf_path):
     bps_of_en = bool(re.search(r'BPS\s+of\s+', catalog_text + preface_en_text, re.IGNORECASE))
     copyright_typo_regency = bool(re.search(r'Regenency', catalog_text + all_prelim, re.I))
 
-    roman_match = re.search(r'([ivxlcdmIVXLCDM]+)\s*[\+\-]\s*(\d+)\s*(hal|hlm|halaman)', catalog_text, re.IGNORECASE)
+    roman_match = re.search(r'([ivxlcdmIVXLCDM]+)\s*[\+\-]\s*(\d+)\s*(halaman|hlm|hal\b)', catalog_text, re.IGNORECASE)
     catalog_roman = roman_match.group(1).lower() if roman_match else "-"
     catalog_arab = roman_match.group(2) if roman_match else "-"
-    uses_hal_not_hlm = bool(roman_match and 'hal' in roman_match.group(3).lower() and 'halaman' not in roman_match.group(3).lower())
-    space_before_slash_pages = bool(re.search(r'halaman\s+/pages', catalog_text, re.I))
+    uses_hal_not_hlm = bool(roman_match and roman_match.group(3).lower() in ['hal', 'hlm'])
+    space_before_slash_label_pages = bool(re.search(r'Jumlah\s+Halaman\s+/Number', catalog_text, re.I))
+    space_before_slash_unit_pages = bool(re.search(r'(?:halaman|hlm|hal)\s+/pages', catalog_text, re.I))
+    space_before_slash_pages = space_before_slash_label_pages or space_before_slash_unit_pages
     space_before_colon_pages = bool(re.search(r'Jumlah\s+Halaman[^\n:]*?\s+:', catalog_text))
 
     # Cek sinkronisasi jumlah halaman katalog vs fisik
@@ -1235,6 +1237,8 @@ def extract_pdf_metadata(pdf_path):
         "catalog_arab": catalog_arab,
         "uses_hal_not_hlm": uses_hal_not_hlm,
         "space_before_slash_pages": space_before_slash_pages,
+        "space_before_slash_label_pages": space_before_slash_label_pages,
+        "space_before_slash_unit_pages": space_before_slash_unit_pages,
         "bps_abbreviated_id": bps_abbreviated_id,
         "bps_of_en": bps_of_en,
         "copyright_typo_regency": copyright_typo_regency,
@@ -1905,10 +1909,15 @@ def analyze_defects(meta, custom_api_key=None):
             f'Kesalahan tanda baca pada baris Katalog: Tertulis "Katalog /Catalogue: {catalog_no}" '
             f'(terdapat spasi sebelum garis miring "/"). Penulisan baku ditulis rapat tanpa spasi sebelum dan sesudah garis miring ("Katalog/Catalogue: {catalog_no}").'
         )
-    if meta.get("space_before_slash_pages"):
+    if meta.get("space_before_slash_label_pages"):
         halaman_katalog.append(
-            'Kesalahan tanda baca pada baris Jumlah Halaman: Terdapat spasi sebelum garis miring pada label "Jumlah Halaman /Number of Pages". '
+            'Kesalahan tanda baca pada label Jumlah Halaman: Terdapat spasi sebelum garis miring pada label "Jumlah Halaman /Number of Pages". '
             'Penulisan baku ditulis rapat tanpa spasi sebelum garis miring ("Jumlah Halaman/Number of Pages").'
+        )
+    if meta.get("space_before_slash_unit_pages"):
+        halaman_katalog.append(
+            'Kesalahan tanda baca pada baris Jumlah Halaman: Terdapat spasi sebelum tanda garis miring pada teks satuan "halaman /pages". '
+            'Sesuai kaidah dwibahasa BPS, penulisan satuan baku ditulis rapat tanpa spasi sebelum dan sesudah garis miring ("halaman/pages").'
         )
     if meta.get("space_before_colon_pages"):
         halaman_katalog.append(
@@ -1933,8 +1942,8 @@ def analyze_defects(meta, custom_api_key=None):
         )
     if meta.get("uses_hal_not_hlm"):
         halaman_katalog.append(
-            'Kesalahan singkatan kata halaman pada baris Jumlah Halaman: Tertulis "hal", '
-            'seharusnya ditulis lengkap "halaman/pages" sesuai standar Pedoman Pembuatan Publikasi BPS.'
+            'Kesalahan singkatan kata halaman pada baris Jumlah Halaman: Kata "halaman" disingkat menjadi "hal" atau "hlm". '
+            'Sesuai standar Pedoman Pembuatan Publikasi BPS, wajib ditulis lengkap tanpa disingkat: "halaman/pages".'
         )
     if meta.get("catalog_pages_mismatch"):
         cat_ar, act_ar = meta["catalog_pages_mismatch"]
