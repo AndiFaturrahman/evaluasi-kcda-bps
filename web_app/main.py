@@ -272,9 +272,13 @@ async def analyze_batch_bangkep(custom_api_key: Optional[str] = Form(None)):
             "source_pdf_url": f"/api/view-pdf/{os.path.basename(pdf_path)}"
         })
 
+    unique_kabs = [r["meta"].get("kabupaten") for r in eval_results if r["meta"].get("kabupaten")]
+    unique_kabs = list(dict.fromkeys(unique_kabs))
+    reg_title = unique_kabs[0] if len(unique_kabs) == 1 else "Kolektif Publikasi Kecamatan"
+
     master_excel_fn = f"Evaluasi_Publikasi_KcDA_MASTER_{task_id}.xlsx"
     master_excel_path = os.path.join(OUTPUT_DIR, master_excel_fn)
-    generate_master_batch_excel(eval_results, master_excel_path, regency_title="Kolektif Publikasi Kecamatan")
+    generate_master_batch_excel(eval_results, master_excel_path, regency_title=reg_title)
 
     zip_fn = f"Laporan_Evaluasi_PDF_Kolektif_{task_id}.zip"
     zip_out_path = os.path.join(OUTPUT_DIR, zip_fn)
@@ -369,9 +373,13 @@ async def analyze_batch_upload(
     if not eval_results:
         raise HTTPException(status_code=400, detail="Tidak ada berkas PDF yang valid untuk diproses.")
 
+    unique_kabs = [r["meta"].get("kabupaten") for r in eval_results if r["meta"].get("kabupaten")]
+    unique_kabs = list(dict.fromkeys(unique_kabs))
+    reg_title = unique_kabs[0] if len(unique_kabs) == 1 else f"Kolektif ({len(eval_results)} Kecamatan)"
+
     master_excel_fn = f"Evaluasi_Publikasi_Kolektif_{task_id}.xlsx"
     master_excel_path = os.path.join(OUTPUT_DIR, master_excel_fn)
-    generate_master_batch_excel(eval_results, master_excel_path, regency_title=f"Kolektif ({len(eval_results)} Kecamatan)")
+    generate_master_batch_excel(eval_results, master_excel_path, regency_title=reg_title)
 
     zip_fn = f"Laporan_Evaluasi_PDF_Kolektif_{task_id}.zip"
     zip_out_path = os.path.join(OUTPUT_DIR, zip_fn)

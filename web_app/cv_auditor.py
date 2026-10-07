@@ -319,7 +319,25 @@ class CVPublicationAuditor:
                 white_stroke_ratio = np.sum((v_boundary > 240) & (s_boundary < 25)) / len(v_boundary)
                 black_stroke_ratio = np.sum(v_boundary < 30) / len(v_boundary)
                 
-                if white_stroke_ratio > 0.60 or black_stroke_ratio > 0.60:
+                # Cek konteks luar (radius 5-11px) untuk membedakan kertas putih vs stroke putih di atas kover bergambar
+                k11 = cv2.getStructuringElement(cv2.MORPH_RECT, (11, 11))
+                dil11 = cv2.dilate(emblem_mask, k11)
+                context_zone = (dil11 == 1) & (dil3 == 0)
+                
+                is_on_white_bg = False
+                if np.sum(context_zone) > 50:
+                    v_ctx = hsv[:, :, 2][context_zone]
+                    s_ctx = hsv[:, :, 1][context_zone]
+                    white_ctx_ratio = np.sum((v_ctx > 240) & (s_ctx < 25)) / len(v_ctx)
+                    if white_ctx_ratio > 0.80:
+                        is_on_white_bg = True
+                
+                # Stroke putih hanya valid jika logo berada di latar bukan-putih (ada garis putih pembatas terhadap latar berwarna)
+                has_white_stroke = (not is_on_white_bg) and (white_stroke_ratio > 0.60)
+                # Stroke hitam/gelap valid di latar manapun
+                has_black_stroke = black_stroke_ratio > 0.60
+                
+                if has_white_stroke or has_black_stroke:
                     info["has_stroke_outline"] = True
                     info["logo_is_ori"] = False
                     info["defects"].append(

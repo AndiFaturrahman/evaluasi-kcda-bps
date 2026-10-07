@@ -57,7 +57,14 @@ def populate_district_sheet(ws, meta, defects):
         c4.border = thin_border
         c4.fill = header_fill
 
-    c2 = ws.cell(row=2, column=2, value="Kabupaten Banggai Kepulauan" if any(k in region for k in ["Buko", "Bulagi", "Tinangkung", "Liang", "Peling", "Totikum"]) else f"Kabupaten {region}")
+    kabupaten_display = meta.get("kabupaten")
+    if not kabupaten_display:
+        try:
+            from evaluator import detect_kabupaten_name
+            kabupaten_display = detect_kabupaten_name(pdf_path=None, pages_text={}, region_name=region, pub_title=title, is_kabupaten=meta.get("is_kabupaten", False))
+        except Exception:
+            kabupaten_display = f"Kabupaten {region}"
+    c2 = ws.cell(row=2, column=2, value=kabupaten_display)
     c2.font = Font(name='Calibri', size=12, bold=True)
 
     ws.row_dimensions[5].height = 45

@@ -92,6 +92,146 @@ KNOWN_BANGKEP_ISSN = {
     "Liang": {"correct": "2655-1039", "typo_variants": []},
 }
 
+KECAMATAN_TO_KABUPATEN = {
+    # Tolitoli (7204)
+    'baolan': 'Kabupaten Tolitoli', 'basidondo': 'Kabupaten Tolitoli', 'dako pemean': 'Kabupaten Tolitoli',
+    'dondo': 'Kabupaten Tolitoli', 'dampal selatan': 'Kabupaten Tolitoli', 'dampal utara': 'Kabupaten Tolitoli',
+    'galang': 'Kabupaten Tolitoli', 'lampasio': 'Kabupaten Tolitoli', 'ogodeide': 'Kabupaten Tolitoli', 'tolitoli utara': 'Kabupaten Tolitoli',
+    # Morowali (7206)
+    'bahodopi': 'Kabupaten Morowali', 'bumi raya': 'Kabupaten Morowali', 'bungku barat': 'Kabupaten Morowali',
+    'bungku pesisir': 'Kabupaten Morowali', 'bungku selatan': 'Kabupaten Morowali', 'bungku tengah': 'Kabupaten Morowali',
+    'bungku timur': 'Kabupaten Morowali', 'menui kepulauan': 'Kabupaten Morowali', 'wita ponda': 'Kabupaten Morowali',
+    # Banggai Kepulauan (7201)
+    'buko': 'Kabupaten Banggai Kepulauan', 'buko selatan': 'Kabupaten Banggai Kepulauan', 'bulagi': 'Kabupaten Banggai Kepulauan',
+    'bulagi selatan': 'Kabupaten Banggai Kepulauan', 'bulagi utara': 'Kabupaten Banggai Kepulauan', 'tinangkung': 'Kabupaten Banggai Kepulauan',
+    'tinangkung selatan': 'Kabupaten Banggai Kepulauan', 'tinangkung utara': 'Kabupaten Banggai Kepulauan', 'liang': 'Kabupaten Banggai Kepulauan',
+    'peling tengah': 'Kabupaten Banggai Kepulauan', 'bokan kepulauan': 'Kabupaten Banggai Kepulauan', 'totikum': 'Kabupaten Banggai Kepulauan',
+    'totikum selatan': 'Kabupaten Banggai Kepulauan',
+    # Morowali Utara (7212)
+    'petasia': 'Kabupaten Morowali Utara', 'petasia timur': 'Kabupaten Morowali Utara', 'petasia barat': 'Kabupaten Morowali Utara',
+    'lembo': 'Kabupaten Morowali Utara', 'lembo raya': 'Kabupaten Morowali Utara', 'mori atas': 'Kabupaten Morowali Utara',
+    'mori utara': 'Kabupaten Morowali Utara', 'soyo jaya': 'Kabupaten Morowali Utara', 'bungku utara': 'Kabupaten Morowali Utara',
+    'mamosalato': 'Kabupaten Morowali Utara',
+    # Banggai (7202)
+    'balantak': 'Kabupaten Banggai', 'balantak selatan': 'Kabupaten Banggai', 'balantak utara': 'Kabupaten Banggai',
+    'batui': 'Kabupaten Banggai', 'batui selatan': 'Kabupaten Banggai', 'bualemo': 'Kabupaten Banggai',
+    'bunta': 'Kabupaten Banggai', 'kintom': 'Kabupaten Banggai', 'lamala': 'Kabupaten Banggai',
+    'lobu': 'Kabupaten Banggai', 'luwuk': 'Kabupaten Banggai', 'luwuk selatan': 'Kabupaten Banggai',
+    'luwuk timur': 'Kabupaten Banggai', 'luwuk utara': 'Kabupaten Banggai', 'masama': 'Kabupaten Banggai',
+    'moilong': 'Kabupaten Banggai', 'nambo': 'Kabupaten Banggai', 'nuhon': 'Kabupaten Banggai',
+    'pagimana': 'Kabupaten Banggai', 'simpang raya': 'Kabupaten Banggai', 'toili': 'Kabupaten Banggai',
+    'toili barat': 'Kabupaten Banggai', 'mantoh': 'Kabupaten Banggai',
+    # Banggai Laut (7211)
+    'banggai': 'Kabupaten Banggai Laut', 'banggai selatan': 'Kabupaten Banggai Laut', 'banggai tengah': 'Kabupaten Banggai Laut',
+    'banggai utara': 'Kabupaten Banggai Laut', 'labobo': 'Kabupaten Banggai Laut', 'bangkurung': 'Kabupaten Banggai Laut',
+    # Buol (7205)
+    'biau': 'Kabupaten Buol', 'bokat': 'Kabupaten Buol', 'bukal': 'Kabupaten Buol',
+    'bunobogu': 'Kabupaten Buol', 'gadung': 'Kabupaten Buol', 'karamat': 'Kabupaten Buol',
+    'lakea': 'Kabupaten Buol', 'momunu': 'Kabupaten Buol', 'paleleh': 'Kabupaten Buol',
+    'paleleh barat': 'Kabupaten Buol', 'tiloan': 'Kabupaten Buol',
+    # Donggala (7207)
+    'balaesang': 'Kabupaten Donggala', 'balaesang tanjung': 'Kabupaten Donggala', 'banawa': 'Kabupaten Donggala',
+    'banawa selatan': 'Kabupaten Donggala', 'banawa tengah': 'Kabupaten Donggala', 'dampelas': 'Kabupaten Donggala',
+    'labuan': 'Kabupaten Donggala', 'sindue': 'Kabupaten Donggala', 'sindue tobata': 'Kabupaten Donggala',
+    'sindue tombusabora': 'Kabupaten Donggala', 'sirenja': 'Kabupaten Donggala', 'sojol': 'Kabupaten Donggala',
+    'sojol utara': 'Kabupaten Donggala', 'tanantovea': 'Kabupaten Donggala', 'pinembani': 'Kabupaten Donggala',
+    'riopakava': 'Kabupaten Donggala',
+    # Parigi Moutong (7208)
+    'ampibabo': 'Kabupaten Parigi Moutong', 'balinggi': 'Kabupaten Parigi Moutong', 'bolano': 'Kabupaten Parigi Moutong',
+    'bolano lambunu': 'Kabupaten Parigi Moutong', 'kasimbar': 'Kabupaten Parigi Moutong', 'mepanga': 'Kabupaten Parigi Moutong',
+    'moutong': 'Kabupaten Parigi Moutong', 'palasa': 'Kabupaten Parigi Moutong', 'parigi': 'Kabupaten Parigi Moutong',
+    'parigi barat': 'Kabupaten Parigi Moutong', 'parigi selatan': 'Kabupaten Parigi Moutong', 'parigi tengah': 'Kabupaten Parigi Moutong',
+    'parigi utara': 'Kabupaten Parigi Moutong', 'sausu': 'Kabupaten Parigi Moutong', 'sidoan': 'Kabupaten Parigi Moutong',
+    'siniu': 'Kabupaten Parigi Moutong', 'taopa': 'Kabupaten Parigi Moutong', 'tinombo': 'Kabupaten Parigi Moutong',
+    'tinombo selatan': 'Kabupaten Parigi Moutong', 'tomini': 'Kabupaten Parigi Moutong', 'toribulu': 'Kabupaten Parigi Moutong',
+    'torue': 'Kabupaten Parigi Moutong',
+    # Poso (7203)
+    'lage': 'Kabupaten Poso', 'lore barat': 'Kabupaten Poso', 'lore piore': 'Kabupaten Poso',
+    'lore selatan': 'Kabupaten Poso', 'lore tengah': 'Kabupaten Poso', 'lore timur': 'Kabupaten Poso',
+    'lore utara': 'Kabupaten Poso', 'pamona barat': 'Kabupaten Poso', 'pamona selatan': 'Kabupaten Poso',
+    'pamona tenggara': 'Kabupaten Poso', 'pamona timur': 'Kabupaten Poso', 'pamona utara': 'Kabupaten Poso',
+    'poso kota': 'Kabupaten Poso', 'poso kota selatan': 'Kabupaten Poso', 'poso kota utara': 'Kabupaten Poso',
+    'poso pesisir': 'Kabupaten Poso', 'poso pesisir selatan': 'Kabupaten Poso', 'poso pesisir utara': 'Kabupaten Poso',
+    # Sigi (7210)
+    'dolo': 'Kabupaten Sigi', 'dolo barat': 'Kabupaten Sigi', 'dolo selatan': 'Kabupaten Sigi',
+    'gumbasa': 'Kabupaten Sigi', 'kinovaro': 'Kabupaten Sigi', 'kulawi': 'Kabupaten Sigi',
+    'kulawi selatan': 'Kabupaten Sigi', 'lindu': 'Kabupaten Sigi', 'marawola': 'Kabupaten Sigi',
+    'marawola barat': 'Kabupaten Sigi', 'nokilalaki': 'Kabupaten Sigi', 'palolo': 'Kabupaten Sigi',
+    'pipikoro': 'Kabupaten Sigi', 'sigi biromaru': 'Kabupaten Sigi', 'tanambulava': 'Kabupaten Sigi',
+    # Tojo Una-Una (7209)
+    'ampana kota': 'Kabupaten Tojo Una-Una', 'ampana tete': 'Kabupaten Tojo Una-Una', 'ratolindo': 'Kabupaten Tojo Una-Una',
+    'tojo': 'Kabupaten Tojo Una-Una', 'tojo barat': 'Kabupaten Tojo Una-Una', 'ulubongka': 'Kabupaten Tojo Una-Una',
+    'una-una': 'Kabupaten Tojo Una-Una', 'togean': 'Kabupaten Tojo Una-Una', 'walea besar': 'Kabupaten Tojo Una-Una',
+    'walea kepulauan': 'Kabupaten Tojo Una-Una', 'batudaka': 'Kabupaten Tojo Una-Una', 'talatako': 'Kabupaten Tojo Una-Una',
+    # Kota Palu (7271)
+    'mantikulore': 'Kota Palu', 'palu barat': 'Kota Palu', 'palu selatan': 'Kota Palu',
+    'palu timur': 'Kota Palu', 'palu utara': 'Kota Palu', 'tatanga': 'Kota Palu',
+    'tawaeli': 'Kota Palu', 'ulujadi': 'Kota Palu'
+}
+
+URL_SUBDOMAIN_TO_KABUPATEN = {
+    'tolitoli': 'Kabupaten Tolitoli',
+    'morowali': 'Kabupaten Morowali',
+    'morowaliutara': 'Kabupaten Morowali Utara',
+    'morut': 'Kabupaten Morowali Utara',
+    'banggaikep': 'Kabupaten Banggai Kepulauan',
+    'bangkep': 'Kabupaten Banggai Kepulauan',
+    'banggai': 'Kabupaten Banggai',
+    'banggailaut': 'Kabupaten Banggai Laut',
+    'banglai': 'Kabupaten Banggai Laut',
+    'donggala': 'Kabupaten Donggala',
+    'poso': 'Kabupaten Poso',
+    'buol': 'Kabupaten Buol',
+    'palu': 'Kota Palu',
+    'parigimoutong': 'Kabupaten Parigi Moutong',
+    'parigi': 'Kabupaten Parigi Moutong',
+    'tojounauna': 'Kabupaten Tojo Una-Una',
+    'sigi': 'Kabupaten Sigi'
+}
+
+def detect_kabupaten_name(pdf_path=None, pages_text=None, region_name="Wilayah", pub_title="", is_kabupaten=False):
+    if is_kabupaten:
+        rn = region_name.strip()
+        if rn.lower().startswith("kabupaten") or rn.lower().startswith("kota"):
+            return rn
+        return f"Kabupaten {rn}"
+
+    rn_clean = (region_name or "").lower().strip()
+    if rn_clean in KECAMATAN_TO_KABUPATEN:
+        return KECAMATAN_TO_KABUPATEN[rn_clean]
+
+    for k, v in KECAMATAN_TO_KABUPATEN.items():
+        if k in rn_clean or rn_clean in k:
+            return v
+
+    all_text = ""
+    if pages_text and isinstance(pages_text, dict):
+        all_text = " ".join([pages_text.get(i, "") for i in range(min(15, len(pages_text)))])
+    elif pdf_path and os.path.exists(pdf_path):
+        try:
+            doc = fitz.open(pdf_path)
+            all_text = " ".join([doc[i].get_text() for i in range(min(15, len(doc)))])
+            doc.close()
+        except Exception:
+            pass
+
+    if all_text:
+        m_url = re.search(r'https?://([a-z0-9\-]+)(?:kab|kota)\.bps\.go\.id', all_text, re.I)
+        if m_url:
+            sub = m_url.group(1).lower().replace('-', '')
+            for k, v in URL_SUBDOMAIN_TO_KABUPATEN.items():
+                if k in sub:
+                    return v
+
+        m_bps = re.search(r'(?:BPS|Badan Pusat Statistik)\s+(Kabupaten|Kota)\s+([A-Za-z\s]+?)(?:/|,|\n|\.|\r|$)', all_text, re.I)
+        if m_bps:
+            kb_type = m_bps.group(1).title()
+            kb_name = m_bps.group(2).strip().title()
+            if "xxxx" not in kb_name.lower() and len(kb_name) >= 3:
+                return f"{kb_type} {kb_name}"
+
+    return f"Kabupaten {region_name}"
+
 def find_page_with_text(doc, *keywords, start_page=0, end_page=None):
     if end_page is None:
         end_page = len(doc)
@@ -228,6 +368,7 @@ def extract_pdf_metadata(pdf_path):
         if "Xxxxx" in pub_title or "xxxxx" in pub_title:
             pub_title = f"Kecamatan {region_name} Dalam Angka {pub_year}"
     is_kabupaten = "Kabupaten" in pub_title or "Regency" in pub_title
+    kabupaten_name = detect_kabupaten_name(pdf_path, pages_text, region_name, pub_title, is_kabupaten)
 
     # ── KOVER DEPAN ──
     cover_text = pages_text.get(0, "")
@@ -1040,7 +1181,7 @@ def extract_pdf_metadata(pdf_path):
                     candidate_title = c_cand
                     if num_match.group(2) == '.':
                         table_findings.append(
-                            f"Tabel {current_tbl_num} (hal {pg_num}): Terdapat tanda titik (.) di akhir nomor tabel ('{line}'). Sesuai Pedoman Publikasi BPS 2023 hal. 40 & Instrumen baris 141, nomor tabel tidak boleh diakhiri tanda titik."
+                            f"Tabel {current_tbl_num} (hal {pg_num}, hal fisik {p+1}): Terdapat tanda titik (.) di akhir nomor tabel ('{line}'). Sesuai Pedoman Publikasi BPS 2023 hal. 40 & Instrumen baris 141, nomor tabel tidak boleh diakhiri tanda titik."
                         )
                     if current_tbl_num.count('.') >= 2:
                         break
@@ -1049,7 +1190,7 @@ def extract_pdf_metadata(pdf_path):
             if m_lanj:
                 current_tbl_num = "Lanjutan " + m_lanj.group(1)
         
-        tbl_label = f"Tabel {current_tbl_num} (hal {pg_num})" if current_tbl_num else f"Tabel pada halaman {pg_num} (hal fisik {p+1})"
+        tbl_label = f"Tabel {current_tbl_num} (hal {pg_num}, hal fisik {p+1})" if current_tbl_num else f"Tabel pada halaman {pg_num} (hal fisik {p+1})"
 
         # Titik di akhir judul tabel (Instrumen Row 141)
         if candidate_title and candidate_title.endswith('.'):
@@ -1290,6 +1431,7 @@ def extract_pdf_metadata(pdf_path):
     return {
         "title": pub_title,
         "region": region_name,
+        "kabupaten": kabupaten_name,
         "year": pub_year,
         "is_kabupaten": is_kabupaten,
         "total_pages": num_pages,
@@ -2240,7 +2382,10 @@ def generate_excel_report(meta, defects, output_path, base_template_path=None):
         c4.border = thin_border
         c4.fill = header_fill
 
-    c2 = ws.cell(row=2, column=2, value=f"Kabupaten Banggai Kepulauan" if "Buko" in region or "Bulagi" in region or "Tinangkung" in region else f"Kabupaten {region}")
+    kabupaten_display = meta.get("kabupaten")
+    if not kabupaten_display:
+        kabupaten_display = detect_kabupaten_name(pdf_path=None, pages_text={}, region_name=region, pub_title=title, is_kabupaten=meta.get("is_kabupaten", False))
+    c2 = ws.cell(row=2, column=2, value=kabupaten_display)
     c2.font = Font(name='Calibri', size=12, bold=True)
 
     ws.row_dimensions[5].height = 45

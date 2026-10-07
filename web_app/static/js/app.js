@@ -1168,8 +1168,8 @@ document.addEventListener('DOMContentLoaded', () => {
             .replace(/(?:pedoman|template|juknis|perka|kaidah|panduan)\s*(?:\d{4})?\s*(?:hal(?:aman)?\.?|hlm\.?)\s*\d+/gi, '')
             .replace(/instrumen[^;,\)\.\n]*?baris\s*\d+/gi, '');
 
-        // 3. Direct explicit physical page regex in defect text (e.g. "halaman fisik 29", "hal fisik 4")
-        const mPhys = cleanText.match(/(?:halaman\s+fisik|hal\s+fisik)\s*[:#]?\s*(\d+)/i);
+        // 3. Direct explicit physical page regex in defect text (e.g. "halaman fisik 29", "hal fisik 67", "fisik hal 4")
+        const mPhys = cleanText.match(/(?:halaman\s+fisik|hal\s+fisik|fisik\s+hal(?:aman)?)\s*[:#]?\s*(\d+)/i);
         if (mPhys && mPhys[1]) {
             const p = parseInt(mPhys[1], 10);
             if (p > 0) return p;
