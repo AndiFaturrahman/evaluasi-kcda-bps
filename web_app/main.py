@@ -317,14 +317,33 @@ async def analyze_batch_upload(
     total_clean_districts = 0
     total_mismatch_districts = 0
 
+    import zipfile
+    pdf_paths_to_process = []
     for file_obj in pdf_files:
-        if not file_obj.filename.lower().endswith(".pdf"):
-            continue
-            
-        saved_name = f"batch_{task_id}_{file_obj.filename}"
-        saved_path = os.path.join(UPLOAD_DIR, saved_name)
-        with open(saved_path, "wb") as f:
-            shutil.copyfileobj(file_obj.file, f)
+        fname = file_obj.filename.lower()
+        if fname.endswith(".zip"):
+            zip_saved_path = os.path.join(UPLOAD_DIR, f"zip_{task_id}_{file_obj.filename}")
+            with open(zip_saved_path, "wb") as f:
+                shutil.copyfileobj(file_obj.file, f)
+            try:
+                with zipfile.ZipFile(zip_saved_path, 'r') as zf:
+                    for member in zf.namelist():
+                        if member.lower().endswith(".pdf") and not member.startswith("__MACOSX") and not os.path.basename(member).startswith("."):
+                            extracted_name = f"batch_{task_id}_{os.path.basename(member)}"
+                            extracted_path = os.path.join(UPLOAD_DIR, extracted_name)
+                            with open(extracted_path, "wb") as out_f, zf.open(member) as in_f:
+                                shutil.copyfileobj(in_f, out_f)
+                            pdf_paths_to_process.append(extracted_path)
+            except Exception as e:
+                print(f"[ZIP Upload] Error extracting zip {file_obj.filename}: {e}")
+        elif fname.endswith(".pdf"):
+            saved_name = f"batch_{task_id}_{file_obj.filename}"
+            saved_path = os.path.join(UPLOAD_DIR, saved_name)
+            with open(saved_path, "wb") as f:
+                shutil.copyfileobj(file_obj.file, f)
+            pdf_paths_to_process.append(saved_path)
+
+    for saved_path in pdf_paths_to_process:
 
         meta = extract_pdf_metadata(saved_path)
         defects = analyze_defects(meta, custom_api_key=custom_api_key)

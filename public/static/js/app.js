@@ -249,9 +249,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function handlePdfsSelected(fileList, isAppend = false) {
         if (!fileList || fileList.length === 0) return;
-        const validFiles = Array.from(fileList).filter(f => f.name && f.name.toLowerCase().endsWith('.pdf'));
+        const validFiles = Array.from(fileList).filter(f => f.name && (f.name.toLowerCase().endsWith('.pdf') || f.name.toLowerCase().endsWith('.zip')));
         if (validFiles.length === 0) {
-            showToast('Format berkas harus PDF publikasi BPS (.pdf)!', 'warning', 4000);
+            showToast('Format berkas harus PDF publikasi BPS (.pdf) atau arsip (.zip)!', 'warning', 4000);
             return;
         }
 
@@ -271,7 +271,12 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast(`✓ Ditambahkan ${addedCount} berkas PDF baru ke antrean!`, 'success', 3000);
         } else {
             selectedPdfFiles = validFiles;
-            showToast(`✓ ${validFiles.length} berkas PDF dipilih. Klik "Mulai Audit" sekarang!`, 'success', 3500);
+            const hasZip = validFiles.some(f => f.name.toLowerCase().endsWith('.zip'));
+            if (hasZip) {
+                showToast(`✓ Arsip ZIP dipilih. Sistem akan mengekstrak seluruh PDF di dalamnya!`, 'success', 3500);
+            } else {
+                showToast(`✓ ${validFiles.length} berkas PDF dipilih. Klik "Mulai Audit" sekarang!`, 'success', 3500);
+            }
         }
 
         selectedPdfFile = selectedPdfFiles[0] || null;
@@ -448,7 +453,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            if (selectedPdfFiles.length > 1) {
+            const isZipUpload = selectedPdfFiles.some(f => f.name.toLowerCase().endsWith('.zip'));
+            if (selectedPdfFiles.length > 1 || isZipUpload) {
                 // Batch Upload Mode
                 const totalBytes = selectedPdfFiles.reduce((sum, f) => sum + f.size, 0);
                 const totalMB = (totalBytes / (1024 * 1024)).toFixed(1);

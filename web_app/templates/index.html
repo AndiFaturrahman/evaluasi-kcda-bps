@@ -72,12 +72,12 @@
                     <span class="icon-inner">📑</span>
                 </div>
                 <div class="dropzone-title">Tarik & Letakkan Berkas PDF Publikasi di Sini</div>
-                <div class="dropzone-sub">atau klik tombol di bawah untuk memilih satu atau banyak berkas PDF sekaligus dari komputer</div>
+                <div class="dropzone-sub">atau klik tombol di bawah untuk memilih satu atau banyak berkas PDF / arsip ZIP sekaligus dari komputer</div>
                 <label for="pdf-input" class="btn-select-file" id="btn-trigger-file">
-                    <span>📁 Pilih Dokumen PDF (Bisa Banyak)</span>
+                    <span>📁 Pilih Dokumen PDF / Arsip ZIP</span>
                 </label>
-                <input type="file" id="pdf-input" class="visually-hidden-file-input" accept=".pdf" multiple>
-                <div class="dropzone-note">Mendukung audit berkas tunggal maupun audit kolektif seluruh kecamatan sekaligus (1 Master Excel)</div>
+                <input type="file" id="pdf-input" class="visually-hidden-file-input" accept=".pdf,.zip" multiple>
+                <div class="dropzone-note">Mendukung berkas PDF tunggal, banyak PDF, maupun 1 berkas .ZIP berisi seluruh publikasi kecamatan</div>
             </div>
 
             <div id="file-chosen" class="file-chosen-info" style="display: none;">
@@ -91,10 +91,10 @@
                         <button type="button" class="btn-instant-analyze" id="btn-instant-analyze">
                             <span>🚀 Mulai Audit Sekarang</span>
                         </button>
-                        <button type="button" class="btn-add-more-pdf" id="btn-add-more-pdf" title="Tambah berkas PDF publikasi lainnya ke antrean">
-                            <span>➕ Tambah PDF</span>
+                        <button type="button" class="btn-add-more-pdf" id="btn-add-more-pdf" title="Tambah berkas PDF/ZIP publikasi lainnya ke antrean">
+                            <span>➕ Tambah PDF/ZIP</span>
                         </button>
-                        <input type="file" id="pdf-add-input" class="visually-hidden-file-input" accept=".pdf" multiple>
+                        <input type="file" id="pdf-add-input" class="visually-hidden-file-input" accept=".pdf,.zip" multiple>
                         <button type="button" class="btn-remove-file" id="btn-remove-file" title="Bersihkan dan pilih ulang berkas">✕ Bersihkan</button>
                     </div>
                 </div>
