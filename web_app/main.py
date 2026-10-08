@@ -39,9 +39,10 @@ async def add_no_cache_header(request, call_next):
 
 # Folder direktori
 BASE_DIR = os.path.dirname(current_dir)
-IS_VERCEL = bool(os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
+IS_CLOUD = bool(os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME") or os.environ.get("SPACE_ID") or os.environ.get("HF_SPACE_ID"))
+IS_VERCEL = IS_CLOUD
 
-if IS_VERCEL:
+if IS_CLOUD:
     UPLOAD_DIR = "/tmp/uploads"
     OUTPUT_DIR = "/tmp/outputs"
 else:

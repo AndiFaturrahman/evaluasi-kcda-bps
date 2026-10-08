@@ -466,6 +466,11 @@ def extract_pdf_metadata(pdf_path):
             pub_num_wrong_year = (code_yr, expected_code)
 
     bps_abbreviated_id = bool(re.search(r'\u00a9\s*BPS\b', catalog_text, re.IGNORECASE))
+    catalog_bps_abbreviations = []
+    for line in catalog_text.splitlines():
+        line_clean = line.strip()
+        if re.search(r'\bBPS\s+(?:Kabupaten|Kota|Provinsi)\b', line_clean) and 'BPS-Statistics' not in line_clean:
+            catalog_bps_abbreviations.append(line_clean)
     bps_of_en = bool(re.search(r'BPS\s+of\s+', catalog_text + preface_en_text, re.IGNORECASE))
     copyright_typo_regency = bool(re.search(r'Regenency', catalog_text + all_prelim, re.I))
 
@@ -925,10 +930,38 @@ def extract_pdf_metadata(pdf_path):
     team_title_nonstandard = bool(re.search(r'TEAM\s+MEMBERS', team_text, re.I))
     team_writers_merged = bool(re.search(r'Pengolah Data dan Penulis Naskah', team_text, re.I))
 
+    # Sesuai Pedoman Publikasi hal. 81: Jika penanggung jawab, penyunting, pengolah data,
+    # penulis naskah, penata letak, dan penerjemah lebih dari satu orang, maka terjemahan
+    # bahasa Inggris DIBOLEHKAN dalam bentuk jamak (tambahkan 's').
+    team_lines_list = [l.strip() for l in team_text.splitlines() if l.strip()]
+    role_blocks = []
+    c_role = None
+    c_names = []
+    for tl in team_lines_list:
+        if any(k in tl.upper() for k in ['PENGARAH', 'PENANGGUNG JAWAB', 'PENYUNTING', 'PENGOLAH DATA', 'PENULIS NASKAH', 'PENATA LETAK', 'PENERJEMAH']):
+            if c_role:
+                role_blocks.append((c_role, c_names))
+            c_role = tl
+            c_names = []
+        elif c_role:
+            if not any(k in tl.upper() for k in ['KECAMATAN', 'DISTRICT', 'HTTP', 'ISSN', 'TIM PENYUSUN', 'VOLUME']):
+                c_names.append(tl)
+    if c_role:
+        role_blocks.append((c_role, c_names))
+
     jabatan_errors = []
-    for wrong, correct in JABATAN_SALAH_JAMAK.items():
-        if wrong in team_text:
-            jabatan_errors.append((wrong, correct))
+    jabatan_tips = []
+    for r_line, n_list in role_blocks:
+        names_joined = ' '.join(n_list)
+        p_tokens = [tok.strip() for tok in re.split(r'[•,\&]|\bdan\b', names_joined) if len(tok.strip()) > 2]
+        p_count = max(1, len(p_tokens))
+        if p_count == 1:
+            for wrong, correct in JABATAN_SALAH_JAMAK.items():
+                if wrong.lower() in r_line.lower():
+                    jabatan_errors.append((wrong, correct, 1))
+        else:
+            if 'Data Processor' in r_line and 'Data Processors' not in r_line:
+                jabatan_tips.append('Pengolah Data berjumlah lebih dari satu orang, disarankan menggunakan bentuk jamak "Data Processors" (Pedoman hal. 81).')
 
     # ── KATA PENGANTAR ──
     preface_year_match = re.search(r'Dalam\s+Angka\s+(\d{4})', preface_text, re.IGNORECASE)
@@ -1358,11 +1391,23 @@ def extract_pdf_metadata(pdf_path):
                 f"{tbl_label}: Kesalahan fatal header kolom. Header kolom tertulis 'Sumber Air Minum/Source of Drinking Water' padahal data tabel menyajikan data vaksinasi/imunisasi."
             )
 
-        # Rentang tahun tanda minus
-        if re.search(r'202\d\s*-\s*202\d', txt):
-            table_findings.append(
-                f"{tbl_label}: Penulisan rentang tahun pada judul tabel masih menggunakan tanda minus strip (-). Sesuai pedoman BPS, wajib menggunakan notasi En Dash (–) tanpa spasi (contoh: 2022–2025)."
-            )
+        # Rentang tahun pada judul tabel (Kaidah Pedoman Publikasi BPS hal. 66)
+        m_2yr = re.search(r'\b(20\d\d)\s*([–\-])\s*(20\d\d)\b', txt)
+        if m_2yr:
+            y1 = int(m_2yr.group(1))
+            sep = m_2yr.group(2)
+            y2 = int(m_2yr.group(3))
+            if y2 - y1 == 1:
+                table_findings.append(
+                    f"{tbl_label}: Kesalahan penulisan rentang tahun pada judul tabel: Tertulis '{m_2yr.group(0)}'. "
+                    f"Sesuai Pedoman Publikasi BPS (hal. 66), apabila hanya menyajikan dua tahun, gunakan kata 'dan' sebagai penghubung antar tahun ('{y1} dan {y2}'). "
+                    f"Tanda pisah En Dash (–) hanya digunakan jika menyajikan rentang lebih dari dua tahun (contoh: {y1}–{y2+2})."
+                )
+            elif y2 - y1 > 1 and sep == '-':
+                table_findings.append(
+                    f"{tbl_label}: Penulisan rentang tahun pada judul tabel masih menggunakan tanda minus strip (-): Tertulis '{m_2yr.group(0)}'. "
+                    f"Sesuai Pedoman Publikasi BPS, penulisan rentang tahun (lebih dari dua tahun) wajib menggunakan notasi En Dash (–) tanpa spasi ('{y1}–{y2}')."
+                )
 
     # ── RUNNING TITLE BATANG TUBUH ──
     rt_odd_wrong = []
@@ -1425,6 +1470,46 @@ def extract_pdf_metadata(pdf_path):
                     hju_title_is_italic = cv_hju["title_english_is_italic"]
         except Exception as e:
             print(f"[CV Auditor] Error in audit_document: {e}")
+
+    # ── DETEKSI LONCATAN NOMOR HALAMAN CETAK (PAGE JUMP DETECTOR) ──
+    def _extract_printed_page(page_obj):
+        rect = page_obj.rect
+        top_txt = page_obj.get_text('text', clip=fitz.Rect(0, 0, rect.width, 45)).strip()
+        bot_txt = page_obj.get_text('text', clip=fitz.Rect(0, rect.height-45, rect.width, rect.height)).strip()
+        for txt_area in [bot_txt, top_txt]:
+            for l_str in txt_area.splitlines():
+                l_str = l_str.strip()
+                if '.' in l_str or '/' in l_str or '-' in l_str:
+                    continue
+                m_lead = re.match(r'^(\d{1,3})(?:\s+[A-Za-z]|$)', l_str)
+                if m_lead and int(m_lead.group(1)) < 300 and int(m_lead.group(1)) != int(pub_year if str(pub_year).isdigit() else 2026):
+                    return int(m_lead.group(1))
+                m_trail = re.search(r'(?:^|\s+)(\d{1,3})$', l_str)
+                if m_trail and int(m_trail.group(1)) < 300 and int(m_trail.group(1)) != int(pub_year if str(pub_year).isdigit() else 2026):
+                    return int(m_trail.group(1))
+        return None
+
+    printed_pages_list = []
+    start_p = (p_arab_start - 1) if ('p_arab_start' in locals() and p_arab_start > 0) else 20
+    for p_idx in range(max(2, start_p), num_pages - 1):
+        num_found = _extract_printed_page(doc[p_idx])
+        if num_found is not None:
+            printed_pages_list.append((p_idx + 1, num_found))
+
+    page_number_jumps = []
+    for idx_p in range(1, len(printed_pages_list)):
+        p_prev, num_prev = printed_pages_list[idx_p - 1]
+        p_curr, num_curr = printed_pages_list[idx_p]
+        phys_diff = p_curr - p_prev
+        expected_num = num_prev + phys_diff
+        if num_curr != expected_num and abs(num_curr - expected_num) >= 2:
+            page_number_jumps.append({
+                "phys_curr": p_curr,
+                "num_curr": num_curr,
+                "expected_num": expected_num,
+                "phys_prev": p_prev,
+                "num_prev": num_prev
+            })
 
     doc.close()
 
@@ -1504,6 +1589,9 @@ def extract_pdf_metadata(pdf_path):
         "rt_even_wrong": rt_even_wrong,
         "has_daftar_pustaka": has_daftar_pustaka,
         "kover_belakang_errors": kover_belakang_errors,
+        "jabatan_tips": jabatan_tips,
+        "catalog_bps_abbreviations": catalog_bps_abbreviations,
+        "page_number_jumps": page_number_jumps,
         # ── NEW: Cross-page consistency fields ──
         "p3_has_bg_illustration": p3_has_image,
         "p3_logo_monochrome": p3_logo_monochrome,
@@ -1766,6 +1854,10 @@ def analyze_defects(meta, custom_api_key=None):
             'Huruf "A" (kode varian Template A master BPS) masih tertanam di text layer PDF pada koordinat pojok bawah bersama teks "XXXXX Dalam Angka 2024". '
             'Meskipun secara visual tercetak putih/tertutup gambar latar, objek teks sisa template ini wajib dihapus dari file desain asli agar tidak terbaca oleh sistem pengindeks repositori publikasi BPS.'
         )
+    kover_depan.append(
+        '[SARAN CETAK FISIK KOVER DEPAN] Logo dan tulisan BPS pada kover depan: '
+        'Pastikan pada spesifikasi cetak fisik, logo dan tulisan BPS dibuat flat/tanpa efek emboss timbul sesuai ketentuan kover resmi BPS.'
+    )
 
     # ── 2. HALAMAN JUDUL UTAMA: - ──
     halaman_judul = []
@@ -1865,6 +1957,13 @@ def analyze_defects(meta, custom_api_key=None):
             'Pelanggaran penulisan nama lembaga pada hak cipta: Tertulis "©BPS ..." atau "© BPS ...". '
             'Sesuai aturan BPS, dalam bahasa Indonesia nama lembaga dilarang disingkat. Penulisan baku adalah "©Badan Pusat Statistik".'
         )
+    if meta.get("catalog_bps_abbreviations"):
+        contoh_teks = meta["catalog_bps_abbreviations"][0]
+        halaman_katalog.append(
+            f'Penulisan nama instansi BPS pada Halaman Katalog disingkat: Tertulis "{contoh_teks}". '
+            f'Sesuai kaidah Halaman Katalog BPS (Pedoman 2023 Bab 4.3.2 hal. 37 & Instrumen baris 32), '
+            f'nama instansi BPS pada baris penyusun, penyunting, dan penerbit wajib ditulis lengkap "Badan Pusat Statistik", tidak boleh disingkat.'
+        )
     if meta.get("bps_of_en"):
         halaman_katalog.append(
             'Penulisan nama Satker BPS dalam bahasa Inggris tidak standar: menggunakan kata "of" ("BPS-Statistics of [Regency]"). '
@@ -1908,11 +2007,21 @@ def analyze_defects(meta, custom_api_key=None):
             f'Nomor ISSN tidak dicantumkan di pojok kanan atas halaman Tim Penyusun: '
             f'Publikasi berkala yang memiliki ISSN wajib mencantumkan "ISSN {team_issn}" di pojok kanan atas tanpa tanda titik dua (Pedoman hal. 35 & Instrumen baris 39).'
         )
-    for wrong, correct in meta.get("jabatan_errors", []):
-        tim_penyusun.append(
-            f'Jabatan {wrong} dalam bahasa Inggris keliru bentuk jamak: tertulis "{wrong}", '
-            f'seharusnya bentuk tunggal standar BPS yaitu "{correct}".'
-        )
+    for item in meta.get("jabatan_errors", []):
+        if len(item) == 3:
+            wrong, correct, cnt = item
+            tim_penyusun.append(
+                f'Jabatan {wrong} dalam bahasa Inggris keliru bentuk jamak padahal personilnya hanya satu orang: tertulis "{wrong}", '
+                f'seharusnya bentuk tunggal standar BPS yaitu "{correct}".'
+            )
+        else:
+            wrong, correct = item
+            tim_penyusun.append(
+                f'Jabatan {wrong} dalam bahasa Inggris keliru: tertulis "{wrong}", '
+                f'seharusnya "{correct}".'
+            )
+    for tip in meta.get("jabatan_tips", []):
+        tim_penyusun.append(f'[SARAN PEDOMAN TIM PENYUSUN] {tip}')
     if meta.get("team_writers_merged"):
         tim_penyusun.append(
             'Jabatan Penulis Naskah dan Pengolah Data digabung: Sesuai Pedoman BPS 2023 (Instrumen baris 42), '
@@ -2050,6 +2159,18 @@ def analyze_defects(meta, custom_api_key=None):
             f'Visual grafik/peta belum di-insert dan masih menyajikan visual placeholder template. '
             f'Dilarang merilis publikasi yang masih memuat visual dummy template.'
         )
+    for jump in meta.get("page_number_jumps", []):
+        layout_isi.append(
+            f'Urutan nomor halaman tidak sesuai: Pada halaman fisik {jump["phys_curr"]} tercantum nomor halaman {jump["num_curr"]}, '
+            f'padahal urutan seharusnya adalah halaman {jump["expected_num"]} '
+            f'(terjadi loncatan penomoran dari halaman {jump["num_prev"]} pada halaman fisik {jump["phys_prev"]}).'
+        )
+    layout_isi.append(
+        '[SARAN LAYOUT TEKS DWIBAHASA] Penjelasan Teknis / Technical Notes: '
+        'Naskah bahasa asing (Inggris) disajikan berdampingan dan sejajar dengan naskah bahasa Indonesia '
+        '(dua kolom berdampingan atau per poin sejajar). Hindari menyajikan naskah bahasa asing bertumpuk di bawah naskah bahasa Indonesia '
+        'agar pembaca dapat langsung membandingkan teks dwibahasa secara simetris (Pedoman Pembuatan Publikasi BPS Bab 4.4 hal. 50).'
+    )
     for tf in meta.get("table_findings", []):
         if tf not in layout_isi:
             layout_isi.append(tf)
