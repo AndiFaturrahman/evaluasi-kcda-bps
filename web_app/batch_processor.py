@@ -74,10 +74,17 @@ def populate_district_sheet(ws, meta, defects):
     ws.cell(row=5, column=5, value="Indonesia dan Inggris").alignment = align_center
     ws.cell(row=5, column=6, value=f"September {year}").alignment = align_center
     ws.cell(row=5, column=7, value=f"29 September {year}").alignment = align_center
-    ws.cell(row=5, column=8, value="√").alignment = align_center
-    ws.cell(row=5, column=9, value="").alignment = align_center
-    ws.cell(row=5, column=10, value=f"September {year}").alignment = align_center
-    ws.cell(row=5, column=11, value="").alignment = align_center
+    raw_tpl_meta = meta.get("raw_template_info", {})
+    if raw_tpl_meta.get("is_pure_template"):
+        ws.cell(row=5, column=8, value="").alignment = align_center
+        ws.cell(row=5, column=9, value="").alignment = align_center
+        ws.cell(row=5, column=10, value="Tidak Rilis").alignment = align_center
+        ws.cell(row=5, column=11, value="√").alignment = align_center
+    else:
+        ws.cell(row=5, column=8, value="√").alignment = align_center
+        ws.cell(row=5, column=9, value="").alignment = align_center
+        ws.cell(row=5, column=10, value=f"September {year}").alignment = align_center
+        ws.cell(row=5, column=11, value="").alignment = align_center
 
     for c in range(2, 14):
         cell = ws.cell(row=5, column=c)
@@ -183,7 +190,18 @@ def generate_master_batch_excel(eval_results, output_excel_path, regency_title="
         d_mismatch = meta.get("district_mismatch_info", {})
         is_mismatch = d_mismatch.get("is_mismatch", False)
 
-        if is_mismatch:
+        raw_tpl = meta.get("raw_template_info", {})
+        if raw_tpl.get("is_pure_template"):
+            status_str = "DITOLAK TOTAL (TEMPLATE MENTAH)"
+            row_fill = fill_fatal
+            font_status = Font(name='Calibri', size=10, bold=True, color='B91C1C')
+            clone_status_str = f"DITOLAK: Master Template BPS Belum Dikerjakan ({raw_tpl.get('markers_count', 0)} Residu)"
+        elif raw_tpl.get("is_raw_template"):
+            status_str = "DRAF BELUM TUNTAS"
+            row_fill = fill_fatal
+            font_status = Font(name='Calibri', size=10, bold=True, color='C2410C')
+            clone_status_str = f"FATAL: Residu Template Masif ({raw_tpl.get('markers_count', 0)} Residu)"
+        elif is_mismatch:
             status_str = "REVISI TOTAL (FATAL)"
             row_fill = fill_fatal
             font_status = Font(name='Calibri', size=10, bold=True, color='B91C1C')
@@ -201,6 +219,10 @@ def generate_master_batch_excel(eval_results, output_excel_path, regency_title="
 
         # Critical summary
         crit_list = []
+        if raw_tpl.get("is_pure_template"):
+            crit_list.append("Ditolak Total: 100% Template Mentah")
+        elif raw_tpl.get("is_raw_template"):
+            crit_list.append("Residu Template Masif")
         if is_mismatch:
             crit_list.append("FATAL Beda Wilayah")
         if meta.get("dummy_camera_detected") or meta.get("dummy_figures"):

@@ -856,6 +856,59 @@ def extract_pdf_metadata(pdf_path):
     }
 
     # ══════════════════════════════════════════════════════════════════════
+    # RAW TEMPLATE UPLOAD & UNWORKED DRAFT DETECTOR
+    # Kasus Fatal (Sering Terjadi): Pengunggah tidak niat mengerjakan publikasi,
+    # melainkan hanya mengunggah file template master mentah (Template KCDA 2026)
+    # atau draf kosong yang belum diisi data riil kecamatan!
+    # ══════════════════════════════════════════════════════════════════════
+    full_doc_text = " ".join([pages_text.get(i, "") for i in range(num_pages)])
+    cover_full_txt = pages_text.get(0, "")
+    back_full_txt = pages_text.get(num_pages - 1, "") if num_pages > 0 else ""
+
+    template_markers_found = []
+    if re.search(r'\bCOVER\s+DEPAN\b', cover_full_txt, re.I):
+        template_markers_found.append('Label teks instruksi master "COVER DEPAN" tercetak di kover depan')
+    if re.search(r'\bCOVER\s+BELAKANG\b', back_full_txt, re.I):
+        template_markers_found.append('Label teks instruksi master "COVER BELAKANG" tercetak di kover belakang')
+    if re.search(r'\bYYYYY\b', full_doc_text):
+        template_markers_found.append('Nama wilayah template "YYYYY" ("KECAMATAN YYYYY" / "YYYYY DISTRICT IN FIGURES") masih tersebar di dalam dokumen')
+    if re.search(r'\bKecamatan\s+XXX\b|\bKecamatan\s+XXXXX\b', full_doc_text):
+        template_markers_found.append('Placeholder nama kecamatan "Kecamatan XXX" masih tercantum di judul tabel/ulasan')
+    if re.search(r'KABUPATEN/KOTA\s+XXXX', full_doc_text, re.I) or re.search(r'BPS-STATISTICS\s+XXXX', full_doc_text, re.I):
+        template_markers_found.append('Identitas satker dummy master "KABUPATEN/KOTA XXXX" masih belum diganti')
+    if re.search(r'nama\s+kepala\s+BPS\s+Kako\s+tanpa\s+gelar', full_doc_text, re.I):
+        template_markers_found.append('Teks instruksi template "nama kepala BPS Kako tanpa gelar" pada halaman Tim Penyusun')
+    if re.search(r'\bNAMA\s+TANPA\s+GELAR\b', full_doc_text):
+        template_markers_found.append('Teks instruksi template "NAMA TANPA GELAR" pada halaman Kata Pengantar / Preface')
+    if re.search(r'xxxxx\s*[•\*\-]\s*xxxxx', full_doc_text, re.I) or re.search(r'xxx\s*[•\*\-]\s*xxx', full_doc_text, re.I):
+        template_markers_found.append('Placeholder nama personil penyusun "xxxxx • xxxxx" pada susunan tim')
+    if re.search(r'lorem\s+ipsum\s+dolor\s+sit\s+amet', full_doc_text, re.I):
+        template_markers_found.append('Ulasan statistik dan sambutan masih berupa teks dummy Latin "Lorem ipsum dolor sit amet..."')
+    if re.search(r'1102001\.(?:xx|xxxx)\b', full_doc_text, re.I):
+        template_markers_found.append('Nomor katalog masih berupa placeholder template "1102001.xx" / "1102001.xxxx"')
+    if re.search(r'ISSN\s*XXXX\s*-\s*XXXX', full_doc_text, re.I):
+        template_markers_found.append('Nomor ISSN masih berupa template bawaan "ISSN XXXX -XXXX"')
+    if re.search(r'Dinas\s+xxx\b', full_doc_text, re.I):
+        template_markers_found.append('Daftar kontributor data masih memuat "Dinas xxx"')
+    if re.search(r'Jl\.\s*\.{2,}|Telp\.:\s*\.{2,}|@bps\.go\.id', back_full_txt, re.I) and '...' in back_full_txt:
+        template_markers_found.append('Alamat, kontak, dan email pada kover belakang masih berupa placeholder titik-titik ("Jl. ... Telp.: ...")')
+
+    is_pure_template = (
+        bool(re.search(r'\bCOVER\s+DEPAN\b', cover_full_txt, re.I)) or
+        region_name.lower() in ['yyyyy', 'xxxxx', 'wilayah'] or
+        len(template_markers_found) >= 10
+    )
+    is_raw_template = len(template_markers_found) >= 4 or is_pure_template
+
+    raw_template_info = {
+        "is_pure_template": is_pure_template,
+        "is_raw_template": is_raw_template,
+        "markers_count": len(template_markers_found),
+        "markers": template_markers_found,
+        "status_label": "REJECTED_PURE_TEMPLATE" if is_pure_template else ("FATAL_UNWORKED_DRAFT" if is_raw_template else "NORMAL")
+    }
+
+    # ══════════════════════════════════════════════════════════════════════
     # ROMAN NUMERAL PAGE COUNT VALIDATOR
     # Validates catalog roman count vs actual preliminary page sequence
     # Catatan Pedoman BPS: Halaman judul, katalog, tim penyusun, serta halaman kosong
@@ -1837,6 +1890,7 @@ def extract_pdf_metadata(pdf_path):
         "xxx_figures": xxx_figures,
         "empty_peta_wilayah": empty_peta_wilayah,
         "empty_grafik_jarak": empty_grafik_jarak,
+        "raw_template_info": raw_template_info,
         "section_pages": {
             "kover_depan": 1,
             "hju": 3,
@@ -2737,6 +2791,41 @@ def analyze_defects(meta, custom_api_key=None):
             f'Publikasi dilarang dirilis dengan data kecamatan yang tertukar.'
         )
 
+    # ── RAW TEMPLATE & UNWORKED DRAFT OVERLAY (Kasus Tidak Niat Mengerjakan) ──
+    raw_tpl = meta.get("raw_template_info", {})
+    if raw_tpl.get("is_pure_template"):
+        m_list = "; ".join(raw_tpl.get("markers", [])[:7])
+        m_cnt = raw_tpl.get("markers_count", 0)
+        rejection_msg = (
+            f'[DITOLAK TOTAL - HANYA UPLOAD TEMPLATE MASTER MENTAH] Dokumen ini terdeteksi 100% sebagai Master Template BPS Pusat '
+            f'(Template KCDA 2026) yang belum dikerjakan sama sekali / tidak diisi substansi riil kecamatan! '
+            f'Terdeteksi {m_cnt} residu template master bawaan: {m_list}. '
+            f'Publikasi ini DITOLAK SEPENUHNYA (REJECTED) dan WAJIB dikerjakan ulang dari awal dengan menyisipkan data dan naskah resmi daerah.'
+        )
+        kover_depan.insert(0, rejection_msg)
+        halaman_judul.insert(0, rejection_msg)
+        halaman_katalog.insert(0, rejection_msg)
+        tim_penyusun.insert(0, rejection_msg)
+        kata_pengantar.insert(0, rejection_msg)
+        daftar_isi.insert(0, rejection_msg)
+        layout_isi.insert(0, rejection_msg)
+        kover_belakang.insert(0, rejection_msg)
+    elif raw_tpl.get("is_raw_template"):
+        m_list = "; ".join(raw_tpl.get("markers", [])[:5])
+        m_cnt = raw_tpl.get("markers_count", 0)
+        draft_msg = (
+            f'[FATAL KELALAIAN - RESIDU TEMPLATE MASTER MASIF] Dokumen terindikasi belum dikerjakan secara tuntas '
+            f'(kemungkinan besar hanya mengubah kover namun isi naskah masih memuat residu template mentah masif). '
+            f'Terdeteksi {m_cnt} residu template master: {m_list}. '
+            f'Publikasi wajib dilengkapi dengan naskah dan data resmi riil sebelum dapat dirilis.'
+        )
+        kover_depan.insert(0, draft_msg)
+        halaman_judul.insert(0, draft_msg)
+        halaman_katalog.insert(0, draft_msg)
+        tim_penyusun.insert(0, draft_msg)
+        kata_pengantar.insert(0, draft_msg)
+        layout_isi.insert(0, draft_msg)
+
     # ── PENGGABUNGAN TEMUAN HASIL INSPEKSI COMPUTER VISION TINGKAT TINGGI ──
     cv_audit = meta.get("cv_audit", {})
     if cv_audit:
@@ -2890,10 +2979,17 @@ def generate_excel_report(meta, defects, output_path, base_template_path=None):
     ws.cell(row=5, column=5, value="Indonesia dan Inggris").alignment = align_center
     ws.cell(row=5, column=6, value=f"September {year}").alignment = align_center
     ws.cell(row=5, column=7, value=f"29 September {year}").alignment = align_center
-    ws.cell(row=5, column=8, value="√").alignment = align_center
-    ws.cell(row=5, column=9, value="").alignment = align_center
-    ws.cell(row=5, column=10, value=f"September {year}").alignment = align_center
-    ws.cell(row=5, column=11, value="").alignment = align_center
+    raw_tpl_meta = meta.get("raw_template_info", {})
+    if raw_tpl_meta.get("is_pure_template"):
+        ws.cell(row=5, column=8, value="").alignment = align_center
+        ws.cell(row=5, column=9, value="").alignment = align_center
+        ws.cell(row=5, column=10, value="Tidak Rilis").alignment = align_center
+        ws.cell(row=5, column=11, value="√").alignment = align_center
+    else:
+        ws.cell(row=5, column=8, value="√").alignment = align_center
+        ws.cell(row=5, column=9, value="").alignment = align_center
+        ws.cell(row=5, column=10, value=f"September {year}").alignment = align_center
+        ws.cell(row=5, column=11, value="").alignment = align_center
 
     for c in range(2, 14):
         cell = ws.cell(row=5, column=c)

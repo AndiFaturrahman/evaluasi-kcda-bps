@@ -122,8 +122,20 @@ def generate_pdf_report(meta, defects, output_pdf_path):
     d_mismatch = meta.get("district_mismatch_info", {})
     is_mismatch = d_mismatch.get("is_mismatch", False)
 
+    raw_tpl = meta.get("raw_template_info", {})
     is_clean_all = (total_defects == 0)
-    if is_mismatch:
+
+    if raw_tpl.get("is_pure_template"):
+        status_text = f'<b>DITOLAK TOTAL</b><br/><font size=\"7.5\" color=\"#B91C1C\"><b>TEMPLATE MENTAH</b></font><br/><font size=\"6.5\">Belum Dikerjakan</font>'
+        status_bg = colors.HexColor('#FEF2F2')
+        status_tc = colors.HexColor('#DC2626')
+        status_bc = colors.HexColor('#F87171')
+    elif raw_tpl.get("is_raw_template"):
+        status_text = f'<b>REVISI TOTAL</b><br/><font size=\"7.5\" color=\"#B91C1C\"><b>RESIDU TEMPLATE</b></font><br/><font size=\"6.5\">Draf Belum Tuntas</font>'
+        status_bg = colors.HexColor('#FEF2F2')
+        status_tc = colors.HexColor('#DC2626')
+        status_bc = colors.HexColor('#F87171')
+    elif is_mismatch:
         status_text = f'<b>REVISI TOTAL</b><br/><font size=\"7.5\" color=\"#B91C1C\"><b>FATAL: SALAH WILAYAH</b></font><br/><font size=\"6.5\">Hanya Ganti Kover</font>'
         status_bg = colors.HexColor('#FEF2F2')
         status_tc = colors.HexColor('#DC2626')

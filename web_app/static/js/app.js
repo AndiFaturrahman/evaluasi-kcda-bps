@@ -622,25 +622,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const districts = batchData.districts || [];
         districts.forEach((dist, idx) => {
             const tr = document.createElement('tr');
-            const meta = dist.metadata || {};
+            const meta = dist.metadata || dist.meta || {};
             const isClean = dist.total_defects === 0;
             const isMismatch = dist.is_mismatch || (meta.district_mismatch_info && meta.district_mismatch_info.is_mismatch);
             const mismatchInfo = dist.mismatch_details || meta.district_mismatch_info || {};
+            const rawTpl = dist.raw_template_info || meta.raw_template_info || {};
 
             let statusPill = '';
-            if (isMismatch) {
-                statusPill = `<span class="badge-pill-status status-fatal">REVISI TOTAL</span>`;
-            } else if (isClean) {
-                statusPill = `<span class="badge-pill-status status-clean">SESUAI STANDAR</span>`;
-            } else {
-                statusPill = `<span class="badge-pill-status status-revision">PERLU REVISI</span>`;
-            }
-
             let cloneCell = '';
-            if (isMismatch) {
+            if (rawTpl.is_pure_template) {
+                statusPill = `<span class="badge-pill-status status-fatal" style="background:#dc2626;color:#fff;">DITOLAK TOTAL</span>`;
+                cloneCell = `<span class="badge-mismatch" style="background:rgba(220,38,38,0.15);color:#ef4444;border:1px solid #ef4444;">🛑 100% Template Mentah (${rawTpl.markers_count || 0} Residu)</span>`;
+            } else if (rawTpl.is_raw_template) {
+                statusPill = `<span class="badge-pill-status status-fatal" style="background:#b91c1c;color:#fff;">DRAF BELUM TUNTAS</span>`;
+                cloneCell = `<span class="badge-mismatch" style="background:rgba(234,88,12,0.15);color:#f97316;border:1px solid #f97316;">⚠️ Draf Residu Template (${rawTpl.markers_count || 0} Residu)</span>`;
+            } else if (isMismatch) {
+                statusPill = `<span class="badge-pill-status status-fatal">REVISI TOTAL</span>`;
                 const domInner = mismatchInfo.dominant_inner_district || 'Beda Wilayah';
                 cloneCell = `<span class="badge-mismatch">🚨 Beda Wilayah (${domInner})</span>`;
+            } else if (isClean) {
+                statusPill = `<span class="badge-pill-status status-clean">SESUAI STANDAR</span>`;
+                cloneCell = `<span class="badge-normal">✓ Sesuai (Kover & Isi Sinkron)</span>`;
             } else {
+                statusPill = `<span class="badge-pill-status status-revision">PERLU REVISI</span>`;
                 cloneCell = `<span class="badge-normal">✓ Sesuai (Kover & Isi Sinkron)</span>`;
             }
 
@@ -708,8 +712,50 @@ document.addEventListener('DOMContentLoaded', () => {
         const fatalDesc = document.getElementById('fatal-mismatch-desc');
         const fatalReasons = document.getElementById('fatal-mismatch-reasons');
 
+        const rawTpl = meta.raw_template_info || {};
+        const fatalTplBanner = document.getElementById('fatal-template-banner');
+        const fatalTplTitle = document.getElementById('fatal-template-title');
+        const fatalTplDesc = document.getElementById('fatal-template-desc');
+        const fatalTplReasons = document.getElementById('fatal-template-reasons');
+
         const isCleanAll = totalDefects === 0;
-        if (dMismatch.is_mismatch) {
+
+        if (rawTpl.is_pure_template) {
+            if (fatalTplBanner) fatalTplBanner.style.display = 'flex';
+            if (fatalTplTitle) fatalTplTitle.textContent = 'DITOLAK TOTAL: 100% Master Template BPS Belum Dikerjakan!';
+            if (fatalTplDesc) {
+                fatalTplDesc.innerHTML = `Dokumen yang diunggah terdeteksi <strong>100% merupakan Template Master BPS Pusat (Template KCDA 2026)</strong> yang belum dikerjakan sama sekali / tidak diisi naskah dan data riil kecamatan. Dokumen <strong>DITOLAK SEPENUHNYA</strong> dan wajib dikerjakan dari awal!`;
+            }
+            if (fatalTplReasons) {
+                fatalTplReasons.innerHTML = (rawTpl.markers || []).map(r => `<div>• ${r}</div>`).join('');
+            }
+            if (fatalBanner) fatalBanner.style.display = 'none';
+            if (auditBadgeCard) auditBadgeCard.className = 'audit-badge-card status-fatal';
+            if (auditBadgeIcon) auditBadgeIcon.textContent = '🛑';
+            if (auditBadgeTitle) auditBadgeTitle.textContent = 'DITOLAK TOTAL (TEMPLATE MENTAH)';
+            if (auditBadgeCount) auditBadgeCount.textContent = totalDefects;
+            if (auditBadgeCaption) {
+                auditBadgeCaption.innerHTML = `<span style="color:#ef4444;font-weight:700;">DITOLAK</span>: Hanya Unggah Template Master (${rawTpl.markers_count} Residu)`;
+            }
+        } else if (rawTpl.is_raw_template) {
+            if (fatalTplBanner) fatalTplBanner.style.display = 'flex';
+            if (fatalTplTitle) fatalTplTitle.textContent = 'PERINGATAN FATAL: Draf Setengah Jadi Memuat Residu Template Masif!';
+            if (fatalTplDesc) {
+                fatalTplDesc.innerHTML = `Dokumen ini terindikasi <strong>hanya mengubah kover namun isi naskah masih memuat residu template mentah masif</strong> (nama kecamatan YYYYY, tim penyusun belum diisi, ulasan Latin dummy, grafik kosong, dsb). Publikasi <strong>BELUM LAYAK TERBIT</strong>.`;
+            }
+            if (fatalTplReasons) {
+                fatalTplReasons.innerHTML = (rawTpl.markers || []).map(r => `<div>• ${r}</div>`).join('');
+            }
+            if (fatalBanner) fatalBanner.style.display = dMismatch.is_mismatch ? 'flex' : 'none';
+            if (auditBadgeCard) auditBadgeCard.className = 'audit-badge-card status-fatal';
+            if (auditBadgeIcon) auditBadgeIcon.textContent = '⚠️';
+            if (auditBadgeTitle) auditBadgeTitle.textContent = 'REVISI TOTAL (RESIDU TEMPLATE)';
+            if (auditBadgeCount) auditBadgeCount.textContent = totalDefects;
+            if (auditBadgeCaption) {
+                auditBadgeCaption.innerHTML = `<span style="color:#f59e0b;font-weight:700;">BELUM DIKERJAKAN TUNTAS</span>: ${rawTpl.markers_count} Residu Template Master`;
+            }
+        } else if (dMismatch.is_mismatch) {
+            if (fatalTplBanner) fatalTplBanner.style.display = 'none';
             if (fatalBanner) fatalBanner.style.display = 'flex';
             const covD = dMismatch.cover_district || meta.region || 'Wilayah A';
             const inD = dMismatch.dominant_inner_district || dMismatch.catalog_district || 'Wilayah B';
@@ -727,6 +773,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 auditBadgeCaption.innerHTML = `<span style="color:#ef4444;font-weight:700;">SALAH WILAYAH</span>: Terindikasi Hanya Ubah Kover (${totalDefects} Temuan)`;
             }
         } else {
+            if (fatalTplBanner) fatalTplBanner.style.display = 'none';
             if (fatalBanner) fatalBanner.style.display = 'none';
             if (auditBadgeCard) {
                 auditBadgeCard.className = `audit-badge-card ${isCleanAll ? 'status-clean' : 'status-revision'}`;
