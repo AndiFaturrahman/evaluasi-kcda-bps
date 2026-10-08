@@ -1436,10 +1436,44 @@ def extract_pdf_metadata(pdf_path):
         kover_belakang_errors.append(f'Terdapat kebocoran nomor halaman "{num_pages}" pada kover belakang. Kover belakang dilarang memuat nomor halaman apapun.')
     if 'XXXXX' in last_page_text or 'xxxxx' in last_page_text:
         kover_belakang_errors.append('Terdapat teks placeholder template "XXXXX Dalam Angka 2024" yang belum dibersihkan pada kover belakang.')
-    if 'DATA MENCERDASKAN' not in last_page_text.upper():
+    has_slogan_kb = 'DATA MENCERDASKAN' in last_page_text.upper()
+    has_berakhlak_kb = ('BERAKHLAK' in last_page_text.upper() or 'BerAKHLAK' in last_page_text)
+
+    # Jika teks layer kosong/sedikit (biasanya kover belakang berupa image grafis hasil export InDesign/Canva),
+    # gunakan verifikasi visual berbasis Computer Vision
+    if (not has_slogan_kb or not has_berakhlak_kb) and HAVE_CV2 and num_pages > 0:
+        try:
+            last_page_obj = doc[-1]
+            pix = last_page_obj.get_pixmap(dpi=100)
+            img = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.height, pix.width, pix.n)
+            if pix.n == 4:
+                img = cv2.cvtColor(img, cv2.COLOR_RGBA2BGR)
+            elif pix.n == 1:
+                img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+            elif pix.n == 3:
+                img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+
+            h, w, _ = img.shape
+            # Cek visual slogan DATA MENCERDASKAN BANGSA di area tengah (y 28%-55%, x 20%-80%)
+            mid = img[int(h*0.28):int(h*0.55), int(w*0.20):int(w*0.80)]
+            gray_mid = cv2.cvtColor(mid, cv2.COLOR_BGR2GRAY)
+            dark_ratio = np.sum(gray_mid < 60) / gray_mid.size
+            if dark_ratio > 0.04:
+                has_slogan_kb = True
+
+            # Cek visual BerAKHLAK dan logo resmi (warna merah/oranye di bagian atas)
+            top_area = img[int(h*0.01):int(h*0.25), :]
+            hsv_top = cv2.cvtColor(top_area, cv2.COLOR_BGR2HSV)
+            mask_red = cv2.inRange(hsv_top, (0, 80, 80), (10, 255, 255)) | cv2.inRange(hsv_top, (170, 80, 80), (180, 255, 255))
+            if np.sum(mask_red > 0) > 300:
+                has_berakhlak_kb = True
+        except Exception as e_kb:
+            print(f"[CV Back Cover] Visual check warning: {e_kb}")
+
+    if not has_slogan_kb:
         kover_belakang_errors.append('Slogan "DATA MENCERDASKAN BANGSA / DATA ENLIGHTEN THE NATION" tidak ditemukan di kover belakang. Wajib dicantumkan di bagian tengah kover belakang.')
-    if 'BERAKHLAK' not in last_page_text.upper() and 'BerAKHLAK' not in last_page_text:
-        kover_belakang_errors.append('Logo Sensus BPS, slogan BerAKHLAK, dan tagar #BanggaMelayaniBangsa wajib ditampilkan di pojok kanan atas kover belakang secara proporsional.')
+    if not has_berakhlak_kb:
+        kover_belakang_errors.append('Logo Sensus BPS, slogan BerAKHLAK, dan tagar #BanggaMelayaniBangsa wajib ditampilkan di kover belakang secara proporsional.')
 
     # ── ADVANCED COMPUTER VISION AUDIT ──
     cv_audit = {}
