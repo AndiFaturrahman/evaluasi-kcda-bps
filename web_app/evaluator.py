@@ -821,29 +821,35 @@ def extract_pdf_metadata(pdf_path):
                     f'Batang tubuh dan ulasan buku didominasi oleh nama "Kecamatan {dominant_inner_district}" (ditemukan {dom_inner_count} kali pada hal {sample_pgs}), bertentangan dengan kover depan ("Kecamatan {cover_district_clean}").'
                 )
                 
+        # Placeholder master template (seperti Yyy/Xxxxx) bukan ketidaksesuaian wilayah riil antar-kecamatan
+        dummy_placeholders = {'yyy', 'yyyyy', 'xxx', 'xxxxx', 'wilayah'}
+        
         if hju_district_clean:
             hju_lower = hju_district_clean.lower()
-            if cov_lower != hju_lower and cov_lower not in hju_lower and hju_lower not in cov_lower:
-                is_district_identity_mismatch = True
-                district_mismatch_reasons.append(
-                    f'Halaman Judul Utama memuat "Kecamatan {hju_district_clean}", bertentangan dengan kover depan ("Kecamatan {cover_district_clean}").'
-                )
+            if hju_lower not in dummy_placeholders:
+                if cov_lower != hju_lower and cov_lower not in hju_lower and hju_lower not in cov_lower:
+                    is_district_identity_mismatch = True
+                    district_mismatch_reasons.append(
+                        f'Halaman Judul Utama memuat "Kecamatan {hju_district_clean}", bertentangan dengan kover depan ("Kecamatan {cover_district_clean}").'
+                    )
                 
         if catalog_district_clean:
             kat_lower = catalog_district_clean.lower()
-            if cov_lower != kat_lower and cov_lower not in kat_lower and kat_lower not in cov_lower:
-                is_district_identity_mismatch = True
-                district_mismatch_reasons.append(
-                    f'Halaman Katalog memuat judul "Kecamatan {catalog_district_clean} Dalam Angka", bertentangan dengan kover depan ("Kecamatan {cover_district_clean}").'
-                )
+            if kat_lower not in dummy_placeholders:
+                if cov_lower != kat_lower and cov_lower not in kat_lower and kat_lower not in cov_lower:
+                    is_district_identity_mismatch = True
+                    district_mismatch_reasons.append(
+                        f'Halaman Katalog memuat judul "Kecamatan {catalog_district_clean} Dalam Angka", bertentangan dengan kover depan ("Kecamatan {cover_district_clean}").'
+                    )
                 
         if preface_district_clean:
             pref_lower = preface_district_clean.lower()
-            if cov_lower != pref_lower and cov_lower not in pref_lower and pref_lower not in cov_lower:
-                is_district_identity_mismatch = True
-                district_mismatch_reasons.append(
-                    f'Kata Pengantar memuat narasi "Publikasi Kecamatan {preface_district_clean} Dalam Angka", bertentangan dengan kover depan ("Kecamatan {cover_district_clean}").'
-                )
+            if pref_lower not in dummy_placeholders:
+                if cov_lower != pref_lower and cov_lower not in pref_lower and pref_lower not in cov_lower:
+                    is_district_identity_mismatch = True
+                    district_mismatch_reasons.append(
+                        f'Kata Pengantar memuat narasi "Publikasi Kecamatan {preface_district_clean} Dalam Angka", bertentangan dengan kover depan ("Kecamatan {cover_district_clean}").'
+                    )
                 
     district_mismatch_info = {
         "is_mismatch": is_district_identity_mismatch,
@@ -857,54 +863,101 @@ def extract_pdf_metadata(pdf_path):
 
     # ══════════════════════════════════════════════════════════════════════
     # RAW TEMPLATE UPLOAD & UNWORKED DRAFT DETECTOR
-    # Kasus Fatal (Sering Terjadi): Pengunggah tidak niat mengerjakan publikasi,
-    # melainkan hanya mengunggah file template master mentah (Template KCDA 2026)
-    # atau draf kosong yang belum diisi data riil kecamatan!
+    # Kasus Fatal: Pengunggah hanya mengunggah file template master mentah
+    # (Template KCDA 2026) atau draf yang belum diisi data riil kecamatan!
+    # Anti-Bias: Residu teks yang hanya terisolasi di 1 halaman (misal HJU
+    # yang tertutup gambar kover) tidak boleh diklaim sebagai draf setengah jadi.
     # ══════════════════════════════════════════════════════════════════════
     full_doc_text = " ".join([pages_text.get(i, "") for i in range(num_pages)])
     cover_full_txt = pages_text.get(0, "")
     back_full_txt = pages_text.get(num_pages - 1, "") if num_pages > 0 else ""
+    team_txt = team_text or pages_text.get(team_idx if team_idx >= 0 else 4, "")
+    p3_txt = pages_text.get(2, "")
 
     template_markers_found = []
+    marker_locations = []
+
     if re.search(r'\bCOVER\s+DEPAN\b', cover_full_txt, re.I):
         template_markers_found.append('Label teks instruksi master "COVER DEPAN" tercetak di kover depan')
+        marker_locations.append('kover_depan')
     if re.search(r'\bCOVER\s+BELAKANG\b', back_full_txt, re.I):
         template_markers_found.append('Label teks instruksi master "COVER BELAKANG" tercetak di kover belakang')
+        marker_locations.append('kover_belakang')
     if re.search(r'\bYYYYY\b', full_doc_text):
         template_markers_found.append('Nama wilayah template "YYYYY" ("KECAMATAN YYYYY" / "YYYYY DISTRICT IN FIGURES") masih tersebar di dalam dokumen')
+        marker_locations.append('batang_tubuh')
     if re.search(r'\bKecamatan\s+XXX\b|\bKecamatan\s+XXXXX\b', full_doc_text):
         template_markers_found.append('Placeholder nama kecamatan "Kecamatan XXX" masih tercantum di judul tabel/ulasan')
+        marker_locations.append('batang_tubuh')
     if re.search(r'KABUPATEN/KOTA\s+XXXX', full_doc_text, re.I) or re.search(r'BPS-STATISTICS\s+XXXX', full_doc_text, re.I):
         template_markers_found.append('Identitas satker dummy master "KABUPATEN/KOTA XXXX" masih belum diganti')
+        if re.search(r'KABUPATEN/KOTA\s+XXXX', p3_txt, re.I) and not re.search(r'KABUPATEN/KOTA\s+XXXX', full_doc_text.replace(p3_txt, ''), re.I):
+            marker_locations.append('hju')
+        else:
+            marker_locations.append('multi_section')
     if re.search(r'nama\s+kepala\s+BPS\s+Kako\s+tanpa\s+gelar', full_doc_text, re.I):
         template_markers_found.append('Teks instruksi template "nama kepala BPS Kako tanpa gelar" pada halaman Tim Penyusun')
+        marker_locations.append('tim_penyusun')
     if re.search(r'\bNAMA\s+TANPA\s+GELAR\b', full_doc_text):
         template_markers_found.append('Teks instruksi template "NAMA TANPA GELAR" pada halaman Kata Pengantar / Preface')
-    if re.search(r'xxxxx\s*[•\*\-]\s*xxxxx', full_doc_text, re.I) or re.search(r'xxx\s*[•\*\-]\s*xxx', full_doc_text, re.I):
+        marker_locations.append('kata_pengantar')
+    # Personil dummy hanya dicek pada halaman Tim Penyusun (mencegah false match pada nomor ISSN XXXX-XXXX)
+    if re.search(r'xxxxx\s*[•\*]\s*xxxxx', team_txt, re.I) or ('xxxxx' in team_txt and '•' in team_txt):
         template_markers_found.append('Placeholder nama personil penyusun "xxxxx • xxxxx" pada susunan tim')
+        marker_locations.append('tim_penyusun')
     if re.search(r'lorem\s+ipsum\s+dolor\s+sit\s+amet', full_doc_text, re.I):
         template_markers_found.append('Ulasan statistik dan sambutan masih berupa teks dummy Latin "Lorem ipsum dolor sit amet..."')
+        marker_locations.append('batang_tubuh')
     if re.search(r'1102001\.(?:xx|xxxx)\b', full_doc_text, re.I):
         template_markers_found.append('Nomor katalog masih berupa placeholder template "1102001.xx" / "1102001.xxxx"')
+        if re.search(r'1102001\.(?:xx|xxxx)\b', p3_txt, re.I) and not re.search(r'1102001\.(?:xx|xxxx)\b', full_doc_text.replace(p3_txt, ''), re.I):
+            marker_locations.append('hju')
+        else:
+            marker_locations.append('katalog')
     if re.search(r'ISSN\s*XXXX\s*-\s*XXXX', full_doc_text, re.I):
         template_markers_found.append('Nomor ISSN masih berupa template bawaan "ISSN XXXX -XXXX"')
+        if re.search(r'ISSN\s*XXXX\s*-\s*XXXX', p3_txt, re.I) and not re.search(r'ISSN\s*XXXX\s*-\s*XXXX', full_doc_text.replace(p3_txt, ''), re.I):
+            marker_locations.append('hju')
+        else:
+            marker_locations.append('multi_section')
     if re.search(r'Dinas\s+xxx\b', full_doc_text, re.I):
         template_markers_found.append('Daftar kontributor data masih memuat "Dinas xxx"')
+        marker_locations.append('katalog')
     if re.search(r'Jl\.\s*\.{2,}|Telp\.:\s*\.{2,}|@bps\.go\.id', back_full_txt, re.I) and '...' in back_full_txt:
         template_markers_found.append('Alamat, kontak, dan email pada kover belakang masih berupa placeholder titik-titik ("Jl. ... Telp.: ...")')
+        marker_locations.append('kover_belakang')
+
+    unique_marker_sections = set(marker_locations)
+    has_lorem = bool(re.search(r'lorem\s+ipsum\s+dolor\s+sit\s+amet', full_doc_text, re.I))
+    has_yyyyy_body = len(re.findall(r'\bYYYYY\b', full_doc_text)) >= 3
 
     is_pure_template = (
         bool(re.search(r'\bCOVER\s+DEPAN\b', cover_full_txt, re.I)) or
         region_name.lower() in ['yyyyy', 'xxxxx', 'wilayah'] or
         len(template_markers_found) >= 10
     )
-    is_raw_template = len(template_markers_found) >= 4 or is_pure_template
+    
+    # Draf setengah jadi masif HANYA aktif jika:
+    # 1. Dokumen merupakan template murni, ATAU
+    # 2. Ada ulasan Latin Lorem Ipsum, ATAU
+    # 3. Running title di batang tubuh masih YYYYY secara masif, ATAU
+    # 4. Residu template tersebar di MINIMAL 2 seksi anatomi di luar HJU.
+    is_raw_template = (
+        is_pure_template or
+        has_lorem or
+        has_yyyyy_body or
+        (len(template_markers_found) >= 4 and len(unique_marker_sections - {'hju'}) >= 2)
+    )
+
+    is_hju_only_leak = (len(template_markers_found) > 0 and unique_marker_sections == {'hju'})
 
     raw_template_info = {
         "is_pure_template": is_pure_template,
         "is_raw_template": is_raw_template,
+        "is_hju_only_leak": is_hju_only_leak,
         "markers_count": len(template_markers_found),
         "markers": template_markers_found,
+        "marker_sections": list(unique_marker_sections),
         "status_label": "REJECTED_PURE_TEMPLATE" if is_pure_template else ("FATAL_UNWORKED_DRAFT" if is_raw_template else "NORMAL")
     }
 
@@ -1974,7 +2027,9 @@ def classify_cover_finding(it):
 
 def classify_hju_finding(it):
     it_l = it.lower()
-    if 'latar belakang' in it_l or 'tanpa ilustrasi' in it_l or 'bebas ilustrasi' in it_l or 'ilustrasi' in it_l:
+    if 'residu teks template' in it_l or 'format template master' in it_l or '1102001.xxxx' in it_l or 'issn xxxx' in it_l or 'teks template tersembunyi' in it_l:
+        return 'hju_template'
+    if 'latar belakang' in it_l or 'tanpa ilustrasi' in it_l or 'bebas ilustrasi' in it_l or 'duplikasi visual kover depan' in it_l:
         return 'hju_background'
     if 'logo' in it_l and ('warna' in it_l or 'berwarna' in it_l or 'monokrom' in it_l):
         return 'hju_logo'
@@ -1994,8 +2049,6 @@ def classify_hju_finding(it):
         return 'hju_judul_ketentuan'
     if 'saltik spasi' in it_l or 'kecamata n' in it_l:
         return 'hju_typo_spasi'
-    if 'format template master' in it_l or '1102001.xxxx' in it_l or 'issn xxxx' in it_l:
-        return 'hju_template'
     return 'other'
 
 def deduplicate_section_items(sec_name, items):
@@ -2173,11 +2226,19 @@ def analyze_defects(meta, custom_api_key=None):
     # ── 2. HALAMAN JUDUL UTAMA: - ──
     halaman_judul = []
     if meta.get("p3_is_template"):
-        halaman_judul.append(
-            f'Halaman Judul Utama masih berupa format template master yang belum disesuaikan: '
-            f'Terdeteksi placeholder nomor katalog ("1102001.xxxx"), nomor ISSN ("ISSN XXXX -XXXX"), volume ("Volume XX"), atau pilihan ganda ("KABUPATEN/KOTA"). '
-            f'Seluruh identitas buku wajib disesuaikan dengan data resmi Kecamatan {region}.'
-        )
+        if meta.get("p3_has_bg_illustration") or meta.get("p3_has_image"):
+            halaman_judul.append(
+                f'Residu teks template tersembunyi pada Halaman Judul Utama: Terdeteksi placeholder template master '
+                f'("1102001.xxxx", "ISSN XXXX -XXXX", "KABUPATEN/KOTA XXXX", "Kecamatan Yyy", atau "Volume XX") '
+                f'yang masih tertanam di text layer PDF pada HJU (halaman fisik 3) di balik gambar desain/ilustrasi. '
+                f'Meskipun secara visual telah ditimpa gambar, kotak teks sisa template master pada file asli (Word/InDesign) wajib dihapus agar tidak terbaca oleh sistem pengindeks repositori digital BPS.'
+            )
+        else:
+            halaman_judul.append(
+                f'Halaman Judul Utama masih berupa format template master yang belum disesuaikan: '
+                f'Terdeteksi placeholder nomor katalog ("1102001.xxxx"), nomor ISSN ("ISSN XXXX -XXXX"), volume ("Volume XX"), atau pilihan ganda ("KABUPATEN/KOTA"). '
+                f'Seluruh identitas buku wajib disesuaikan dengan data resmi Kecamatan {region}.'
+            )
     if meta.get("p3_typo_kecamatan"):
         halaman_judul.append(
             'Saltik spasi pada penulisan kata "KECAMATAN" di Halaman Judul Utama: Tertulis "KECAMATA N" '
