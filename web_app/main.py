@@ -17,15 +17,35 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 if current_dir not in sys.path:
     sys.path.append(current_dir)
 
+from collections import Counter
 from evaluator import (
     extract_pdf_metadata,
     analyze_defects,
     generate_excel_report,
     DEFAULT_API_KEY,
     WILAYAH_METADATA,
+    ALL_REGENCIES_MAP,
 )
 from pdf_generator import generate_pdf_report
 from batch_processor import generate_master_batch_excel, create_batch_zip
+
+def get_kabupaten_code(kab_name: str) -> str:
+    if not kab_name:
+        return ""
+    clean_k = kab_name.lower().replace("kabupaten", "").replace("kota", "").strip()
+    for code, name in ALL_REGENCIES_MAP.items():
+        name_clean = name.lower().replace("kabupaten", "").replace("kota", "").strip()
+        if clean_k and (clean_k == name_clean or clean_k in name_clean or name_clean in clean_k):
+            return str(code)
+    return ""
+
+def sanitize_clean_name(name: str) -> str:
+    if not name:
+        return ""
+    clean = re.sub(r'[\\/*?:"<>|]', '_', str(name).strip())
+    clean = re.sub(r'\s+', '_', clean)
+    clean = re.sub(r'_+', '_', clean)
+    return clean.strip('_')
 
 app = FastAPI(title="Sistem Otomatisasi Evaluasi Publikasi BPS", version="2.0.0")
 
@@ -245,13 +265,20 @@ def analyze_upload(
         total_defects = sum(len(items) for items in defects.values())
         clean_sections = sum(1 for items in defects.values() if len(items) == 0)
         
+        # Penamaan Hasil Ekspor Resmi & Informatif sesuai Standar BPS
+        kab = meta.get("kabupaten") or ""
+        kab_code = get_kabupaten_code(kab)
+        prefix = f"{kab_code}_" if kab_code else ""
+        region_clean = sanitize_clean_name(meta.get("region", "Wilayah"))
+        year_clean = str(meta.get("year", 2026))
+        
         # Generate Excel Report
-        excel_filename = f"Evaluasi_{meta['region'].replace(' ', '_')}_{meta['year']}_{task_id}.xlsx"
+        excel_filename = f"{prefix}Evaluasi_Publikasi_KcDA_Kecamatan_{region_clean}_{year_clean}.xlsx"
         excel_path = os.path.join(OUTPUT_DIR, excel_filename)
         generate_excel_report(meta, defects, excel_path, base_template_path=base_template_path)
         
         # Generate Executive PDF Report
-        pdf_filename = f"Laporan_Evaluasi_{meta['region'].replace(' ', '_')}_{meta['year']}_{task_id}.pdf"
+        pdf_filename = f"{prefix}Laporan_Evaluasi_KcDA_Kecamatan_{region_clean}_{year_clean}.pdf"
         pdf_path = os.path.join(OUTPUT_DIR, pdf_filename)
         generate_pdf_report(meta, defects, pdf_path)
     except Exception as e:
@@ -272,6 +299,8 @@ def analyze_upload(
         "total_defects": total_defects,
         "clean_sections": clean_sections,
         "defects": defects,
+        "excel_filename": excel_filename,
+        "pdf_filename": pdf_filename,
         "download_url": f"/api/download/{excel_filename}",
         "excel_download_url": f"/api/download/{excel_filename}",
         "pdf_download_url": f"/api/download/{pdf_filename}",
@@ -311,13 +340,18 @@ def analyze_batch_bangkep(custom_api_key: Optional[str] = Form(None)):
             total_clean_districts += 1
         total_aggregate_defects += tot_d
 
-        safe_reg = meta['region'].replace(' ', '_').replace('/', '_')
-        pdf_fn = f"Laporan_Evaluasi_{safe_reg}_{meta['year']}_{task_id}_{item_idx+1}.pdf"
+        item_kab = meta.get("kabupaten") or "Kabupaten Banggai Kepulauan"
+        item_code = get_kabupaten_code(item_kab) or "7201"
+        item_prefix = f"{item_code}_" if item_code else ""
+        item_reg = sanitize_clean_name(meta.get("region", f"Kecamatan_{item_idx+1}"))
+        item_year = str(meta.get("year", 2026))
+
+        pdf_fn = f"{item_prefix}Laporan_Evaluasi_KcDA_Kecamatan_{item_reg}_{item_year}.pdf"
         pdf_out_path = os.path.join(OUTPUT_DIR, pdf_fn)
         generate_pdf_report(meta, defects, pdf_out_path)
         zip_items.append((pdf_out_path, pdf_fn))
 
-        excel_fn = f"Evaluasi_{safe_reg}_{meta['year']}_{task_id}_{item_idx+1}.xlsx"
+        excel_fn = f"{item_prefix}Evaluasi_Publikasi_KcDA_Kecamatan_{item_reg}_{item_year}.xlsx"
         excel_out_path = os.path.join(OUTPUT_DIR, excel_fn)
         generate_excel_report(meta, defects, excel_out_path, base_template_path=None)
 
@@ -345,22 +379,18 @@ def analyze_batch_bangkep(custom_api_key: Optional[str] = Form(None)):
             "source_pdf_url": f"/api/view-pdf/{os.path.basename(pdf_path)}"
         })
 
-    unique_kabs = [r["meta"].get("kabupaten") for r in eval_results if r["meta"].get("kabupaten")]
-    unique_kabs = list(dict.fromkeys(unique_kabs))
-    reg_title = unique_kabs[0] if len(unique_kabs) == 1 else "Kolektif Publikasi Kecamatan"
-
-    master_excel_fn = f"Evaluasi_Publikasi_KcDA_MASTER_{task_id}.xlsx"
+    master_excel_fn = "7201_Evaluasi_Publikasi_KcDA_Banggai_Kepulauan_2026_MASTER.xlsx"
     master_excel_path = os.path.join(OUTPUT_DIR, master_excel_fn)
-    generate_master_batch_excel(eval_results, master_excel_path, regency_title=reg_title)
+    generate_master_batch_excel(eval_results, master_excel_path, regency_title="Kabupaten Banggai Kepulauan")
 
-    zip_fn = f"Laporan_Evaluasi_PDF_Kolektif_{task_id}.zip"
+    zip_fn = "7201_Laporan_Evaluasi_PDF_KcDA_Banggai_Kepulauan_2026.zip"
     zip_out_path = os.path.join(OUTPUT_DIR, zip_fn)
     create_batch_zip(zip_items, zip_out_path)
 
     return {
         "success": True,
         "task_id": task_id,
-        "regency": "Kolektif Publikasi Kecamatan",
+        "regency": "Kabupaten Banggai Kepulauan",
         "total_districts": len(eval_results),
         "total_defects": total_aggregate_defects,
         "total_aggregate_defects": total_aggregate_defects,
@@ -368,6 +398,8 @@ def analyze_batch_bangkep(custom_api_key: Optional[str] = Form(None)):
         "total_clean_districts": total_clean_districts,
         "mismatch_districts": total_mismatch_districts,
         "total_mismatch_districts": total_mismatch_districts,
+        "master_excel_filename": master_excel_fn,
+        "zip_filename": zip_fn,
         "master_excel_download_url": f"/api/download/{master_excel_fn}",
         "zip_download_url": f"/api/download/{zip_fn}",
         "zip_pdf_download_url": f"/api/download/{zip_fn}",
@@ -457,13 +489,18 @@ def analyze_batch_upload(
                 total_clean_districts += 1
             total_aggregate_defects += tot_d
 
-            safe_reg = meta.get('region', 'Wilayah').replace(' ', '_').replace('/', '_')
-            pdf_fn = f"Laporan_Evaluasi_{safe_reg}_{meta.get('year', 2026)}_{task_id}_{item_idx+1}.pdf"
+            item_kab = meta.get("kabupaten") or ""
+            item_code = get_kabupaten_code(item_kab)
+            item_prefix = f"{item_code}_" if item_code else ""
+            item_reg = sanitize_clean_name(meta.get("region", display_name))
+            item_year = str(meta.get("year", 2026))
+
+            pdf_fn = f"{item_prefix}Laporan_Evaluasi_KcDA_Kecamatan_{item_reg}_{item_year}.pdf"
             pdf_out_path = os.path.join(OUTPUT_DIR, pdf_fn)
             generate_pdf_report(meta, defects, pdf_out_path)
             zip_items.append((pdf_out_path, pdf_fn))
 
-            excel_fn = f"Evaluasi_{safe_reg}_{meta.get('year', 2026)}_{task_id}_{item_idx+1}.xlsx"
+            excel_fn = f"{item_prefix}Evaluasi_Publikasi_KcDA_Kecamatan_{item_reg}_{item_year}.xlsx"
             excel_out_path = os.path.join(OUTPUT_DIR, excel_fn)
             generate_excel_report(meta, defects, excel_out_path, base_template_path=None)
 
@@ -498,13 +535,26 @@ def analyze_batch_upload(
 
     unique_kabs = [r["meta"].get("kabupaten") for r in eval_results if r["meta"].get("kabupaten")]
     unique_kabs = list(dict.fromkeys(unique_kabs))
-    reg_title = unique_kabs[0] if len(unique_kabs) == 1 else f"Kolektif ({len(eval_results)} Kecamatan)"
+    
+    years = [str(r["meta"].get("year", 2026)) for r in eval_results if r["meta"].get("year")]
+    dominant_year = Counter(years).most_common(1)[0][0] if years else "2026"
 
-    master_excel_fn = f"Evaluasi_Publikasi_Kolektif_{task_id}.xlsx"
+    if len(unique_kabs) == 1 and unique_kabs[0]:
+        kab_full = unique_kabs[0]
+        kab_code = get_kabupaten_code(kab_full)
+        kab_clean = sanitize_clean_name(kab_full.replace("Kabupaten ", "").replace("Kota ", ""))
+        prefix = f"{kab_code}_" if kab_code else ""
+        reg_title = kab_full
+        master_excel_fn = f"{prefix}Evaluasi_Publikasi_KcDA_{kab_clean}_{dominant_year}_MASTER.xlsx"
+        zip_fn = f"{prefix}Laporan_Evaluasi_PDF_KcDA_{kab_clean}_{dominant_year}.zip"
+    else:
+        reg_title = f"Kolektif ({len(eval_results)} Kecamatan)"
+        master_excel_fn = f"Master_Evaluasi_Publikasi_KcDA_{dominant_year}_Kolektif_{len(eval_results)}_Kecamatan.xlsx"
+        zip_fn = f"Kumpulan_Laporan_Evaluasi_PDF_KcDA_{dominant_year}_{len(eval_results)}_Kecamatan.zip"
+
     master_excel_path = os.path.join(OUTPUT_DIR, master_excel_fn)
     generate_master_batch_excel(eval_results, master_excel_path, regency_title=reg_title)
 
-    zip_fn = f"Laporan_Evaluasi_PDF_Kolektif_{task_id}.zip"
     zip_out_path = os.path.join(OUTPUT_DIR, zip_fn)
     create_batch_zip(zip_items, zip_out_path)
 
@@ -525,6 +575,8 @@ def analyze_batch_upload(
         "total_clean_districts": total_clean_districts,
         "mismatch_districts": total_mismatch_districts,
         "total_mismatch_districts": total_mismatch_districts,
+        "master_excel_filename": master_excel_fn,
+        "zip_filename": zip_fn,
         "master_excel_download_url": f"/api/download/{master_excel_fn}",
         "zip_download_url": f"/api/download/{zip_fn}",
         "zip_pdf_download_url": f"/api/download/{zip_fn}",
@@ -550,7 +602,12 @@ def download_file(filename: str):
     return FileResponse(
         path=file_path,
         filename=safe_fn,
-        media_type=media_type
+        media_type=media_type,
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0"
+        }
     )
 
 @app.get("/api/view-pdf/{filename}")

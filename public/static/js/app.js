@@ -653,13 +653,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const btnExcel = document.getElementById('btn-batch-download-excel');
         const btnZip = document.getElementById('btn-batch-download-zip');
+        const masterExcelFn = batchData.master_excel_filename || (batchData.master_excel_download_url ? batchData.master_excel_download_url.split('/').pop() : 'Evaluasi_Publikasi_KcDA_MASTER.xlsx');
+        const batchZipFn = batchData.zip_filename || (batchData.zip_download_url ? batchData.zip_download_url.split('/').pop() : 'Laporan_Evaluasi_PDF_Kolektif.zip');
         if (btnExcel && batchData.master_excel_download_url) {
             btnExcel.href = batchData.master_excel_download_url;
-            btnExcel.setAttribute('download', '');
+            btnExcel.setAttribute('download', masterExcelFn);
         }
         if (btnZip && batchData.zip_download_url) {
             btnZip.href = batchData.zip_download_url;
-            btnZip.setAttribute('download', '');
+            btnZip.setAttribute('download', batchZipFn);
         }
 
         const tbody = document.getElementById('batch-table-body');
@@ -710,9 +712,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 </td>
                 <td style="text-align: center;">${statusPill}</td>
                 <td>${cloneCell}</td>
-                <td style="text-align: center;">
-                    <button type="button" class="btn-table-detail" data-idx="${idx}">
+                <td style="text-align: center; white-space: nowrap;">
+                    <button type="button" class="btn-table-detail" data-idx="${idx}" style="margin-right: 6px;">
                         <span>👁️ Rincian 11 Bagian</span>
+                    </button>
+                    <button type="button" class="btn-table-view-pdf" data-idx="${idx}" title="Buka dan periksa naskah PDF asli Kecamatan ${escapeHtml(dist.district_name || dist.region)}" style="background: rgba(14, 165, 233, 0.12); color: #0284c7; border: 1px solid rgba(14, 165, 233, 0.35); padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s ease;">
+                        <span>📄 Lihat PDF</span>
                     </button>
                 </td>
             `;
@@ -723,6 +728,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     currentAnalysisData = dist;
                     renderResults(dist);
                     showToast(`Membuka rincian evaluasi Kecamatan ${dist.district_name}`, 'info', 2000);
+                });
+            }
+
+            const btnViewPdfRow = tr.querySelector('.btn-table-view-pdf');
+            if (btnViewPdfRow) {
+                btnViewPdfRow.addEventListener('click', () => {
+                    currentAnalysisData = dist;
+                    openPdfViewer(dist, 1, 'Kover Depan', `Naskah Publikasi Kecamatan ${dist.district_name || dist.region}`, 1);
                 });
             }
 
@@ -751,7 +764,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (metaYear) metaYear.textContent = `📅 Tahun: ${meta.year || '2026'}`;
         if (metaCatalog) metaCatalog.textContent = `🏷️ Katalog: ${meta.catalog || '-'}`;
         if (metaIssn) metaIssn.textContent = `🔢 ISSN: ${meta.issn || '-'}`;
-        if (metaPages) metaPages.textContent = `📄 Fisik: ${meta.total_pages || '-'} Hlm`;
+        if (metaPages) {
+            metaPages.innerHTML = `📄 Fisik: ${meta.total_pages || '-'} Hlm <span style="margin-left: 6px; padding: 2px 8px; border-radius: 4px; background: rgba(14, 165, 233, 0.15); color: #0284c7; font-size: 0.75rem; font-weight: 700; cursor: pointer;">🔍 Buka Naskah PDF</span>`;
+            metaPages.style.cursor = 'pointer';
+            metaPages.title = 'Klik untuk membuka naskah asli publikasi PDF ini di layar penuh';
+            metaPages.onclick = () => {
+                openPdfViewer(data, 1, 'Kover Depan', `Naskah Asli Kecamatan ${meta.region || data.district_name || ''}`, 1);
+            };
+        }
 
         // 2. Status Kelayakan Publikasi (Baku & Obyektif - Tanpa Persentase Arbitrer)
         const dMismatch = meta.district_mismatch_info || {};
@@ -947,14 +967,12 @@ document.addEventListener('DOMContentLoaded', () => {
             cvCard.style.display = 'none';
         }
 
-        // 4. Download Excel & PDF Buttons (Anti undefined.json Fallback)
-        const distName = (meta && meta.region) ? meta.region.replace(/\s+/g, '_') : 'Evaluasi';
-        const docYear = (meta && meta.year) || '2026';
-
+        // 4. Download Excel & PDF Buttons (Format Baku Resmi BPS)
+        const pdfDownloadFn = data.pdf_filename || (data.pdf_download_url ? data.pdf_download_url.split('/').pop() : `Laporan_Evaluasi_KcDA_${distName}_${docYear}.pdf`);
         if (btnDownloadPdf) {
             if (data.pdf_download_url) {
                 btnDownloadPdf.href = data.pdf_download_url;
-                btnDownloadPdf.setAttribute('download', `Laporan_Evaluasi_${distName}_${docYear}.pdf`);
+                btnDownloadPdf.setAttribute('download', pdfDownloadFn);
                 btnDownloadPdf.style.display = 'inline-flex';
             } else {
                 btnDownloadPdf.style.display = 'none';
@@ -962,10 +980,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const excelUrl = data.excel_download_url || data.download_url || (currentBatchData && currentBatchData.master_excel_download_url);
+        const excelDownloadFn = data.excel_filename || (excelUrl ? excelUrl.split('/').pop() : `Evaluasi_Publikasi_KcDA_${distName}_${docYear}.xlsx`);
         if (btnDownloadExcel) {
             if (excelUrl) {
                 btnDownloadExcel.href = excelUrl;
-                btnDownloadExcel.setAttribute('download', `Evaluasi_${distName}_${docYear}.xlsx`);
+                btnDownloadExcel.setAttribute('download', excelDownloadFn);
                 btnDownloadExcel.style.display = 'inline-flex';
             } else {
                 btnDownloadExcel.style.display = 'none';
@@ -1325,44 +1344,53 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const meta = (data && data.metadata) || {};
+        const meta = (data && data.metadata) || (data && data.meta) || {};
         const totalPages = parseInt(meta.total_pages || (data && data.total_pages) || 100, 10);
-        const region = meta.region || (data && data.district_name) || 'Kecamatan';
+        const region = meta.region || (data && data.district_name) || (data && data.region) || 'Kecamatan';
         const year = meta.year || (data && data.year) || '2026';
         const title = meta.title || (data && data.title) || `Publikasi Kecamatan ${region} Dalam Angka ${year}`;
 
-        // Cari file lokal jika pengguna mengunggah berkas di sesi ini
-        let localFile = null;
-        if (selectedPdfFile) {
-            localFile = selectedPdfFile;
-        } else if (selectedPdfFiles && selectedPdfFiles.length > 0) {
-            const regClean = region.toLowerCase().replace(/\s+/g, '');
-            for (const f of selectedPdfFiles) {
-                const fname = f.name.toLowerCase().replace(/[^a-z0-9]/g, '');
-                if (fname.includes(regClean)) {
-                    localFile = f;
-                    break;
-                }
-            }
-            if (!localFile) localFile = selectedPdfFiles[0];
-        }
-
+        // Tentukan sumber berkas PDF yang valid
         let pdfSourceUrl = '';
-        if (localFile) {
-            if (!localFile._blobUrl) {
-                localFile._blobUrl = URL.createObjectURL(localFile);
-            }
-            pdfSourceUrl = localFile._blobUrl;
-        } else if (data && data.source_pdf_url) {
+
+        // Prioritas 1: Jika server menyediakan endpoint berkas naskah PDF (hasil ekstraksi ZIP atau analisis server)
+        if (data && data.source_pdf_url) {
             pdfSourceUrl = data.source_pdf_url;
         } else if (data && data.source_pdf_filename) {
             pdfSourceUrl = `/api/view-pdf/${encodeURIComponent(data.source_pdf_filename)}`;
-        } else if (data && data.pdf_download_url) {
-            pdfSourceUrl = data.pdf_download_url;
+        } else {
+            // Prioritas 2: Cari berkas lokal yang BENAR-BENAR berformat .pdf (TIDAK BOLEH .zip!)
+            let localPdf = null;
+            if (selectedPdfFile && selectedPdfFile.name && selectedPdfFile.name.toLowerCase().endsWith('.pdf')) {
+                localPdf = selectedPdfFile;
+            } else if (selectedPdfFiles && selectedPdfFiles.length > 0) {
+                const regClean = region.toLowerCase().replace(/[^a-z0-9]/g, '');
+                for (const f of selectedPdfFiles) {
+                    if (f.name && f.name.toLowerCase().endsWith('.pdf')) {
+                        const fname = f.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+                        if (regClean && fname.includes(regClean)) {
+                            localPdf = f;
+                            break;
+                        }
+                    }
+                }
+                if (!localPdf) {
+                    localPdf = selectedPdfFiles.find(f => f.name && f.name.toLowerCase().endsWith('.pdf')) || null;
+                }
+            }
+
+            if (localPdf) {
+                if (!localPdf._blobUrl) {
+                    localPdf._blobUrl = URL.createObjectURL(localPdf);
+                }
+                pdfSourceUrl = localPdf._blobUrl;
+            } else if (data && data.pdf_download_url) {
+                pdfSourceUrl = data.pdf_download_url;
+            }
         }
 
         if (!pdfSourceUrl) {
-            showToast('Berkas PDF belum tersedia untuk pratinjau langsung.', 'warning');
+            showToast(`Berkas PDF untuk Kecamatan ${region} belum tersedia untuk dipratinjau.`, 'warning');
             return;
         }
 
