@@ -5,6 +5,16 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     // ── 0. THEME SWITCHER (DARK / LIGHT PUTIH-OREN) ──
+    function escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
     const btnThemeToggle = document.getElementById('btn-theme-toggle');
     const themeIcon = document.getElementById('theme-icon');
     const themeText = document.getElementById('theme-text');
@@ -123,6 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentAnalysisData = null;
     let currentBatchData = null;
     let isAllCollapsed = false;
+    let currentLanUrl = 'http://10.72.10.249:8000';
 
     // ── TOAST NOTIFICATION ──
     let toastTimeout = null;
@@ -142,8 +153,9 @@ document.addEventListener('DOMContentLoaded', () => {
     fetch('/api/system-info')
         .then(r => r.json())
         .then(data => {
-            if (data.lan_url && lanUrlCode) {
-                lanUrlCode.textContent = data.lan_url;
+            if (data.lan_url) {
+                currentLanUrl = data.lan_url;
+                if (lanUrlCode) lanUrlCode.textContent = data.lan_url;
             }
         })
         .catch(err => console.warn('Gagal membaca info jaringan:', err));
@@ -338,9 +350,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     chip.className = 'chosen-file-chip';
                     const fMb = (f.size / (1024 * 1024)).toFixed(2);
                     chip.innerHTML = `
-                        <div class="chosen-chip-info" title="${f.name}">
+                        <div class="chosen-chip-info" title="${escapeHtml(f.name)}">
                             <span>📄</span>
-                            <span class="chosen-chip-name">${idx + 1}. ${f.name}</span>
+                            <span class="chosen-chip-name">${idx + 1}. ${escapeHtml(f.name)}</span>
                             <span class="chosen-chip-size">${fMb} MB</span>
                         </div>
                         <button type="button" class="btn-chip-del" title="Hapus berkas ini dari antrean">✕</button>
@@ -489,6 +501,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             errMsg = `Batas Payload Serverless Terlampaui (HTTP 413 Request Entity Too Large): Total berkas (${totalMB} MB) melebihi batas 4.5 MB Vercel Serverless. Silakan gunakan Cloudflare Tunnel atau server lokal untuk audit kolektif.`;
                         } else if (res.status === 504) {
                             errMsg = 'Batas Waktu Eksekusi Terlampaui (HTTP 504 Gateway Timeout): Analisis dokumen melebihi batas waktu Vercel Serverless. Silakan gunakan Cloudflare Tunnel atau server lokal.';
+                        } else if (res.status === 524) {
+                            errMsg = `Batas Waktu Jaringan Internet Terlampaui (Cloudflare HTTP 524 Timeout):\n\nUnggahan berkas berukuran besar terhambat kecepatan internet publik sehingga melewati batas waktu Cloudflare (100 detik).\n\n💡 Rekomendasi Solusi:\nBuka sistem melalui Jaringan Lokal Kantor (LAN/Wi-Fi BPS) di:\n👉 ${currentLanUrl}\n(Proses instan hanya ~4 detik tanpa batasan kuota/waktu).`;
                         } else {
                             try {
                                 const text = await res.text();
@@ -552,6 +566,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             errMsg = `Batas Payload Serverless Terlampaui (HTTP 413 Request Entity Too Large): Berkas "${selectedPdfFile.name}" (${singleMB} MB) melebihi batas 4.5 MB Vercel Serverless. Silakan gunakan Cloudflare Tunnel atau server lokal.`;
                         } else if (res.status === 504) {
                             errMsg = 'Batas Waktu Eksekusi Terlampaui (HTTP 504 Gateway Timeout): Analisis dokumen melebihi batas waktu Vercel Serverless. Silakan gunakan Cloudflare Tunnel atau server lokal.';
+                        } else if (res.status === 524) {
+                            errMsg = `Batas Waktu Jaringan Internet Terlampaui (Cloudflare HTTP 524 Timeout):\n\nUnggahan berkas "${selectedPdfFile.name}" (${singleMB} MB) terhambat kecepatan internet publik sehingga melewati batas waktu Cloudflare (100 detik).\n\n💡 Rekomendasi Solusi:\nBuka sistem melalui Jaringan Lokal Kantor (LAN/Wi-Fi BPS) di:\n👉 ${currentLanUrl}\n(Proses instan hanya ~4 detik tanpa batasan kuota/waktu).`;
                         } else {
                             try {
                                 const text = await res.text();
@@ -651,12 +667,12 @@ document.addEventListener('DOMContentLoaded', () => {
             tr.innerHTML = `
                 <td class="batch-cell-num">${idx + 1}</td>
                 <td>
-                    <strong class="dist-name">Kecamatan ${dist.district_name}</strong>
-                    <div class="dist-meta">Publikasi: ${meta.year || '2026'} • ${meta.total_pages || '-'} Halaman</div>
+                    <strong class="dist-name">Kecamatan ${escapeHtml(dist.district_name)}</strong>
+                    <div class="dist-meta">Publikasi: ${escapeHtml(meta.year || '2026')} • ${escapeHtml(meta.total_pages || '-')} Halaman</div>
                 </td>
                 <td>
-                    <code class="dist-catalog">${meta.catalog || '-'}</code>
-                    <div class="dist-issn">ISSN: ${meta.issn || '-'}</div>
+                    <code class="dist-catalog">${escapeHtml(meta.catalog || '-')}</code>
+                    <div class="dist-issn">ISSN: ${escapeHtml(meta.issn || '-')}</div>
                 </td>
                 <td style="text-align: center;">
                     <span class="badge-count ${isClean ? 'clean' : 'red'}">${dist.total_defects} Catatan</span>
@@ -727,7 +743,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 fatalTplDesc.innerHTML = `Dokumen yang diunggah terdeteksi <strong>100% merupakan Template Master BPS Pusat (Template KCDA 2026)</strong> yang belum dikerjakan sama sekali / tidak diisi naskah dan data riil kecamatan. Dokumen <strong>DITOLAK SEPENUHNYA</strong> dan wajib dikerjakan dari awal!`;
             }
             if (fatalTplReasons) {
-                fatalTplReasons.innerHTML = (rawTpl.markers || []).map(r => `<div>• ${r}</div>`).join('');
+                fatalTplReasons.innerHTML = (rawTpl.markers || []).map(r => `<div>• ${escapeHtml(r)}</div>`).join('');
             }
             if (fatalBanner) fatalBanner.style.display = 'none';
             if (auditBadgeCard) auditBadgeCard.className = 'audit-badge-card status-fatal';
@@ -744,7 +760,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 fatalTplDesc.innerHTML = `Dokumen ini terindikasi <strong>hanya mengubah kover namun isi naskah masih memuat residu template mentah masif</strong> (nama kecamatan YYYYY, tim penyusun belum diisi, ulasan Latin dummy, grafik kosong, dsb). Publikasi <strong>BELUM LAYAK TERBIT</strong>.`;
             }
             if (fatalTplReasons) {
-                fatalTplReasons.innerHTML = (rawTpl.markers || []).map(r => `<div>• ${r}</div>`).join('');
+                fatalTplReasons.innerHTML = (rawTpl.markers || []).map(r => `<div>• ${escapeHtml(r)}</div>`).join('');
             }
             if (fatalBanner) fatalBanner.style.display = dMismatch.is_mismatch ? 'flex' : 'none';
             if (auditBadgeCard) auditBadgeCard.className = 'audit-badge-card status-fatal';
@@ -760,10 +776,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const covD = dMismatch.cover_district || meta.region || 'Wilayah A';
             const inD = dMismatch.dominant_inner_district || dMismatch.catalog_district || 'Wilayah B';
             if (fatalDesc) {
-                fatalDesc.innerHTML = `Dokumen ini terdeteksi menggunakan kover <strong>"${covD}"</strong>, namun batang tubuh, narasi ulasan, dan data di dalamnya merupakan milik <strong>"${inD}"</strong>. Terindikasi kuat ketidaksesuaian identitas wilayah (halaman kover tidak sesuai dengan isi). <strong>PUBLIKASI TIDAK LAYAK TERBIT</strong> sebelum diganti dengan naskah dan data wilayah yang benar.`;
+                fatalDesc.innerHTML = `Dokumen ini terdeteksi menggunakan kover <strong>"${escapeHtml(covD)}"</strong>, namun batang tubuh, narasi ulasan, dan data di dalamnya merupakan milik <strong>"${escapeHtml(inD)}"</strong>. Terindikasi kuat ketidaksesuaian identitas wilayah (halaman kover tidak sesuai dengan isi). <strong>PUBLIKASI TIDAK LAYAK TERBIT</strong> sebelum diganti dengan naskah dan data wilayah yang benar.`;
             }
             if (fatalReasons) {
-                fatalReasons.innerHTML = (dMismatch.reasons || []).map(r => `<div>• ${r}</div>`).join('');
+                fatalReasons.innerHTML = (dMismatch.reasons || []).map(r => `<div>• ${escapeHtml(r)}</div>`).join('');
             }
             if (auditBadgeCard) auditBadgeCard.className = 'audit-badge-card status-fatal';
             if (auditBadgeIcon) auditBadgeIcon.textContent = '🚨';
@@ -803,7 +819,7 @@ document.addEventListener('DOMContentLoaded', () => {
                            (meta.dummy_camera_detected ? 14 : 0);
         if (statDummyImages) {
             statDummyImages.textContent = dummyCount > 0 ? `${dummyCount} Gambar` : '0 Gambar';
-            statDummyImages.style.color = dummyCount > 0 ? 'var(--accent-amber)' : 'var(--accent-green)';
+            statDummyImages.style.color = dummyCount > 0 ? 'var(--accent-amber)' : 'var(--accent-success)';
         }
 
         if (statISSNConsistency) {
@@ -812,7 +828,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (issnInconsistent) {
                 statISSNConsistency.textContent = 'Inkonsisten!';
-                statISSNConsistency.style.color = 'var(--accent-red, #ef4444)';
+                statISSNConsistency.style.color = 'var(--accent-danger)';
                 if (statISSNSub) {
                     const details = meta.issn_cross_page_details || [];
                     if (details.length >= 2) {
@@ -823,13 +839,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } else if (issnRegistryMismatch) {
                 statISSNConsistency.textContent = 'Salah Registri';
-                statISSNConsistency.style.color = 'var(--accent-amber, #f59e0b)';
+                statISSNConsistency.style.color = 'var(--accent-amber)';
                 if (statISSNSub) {
                     statISSNSub.textContent = `Tertulis ${issnRegistryMismatch.found} (Resmi: ${issnRegistryMismatch.correct})`;
                 }
             } else {
                 statISSNConsistency.textContent = 'Konsisten';
-                statISSNConsistency.style.color = 'var(--accent-green, #22c55e)';
+                statISSNConsistency.style.color = 'var(--accent-success)';
                 if (statISSNSub) {
                     statISSNSub.textContent = 'Seluruh halaman sinkron';
                 }
@@ -855,7 +871,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (covVis.has_template_letter_a) covIssues.push('Residu Huruf A');
             if (cvValCover) {
                 cvValCover.textContent = covIssues.length > 0 ? `⚠️ ${covIssues.join(' • ')}` : '✓ Sesuai Kaidah Baku';
-                cvValCover.style.color = covIssues.length > 0 ? '#f87171' : '#4ade80';
+                cvValCover.style.color = covIssues.length > 0 ? 'var(--accent-danger)' : 'var(--accent-success)';
             }
 
             // HJU
@@ -866,7 +882,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (hjuVis.has_colon_on_issn) hjuIssues.push('ISSN : (Titik Dua)');
             if (cvValHJU) {
                 cvValHJU.textContent = hjuIssues.length > 0 ? `⚠️ ${hjuIssues.join(' • ')}` : '✓ Latar Putih Bersih';
-                cvValHJU.style.color = hjuIssues.length > 0 ? '#f87171' : '#4ade80';
+                cvValHJU.style.color = hjuIssues.length > 0 ? 'var(--accent-danger)' : 'var(--accent-success)';
             }
 
             // Preface
@@ -881,7 +897,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (cvValPreface) {
                 cvValPreface.textContent = prefTxt.length > 0 ? prefTxt.join(' • ') : 'Tidak Terdeteksi Foto/TTD';
-                cvValPreface.style.color = prefVis.signature_space_is_cramped ? '#fbbf24' : '#38bdf8';
+                cvValPreface.style.color = prefVis.signature_space_is_cramped ? 'var(--accent-amber)' : 'var(--accent-cyan)';
             }
 
             // Body
@@ -890,10 +906,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (cvValBody) {
                 if (dummies.length > 0) {
                     cvValBody.textContent = `⚠️ ${dummies.length} Titik Placeholder Kamera (Hal ${dummies.slice(0, 4).join(', ')}...)`;
-                    cvValBody.style.color = '#f87171';
+                    cvValBody.style.color = 'var(--accent-danger)';
                 } else {
                     cvValBody.textContent = '✓ Tidak Ada Dummy Kamera';
-                    cvValBody.style.color = '#4ade80';
+                    cvValBody.style.color = 'var(--accent-success)';
                 }
             }
         } else if (cvCard) {
@@ -1010,7 +1026,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     const itemContent = document.createElement('div');
                     itemContent.className = 'defect-content';
-                    itemContent.innerHTML = `<span class="defect-num">[${idx + 1}]</span> <span class="defect-text">${defect}</span>`;
+                    itemContent.innerHTML = `<span class="defect-num">[${idx + 1}]</span> <span class="defect-text">${escapeHtml(defect)}</span>`;
 
                     const actionsWrap = document.createElement('div');
                     actionsWrap.className = 'defect-actions-wrap';
@@ -1337,7 +1353,7 @@ document.addEventListener('DOMContentLoaded', () => {
             pdfModalDefectIcon.textContent = isAesthetic ? '💡' : '⚠️';
         }
         if (pdfModalDefectMsg) {
-            pdfModalDefectMsg.innerHTML = `<strong>[${sectionTitle}] Catatan #${defectIndex}:</strong> ${defectText}`;
+            pdfModalDefectMsg.innerHTML = `<strong>[${escapeHtml(sectionTitle)}] Catatan #${defectIndex}:</strong> ${escapeHtml(defectText)}`;
         }
 
         updatePdfModalPage(pdfViewerState.currentPage);
