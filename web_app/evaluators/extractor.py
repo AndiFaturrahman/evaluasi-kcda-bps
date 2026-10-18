@@ -648,17 +648,37 @@ def extract_pdf_metadata(pdf_path):
     cover_txt_norm = re.sub(r'\s+', ' ', cover_text)
     m_cov_dist = re.search(r'Kecamatan\s+([A-Za-z\s]+?)\s+Dalam\s+Angka', cover_txt_norm, re.I)
     cover_district_clean = None
+    dummy_placeholders = {'yyy', 'yyyyy', 'xxx', 'xxxxx', 'wilayah', 'kecamatan', ''}
+    
     if m_cov_dist:
         cand_cov = re.sub(r'\s+', ' ', m_cov_dist.group(1)).strip().title()
-        if cand_cov not in ['Xxxxx', 'Xxxxx Dalam Angka', '']:
-            cover_district_clean = cand_cov
+        # Bersihkan kata 'Kecamatan' yang berulang (misal layer kover terduplikasi/shadow text)
+        cand_clean = re.sub(r'\bkecamatan\b', '', cand_cov, flags=re.I).strip()
+        if cand_clean and cand_clean.lower() not in dummy_placeholders:
+            cover_district_clean = cand_clean.title()
             
+    # Jika kover depan memiliki text layer terpisah (misal nama kecamatan berada di text frame/layer berbeda):
+    if not cover_district_clean:
+        # Cek apakah nama wilayah hasil ekstraksi (region_name) muncul eksplisit di teks kover
+        if region_name and len(region_name) > 2 and re.search(r'\b' + re.escape(region_name) + r'\b', cover_text, re.I):
+            cover_district_clean = region_name
+        else:
+            # Pindai apakah ada nama kecamatan resmi dari database yang tertulis di kover
+            for kec_name in KECAMATAN_TO_KABUPATEN.keys():
+                if len(kec_name) > 3 and re.search(r'\b' + re.escape(kec_name) + r'\b', cover_text, re.I):
+                    cover_district_clean = kec_name.title()
+                    break
+
     if not cover_district_clean:
         m_fname = re.search(r'kecamatan-([a-z\-]+)-dalam-angka', os.path.basename(pdf_path), re.I)
         if m_fname:
-            cover_district_clean = m_fname.group(1).replace('-', ' ').title()
-        else:
-            cover_district_clean = region_name
+            cand_fn = m_fname.group(1).replace('-', ' ').title()
+            cand_fn_clean = re.sub(r'\bkecamatan\b', '', cand_fn, flags=re.I).strip()
+            if cand_fn_clean and cand_fn_clean.lower() not in dummy_placeholders:
+                cover_district_clean = cand_fn_clean.title()
+                
+    if not cover_district_clean:
+        cover_district_clean = region_name
 
     p3_txt_norm = re.sub(r'\s+', ' ', pages_text.get(2, ""))
     m_hju_dist = re.search(r'Kecamatan\s+([A-Za-z\s]+?)\s+Dalam\s+Angka', p3_txt_norm, re.I)
