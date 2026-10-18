@@ -324,32 +324,41 @@ document.addEventListener('DOMContentLoaded', () => {
         const totalBytes = selectedPdfFiles.reduce((acc, f) => acc + f.size, 0);
         const totalMb = (totalBytes / (1024 * 1024)).toFixed(2);
 
+        const hasZip = selectedPdfFiles.some(f => f.name.toLowerCase().endsWith('.zip'));
+
         if (count === 1) {
             const single = selectedPdfFiles[0];
-            if (fileChosenMainIcon) fileChosenMainIcon.textContent = '📄';
+            const isSingleZip = single.name.toLowerCase().endsWith('.zip');
+            if (fileChosenMainIcon) fileChosenMainIcon.textContent = isSingleZip ? '📦' : '📄';
             if (chosenFileName) chosenFileName.textContent = single.name;
-            if (chosenFileSize) chosenFileSize.textContent = `${totalMb} MB • Berkas Tunggal Siap Diperiksa`;
+            if (chosenFileSize) chosenFileSize.textContent = isSingleZip 
+                ? `${totalMb} MB • Arsip ZIP (Otomatis Ekstrak Seluruh PDF Kecamatan)` 
+                : `${totalMb} MB • Berkas Tunggal Siap Diperiksa`;
             if (btnAnalyze) {
-                btnAnalyze.innerHTML = `<span>🔍 Mulai Audit Kepatuhan & Ekstraksi Kesalahan</span>`;
+                btnAnalyze.innerHTML = isSingleZip 
+                    ? `<span>⚡ Mulai Audit Kolektif (Ekstrak & Periksa Arsip ZIP)</span>`
+                    : `<span>🔍 Mulai Audit Kepatuhan & Ekstraksi Kesalahan</span>`;
                 btnAnalyze.disabled = false;
             }
             if (btnInstantAnalyze) {
-                btnInstantAnalyze.innerHTML = `<span>🚀 Mulai Audit Sekarang</span>`;
+                btnInstantAnalyze.innerHTML = isSingleZip 
+                    ? `<span>⚡ Mulai Audit Arsip ZIP</span>`
+                    : `<span>🚀 Mulai Audit Sekarang</span>`;
             }
             if (chosenFilesList) {
                 chosenFilesList.style.display = 'none';
                 chosenFilesList.innerHTML = '';
             }
         } else {
-            if (fileChosenMainIcon) fileChosenMainIcon.textContent = '📚';
-            if (chosenFileName) chosenFileName.textContent = `${count} Berkas PDF Terpilih (Kolektif)`;
+            if (fileChosenMainIcon) fileChosenMainIcon.textContent = hasZip ? '📦' : '📚';
+            if (chosenFileName) chosenFileName.textContent = `${count} Berkas Terpilih (Kolektif)`;
             if (chosenFileSize) chosenFileSize.textContent = `Total ${totalMb} MB • Mode Audit Kolektif Multi-Kecamatan`;
             if (btnAnalyze) {
-                btnAnalyze.innerHTML = `<span>⚡ Mulai Audit Kolektif (${count} Berkas PDF Sekaligus)</span>`;
+                btnAnalyze.innerHTML = `<span>⚡ Mulai Audit Kolektif (${count} Berkas PDF / ZIP)</span>`;
                 btnAnalyze.disabled = false;
             }
             if (btnInstantAnalyze) {
-                btnInstantAnalyze.innerHTML = `<span>⚡ Mulai Audit Kolektif (${count} PDF)</span>`;
+                btnInstantAnalyze.innerHTML = `<span>⚡ Mulai Audit Kolektif (${count} Berkas)</span>`;
             }
 
             if (chosenFilesList) {
@@ -496,9 +505,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     formData.append('custom_api_key', apiKeyInput.value.trim());
                 }
 
+                const progressTitle = isZipUpload 
+                    ? `Sedang Mengekstrak Arsip ZIP & Audit Kolektif Publikasi...`
+                    : `Sedang Melakukan Audit Kolektif ${selectedPdfFiles.length} Berkas PDF...`;
                 startProgress(
-                    `Sedang Melakukan Audit Kolektif ${selectedPdfFiles.length} Berkas PDF...`,
-                    'Sistem memindai seluruh berkas secara paralel, mendeteksi ketidaksesuaian wilayah/kasus ganti kover, menyusun 1 Master File Excel Terpadu (.xlsx), dan mengemas seluruh Laporan PDF resmi (.zip).'
+                    progressTitle,
+                    'Sistem mengekstrak dan memindai seluruh berkas secara terpadu, mendeteksi ketidaksesuaian wilayah/kasus ganti kover, menyusun 1 Master File Excel Terpadu (.xlsx), dan mengemas seluruh Laporan PDF resmi (.zip).'
                 );
 
                 fetch('/api/analyze-batch-upload', {
@@ -536,8 +548,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 .catch(err => {
                     stopProgress();
                     console.error(err);
-                    alert(`Audit Kolektif Gagal: ${err.message}`);
-                    showToast(`Terjadi kesalahan: ${err.message}`, 'warning', 6000);
+                    let displayMsg = err.message || 'Terjadi kesalahan komunikasi jaringan.';
+                    if (displayMsg.toLowerCase().includes('failed to fetch')) {
+                        displayMsg = `Koneksi ke Server Terputus (Failed to fetch).\n\nServer lokal Python / Uvicorn tidak merespons di ${window.location.host}.\n\nLangkah Penanganan Cepat:\n1. Pastikan server lokal aktif (jalankan run_web.bat jika jendela konsol tertutup).\n2. Cek apakah komputer baru saja keluar dari mode tidur (sleep/standby).\n3. Muat ulang halaman (F5) lalu ulangi proses audit kolektif.`;
+                    }
+                    alert(`Audit Kolektif Gagal:\n\n${displayMsg}`);
+                    showToast(`Koneksi terputus: ${err.message}`, 'warning', 6000);
                 });
 
             } else {
@@ -601,8 +617,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 .catch(err => {
                     stopProgress();
                     console.error(err);
-                    alert(`Pemeriksaan Gagal: ${err.message}`);
-                    showToast(`Terjadi kesalahan: ${err.message}`, 'warning', 6000);
+                    let displayMsg = err.message || 'Terjadi kesalahan komunikasi jaringan.';
+                    if (displayMsg.toLowerCase().includes('failed to fetch')) {
+                        displayMsg = `Koneksi ke Server Terputus (Failed to fetch).\n\nServer lokal Python / Uvicorn tidak merespons di ${window.location.host}.\n\nLangkah Penanganan Cepat:\n1. Pastikan server lokal aktif (jalankan run_web.bat jika jendela konsol tertutup).\n2. Cek apakah komputer baru saja keluar dari mode tidur (sleep/standby).\n3. Muat ulang halaman (F5) lalu ulangi proses audit.`;
+                    }
+                    alert(`Pemeriksaan Gagal:\n\n${displayMsg}`);
+                    showToast(`Koneksi terputus: ${err.message}`, 'warning', 6000);
                 });
             }
         });

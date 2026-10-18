@@ -4,6 +4,8 @@ import uuid
 import time
 import socket
 import shutil
+import re
+import zipfile
 from typing import Optional, List
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
@@ -388,13 +390,15 @@ def analyze_batch_upload(
     total_clean_districts = 0
     total_mismatch_districts = 0
 
-    import zipfile
     pdf_items_to_process = []
+    temp_zip_paths = []
+    
     for file_obj in pdf_files:
         safe_orig_name = os.path.basename(file_obj.filename)
         fname_lower = safe_orig_name.lower()
         if fname_lower.endswith(".zip"):
             zip_saved_path = os.path.join(UPLOAD_DIR, f"zip_{task_id}_{safe_orig_name}")
+            temp_zip_paths.append(zip_saved_path)
             with open(zip_saved_path, "wb") as f:
                 shutil.copyfileobj(file_obj.file, f)
             try:
@@ -402,78 +406,92 @@ def analyze_batch_upload(
                     for member in zf.namelist():
                         member_base = os.path.basename(member)
                         if member_base.lower().endswith(".pdf") and not member.startswith("__MACOSX") and not member_base.startswith("."):
-                            extracted_name = f"batch_{task_id}_{member_base}"
+                            safe_member_base = re.sub(r'[\\/*?:"<>|]', '_', member_base)
+                            item_num = len(pdf_items_to_process) + 1
+                            extracted_name = f"batch_{task_id}_{item_num}_{safe_member_base}"
                             extracted_path = os.path.join(UPLOAD_DIR, extracted_name)
                             with open(extracted_path, "wb") as out_f, zf.open(member) as in_f:
                                 shutil.copyfileobj(in_f, out_f)
-                            pdf_items_to_process.append({
-                                "path": extracted_path,
-                                "saved_name": extracted_name,
-                                "display_name": member_base
-                            })
+                            if os.path.exists(extracted_path) and os.path.getsize(extracted_path) > 500:
+                                pdf_items_to_process.append({
+                                    "path": extracted_path,
+                                    "saved_name": extracted_name,
+                                    "display_name": member_base
+                                })
             except Exception as e:
                 print(f"[ZIP Upload] Error extracting zip {safe_orig_name}: {e}")
         elif fname_lower.endswith(".pdf"):
-            saved_name = f"batch_{task_id}_{safe_orig_name}"
+            item_num = len(pdf_items_to_process) + 1
+            saved_name = f"batch_{task_id}_{item_num}_{safe_orig_name}"
             saved_path = os.path.join(UPLOAD_DIR, saved_name)
             with open(saved_path, "wb") as f:
                 shutil.copyfileobj(file_obj.file, f)
-            pdf_items_to_process.append({
-                "path": saved_path,
-                "saved_name": saved_name,
-                "display_name": safe_orig_name
-            })
+            if os.path.exists(saved_path) and os.path.getsize(saved_path) > 500:
+                pdf_items_to_process.append({
+                    "path": saved_path,
+                    "saved_name": saved_name,
+                    "display_name": safe_orig_name
+                })
+
+    if not pdf_items_to_process:
+        raise HTTPException(
+            status_code=400, 
+            detail="Tidak ditemukan berkas PDF yang valid di dalam unggahan atau arsip ZIP. Pastikan berkas berformat .pdf dan tidak kosong."
+        )
 
     for item_idx, item in enumerate(pdf_items_to_process):
         saved_path = item["path"]
         saved_name = item["saved_name"]
         display_name = item["display_name"]
 
-        meta = extract_pdf_metadata(saved_path)
-        defects = analyze_defects(meta, custom_api_key=custom_api_key)
-        tot_d = sum(len(items) for items in defects.values())
-        clean_sec = sum(1 for items in defects.values() if len(items) == 0)
-        
-        is_mismatch = meta.get("district_mismatch_info", {}).get("is_mismatch", False)
-        if is_mismatch:
-            total_mismatch_districts += 1
-        if tot_d == 0:
-            total_clean_districts += 1
-        total_aggregate_defects += tot_d
+        try:
+            meta = extract_pdf_metadata(saved_path)
+            defects = analyze_defects(meta, custom_api_key=custom_api_key)
+            tot_d = sum(len(items) for items in defects.values())
+            clean_sec = sum(1 for items in defects.values() if len(items) == 0)
+            
+            is_mismatch = meta.get("district_mismatch_info", {}).get("is_mismatch", False)
+            if is_mismatch:
+                total_mismatch_districts += 1
+            if tot_d == 0:
+                total_clean_districts += 1
+            total_aggregate_defects += tot_d
 
-        safe_reg = meta['region'].replace(' ', '_').replace('/', '_')
-        pdf_fn = f"Laporan_Evaluasi_{safe_reg}_{meta['year']}_{task_id}_{item_idx+1}.pdf"
-        pdf_out_path = os.path.join(OUTPUT_DIR, pdf_fn)
-        generate_pdf_report(meta, defects, pdf_out_path)
-        zip_items.append((pdf_out_path, pdf_fn))
+            safe_reg = meta.get('region', 'Wilayah').replace(' ', '_').replace('/', '_')
+            pdf_fn = f"Laporan_Evaluasi_{safe_reg}_{meta.get('year', 2026)}_{task_id}_{item_idx+1}.pdf"
+            pdf_out_path = os.path.join(OUTPUT_DIR, pdf_fn)
+            generate_pdf_report(meta, defects, pdf_out_path)
+            zip_items.append((pdf_out_path, pdf_fn))
 
-        excel_fn = f"Evaluasi_{safe_reg}_{meta['year']}_{task_id}_{item_idx+1}.xlsx"
-        excel_out_path = os.path.join(OUTPUT_DIR, excel_fn)
-        generate_excel_report(meta, defects, excel_out_path, base_template_path=None)
+            excel_fn = f"Evaluasi_{safe_reg}_{meta.get('year', 2026)}_{task_id}_{item_idx+1}.xlsx"
+            excel_out_path = os.path.join(OUTPUT_DIR, excel_fn)
+            generate_excel_report(meta, defects, excel_out_path, base_template_path=None)
 
-        eval_results.append({
-            "district_name": meta["region"],
-            "region": meta["region"],
-            "year": meta["year"],
-            "title": meta["title"],
-            "catalog": meta["catalog"],
-            "issn": meta["issn"],
-            "total_defects": tot_d,
-            "clean_sections": clean_sec,
-            "is_mismatch": is_mismatch,
-            "mismatch_details": meta.get("district_mismatch_info", {}),
-            "raw_template_info": meta.get("raw_template_info", {}),
-            "meta": meta,
-            "metadata": meta,
-            "defects": defects,
-            "pdf_filename": pdf_fn,
-            "pdf_download_url": f"/api/download/{pdf_fn}",
-            "excel_filename": excel_fn,
-            "excel_download_url": f"/api/download/{excel_fn}",
-            "download_url": f"/api/download/{excel_fn}",
-            "source_pdf_filename": saved_name,
-            "source_pdf_url": f"/api/view-pdf/{saved_name}"
-        })
+            eval_results.append({
+                "district_name": meta.get("region", display_name),
+                "region": meta.get("region", display_name),
+                "year": meta.get("year", 2026),
+                "title": meta.get("title", display_name),
+                "catalog": meta.get("catalog", "-"),
+                "issn": meta.get("issn", "-"),
+                "total_defects": tot_d,
+                "clean_sections": clean_sec,
+                "is_mismatch": is_mismatch,
+                "mismatch_details": meta.get("district_mismatch_info", {}),
+                "raw_template_info": meta.get("raw_template_info", {}),
+                "meta": meta,
+                "metadata": meta,
+                "defects": defects,
+                "pdf_filename": pdf_fn,
+                "pdf_download_url": f"/api/download/{pdf_fn}",
+                "excel_filename": excel_fn,
+                "excel_download_url": f"/api/download/{excel_fn}",
+                "download_url": f"/api/download/{excel_fn}",
+                "source_pdf_filename": saved_name,
+                "source_pdf_url": f"/api/view-pdf/{saved_name}"
+            })
+        except Exception as item_err:
+            print(f"[Batch Processing] Error on {display_name}: {item_err}")
 
     if not eval_results:
         raise HTTPException(status_code=400, detail="Tidak ada berkas PDF yang valid untuk diproses.")
@@ -489,6 +507,13 @@ def analyze_batch_upload(
     zip_fn = f"Laporan_Evaluasi_PDF_Kolektif_{task_id}.zip"
     zip_out_path = os.path.join(OUTPUT_DIR, zip_fn)
     create_batch_zip(zip_items, zip_out_path)
+
+    for zp in temp_zip_paths:
+        try:
+            if os.path.exists(zp):
+                os.remove(zp)
+        except Exception:
+            pass
 
     return {
         "success": True,

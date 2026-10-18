@@ -705,14 +705,44 @@ class CVPublicationAuditor:
             b_txt = b[4].strip()
             if any(k in b_txt for k in ["Kepala BPS", "Kepala Badan Pusat Statistik", "Chief Statistician"]):
                 title_block = b
-            elif any(k in b_txt for k in ["HENDRA", "GLADIUS", "SETIAWAN", "NIP"]) or (b_txt.isupper() and 2 <= len(b_txt.split()) <= 4):
-                if title_block and b[1] > title_block[3]:
-                    name_block = b
+            elif title_block and b[1] > title_block[3] and (b[1] - title_block[3]) < 180:
+                b_lines = [l.strip() for l in b_txt.split('\n') if l.strip()]
+                if b_lines and not name_block:
+                    first_l = b_lines[0]
+                    if (2 <= len(first_l.split()) <= 5) and not any(kw in first_l.lower() for kw in ['penerbit', 'katalog', 'halaman', 'website', 'http']):
+                        name_block = b
 
         if title_block and name_block:
             gap_pt = name_block[1] - title_block[3]
             gap_cm = round((gap_pt / 72.0) * 2.54, 2)
             info["signature_vertical_gap_cm"] = gap_cm
+
+            # Cek fisik tanda tangan (Signature Presence Check)
+            # Mengukur densitas piksel gelap coretan tanda tangan di area antara baris jabatan dan nama pejabat
+            try:
+                scale_x = w / page.rect.width
+                scale_y = h / page.rect.height
+                y_sig_start = int(title_block[3] * scale_y)
+                y_sig_end = int(name_block[1] * scale_y)
+                x_sig_start = int(min(title_block[0], name_block[0]) * scale_x)
+                x_sig_end = int(max(title_block[2], name_block[2]) * scale_x)
+
+                if (y_sig_end - y_sig_start) > 8 and (x_sig_end - x_sig_start) > 20:
+                    roi_sig = gray[y_sig_start:y_sig_end, x_sig_start:x_sig_end]
+                    dark_sig_px = np.sum(roi_sig < 200)
+                    sig_ratio = dark_sig_px / roi_sig.size if roi_sig.size > 0 else 0
+                    if sig_ratio < 0.005:
+                        info["has_signature"] = False
+                        info["defects"].append(
+                            f'Belum ada Tanda Tangan Kepala/Pejabat pada Kata Pengantar (hal {page_num}): Ruang tanda tangan resmi '
+                            f'masih kosong tanpa coretan tanda tangan basah hasil pindai atau tanda tangan elektronik/barcode tersertifikasi. '
+                            f'Wajib dibubuhi tanda tangan sebelum publikasi dirilis.'
+                        )
+                    else:
+                        info["has_signature"] = True
+            except Exception as e_sig:
+                print(f"[CV Auditor] Signature presence check warning: {e_sig}")
+
             # Standar ruang tanda tangan: minimal 2,5 cm
             if gap_cm < 2.0:
                 info["signature_space_is_cramped"] = True
