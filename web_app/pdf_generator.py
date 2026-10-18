@@ -44,7 +44,7 @@ class NumberedCanvas(canvas.Canvas):
         self.setStrokeColor(colors.HexColor('#CBD5E1'))
         self.setLineWidth(0.5)
         self.line(18 * mm, 14 * mm, 192 * mm, 14 * mm)
-        self.drawString(18 * mm, 10 * mm, 'Badan Pusat Statistik • Sistem Penjaminan Kualitas Publikasi (Data Mencerdaskan Bangsa)')
+        self.drawString(18 * mm, 10 * mm, 'Badan Pusat Statistik • Ref: Kemendagri & BPS RI 2024 (v2024.1 | 7.288 Kec, 514 Kab/Kota)')
         self.drawRightString(192 * mm, 10 * mm, f'Halaman {self._pageNumber} dari {page_count}')
         self.restoreState()
 
@@ -194,6 +194,13 @@ def generate_pdf_report(meta, defects, output_pdf_path):
             Paragraph('<b>Halaman Fisik:</b>', meta_label),
             Paragraph(f"{meta.get('total_pages', '-')} Halaman", meta_val),
             ''
+        ],
+        [
+            Paragraph('<b>Basis Data:</b>', meta_label),
+            Paragraph('Kemendagri (Kepmendagri 050-145-2022) & BPS RI 2024 (v2024.1 | 7.288 Kec, 514 Kab/Kota)', meta_val),
+            '',
+            '',
+            ''
         ]
     ]
     
@@ -209,10 +216,11 @@ def generate_pdf_report(meta, defects, output_pdf_path):
         ('LEFTPADDING', (0,0), (-1,-1), 4),
         ('RIGHTPADDING', (0,0), (-1,-1), 4),
         ('SPAN', (1,0), (3,0)), # Span Judul Publikasi di kolom 1 s.d. 3
-        ('SPAN', (4,0), (4,3)), # Span Status Kelayakan di kolom 4 dari baris 0 s.d. 3
-        ('BACKGROUND', (4,0), (4,3), status_bg),
-        ('BOX', (4,0), (4,3), 1, status_bc),
-        ('VALIGN', (4,0), (4,3), 'MIDDLE'),
+        ('SPAN', (1,4), (3,4)), # Span Basis Data di kolom 1 s.d. 3
+        ('SPAN', (4,0), (4,4)), # Span Status Kelayakan di kolom 4 dari baris 0 s.d. 4
+        ('BACKGROUND', (4,0), (4,4), status_bg),
+        ('BOX', (4,0), (4,4), 1, status_bc),
+        ('VALIGN', (4,0), (4,4), 'MIDDLE'),
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
     ]))
     

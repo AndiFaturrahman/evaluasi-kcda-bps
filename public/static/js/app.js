@@ -149,13 +149,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }, duration);
     }
 
-    // ── 1. SYSTEM INFO & LAN IP ──
+    // ── 1. SYSTEM INFO & LAN IP & DATASET INFO ──
     fetch('/api/system-info')
         .then(r => r.json())
         .then(data => {
             if (data.lan_url) {
                 currentLanUrl = data.lan_url;
                 if (lanUrlCode) lanUrlCode.textContent = data.lan_url;
+            }
+            if (data.dataset_info) {
+                const dsPill = document.getElementById('dataset-pill');
+                const dsText = document.getElementById('dataset-ver-text');
+                const info = data.dataset_info;
+                if (dsText) {
+                    dsText.textContent = `${info.version || 'v2024.1'} (${info.total_districts ? info.total_districts.toLocaleString('id-ID') : '7.288'} Kec)`;
+                }
+                if (dsPill) {
+                    dsPill.title = `Basis Data: ${info.source || 'Kemendagri & BPS RI 2024'}\nVersi: ${info.version || 'v2024.1'}\nPeriode: ${info.release_date || '2024 / Edisi 2026'}\nCakupan: ${info.total_provinces || 38} Provinsi, ${info.total_regencies || 514} Kab/Kota, ${info.total_districts || 7288} Kecamatan`;
+                }
             }
         })
         .catch(err => console.warn('Gagal membaca info jaringan:', err));

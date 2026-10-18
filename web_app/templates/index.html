@@ -18,7 +18,7 @@
         } catch(e) {}
       })();
     </script>
-    <link rel="stylesheet" href="/static/css/style.css?v=6.0">
+    <link rel="stylesheet" href="/static/css/style.css?v=7.3">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
 </head>
 <body>
@@ -37,6 +37,13 @@
                         <span class="badge-version">v3.0 Ultra Deep Cross-Page</span>
                     </div>
                     <p>Audit Kepatuhan 11 Bagian Anatomi + Validasi Lintas Halaman ISSN/Katalog/Tahun + Deteksi Saltik Otomatis</p>
+                    <div class="brand-slogan-strip">
+                        <span class="slogan-item">📊 <strong>DATA MENCERDASKAN BANGSA</strong></span>
+                        <span class="slogan-sep">•</span>
+                        <span class="slogan-item">✨ <strong>BerAKHLAK</strong></span>
+                        <span class="slogan-sep">•</span>
+                        <span class="slogan-item">🇮🇩 <strong>#BanggaMelayaniBangsa</strong></span>
+                    </div>
                 </div>
             </div>
 
@@ -49,6 +56,10 @@
                 <button type="button" class="btn-guide-toggle" id="btn-open-guide">
                     <span>📖 Panduan Standar BPS</span>
                 </button>
+                <div class="dataset-version-pill" id="dataset-pill" title="Basis Data Master Wilayah Kemendagri (Kepmendagri No. 050-145-2022) & BPS RI 2024 (v2024.1, 7.288 Kecamatan, 514 Kab/Kota)">
+                    <span class="dataset-icon">🌐</span>
+                    <span class="dataset-text" id="dataset-ver-text">Kemendagri 2024 (7.288 Kec)</span>
+                </div>
                 <div class="lan-share-pill" id="lan-pill" title="Klik untuk menyalin tautan akses LAN sekantor">
                     <span class="live-dot"></span>
                     <span class="lan-text">Akses LAN:</span>
@@ -266,11 +277,11 @@
                 <div class="fatal-alert-icon" style="font-size: 36px;">🛑</div>
                 <div class="fatal-alert-body">
                     <div class="fatal-alert-badge" style="background: #dc2626; color: #fff; font-weight: 700;">DITOLAK SEPENUHNYA (REJECTED): HANYA UPLOAD TEMPLATE MENTAH!</div>
-                    <div class="fatal-alert-title" id="fatal-template-title" style="color: #f87171; font-size: 1.25rem; font-weight: 700; margin: 4px 0;">Dokumen Belum Dikerjakan (Master Template BPS 2026)</div>
-                    <div class="fatal-alert-desc" id="fatal-template-desc" style="color: #cbd5e1; line-height: 1.5; margin-bottom: 8px;">
+                    <div class="fatal-alert-title" id="fatal-template-title" style="font-size: 1.25rem; font-weight: 700; margin: 4px 0;">Dokumen Belum Dikerjakan (Master Template BPS 2026)</div>
+                    <div class="fatal-alert-desc" id="fatal-template-desc" style="line-height: 1.5; margin-bottom: 8px;">
                         Dokumen ini terdeteksi sebagai template master kosong bawaan BPS Pusat yang belum diisi data dan naskah riil kecamatan.
                     </div>
-                    <div class="fatal-alert-reasons" id="fatal-template-reasons" style="font-size: 0.85rem; color: #fca5a5; background: rgba(0,0,0,0.25); padding: 10px; border-radius: 6px;"></div>
+                    <div class="fatal-alert-reasons" id="fatal-template-reasons" style="font-size: 0.85rem; padding: 10px; border-radius: 6px;"></div>
                 </div>
             </div>
 
@@ -521,6 +532,6 @@
     <!-- Notification Toast -->
     <div id="toast" class="toast-notification" style="display: none;"></div>
 
-    <script src="/static/js/app.js?v=6.2"></script>
+    <script src="/static/js/app.js?v=7.3"></script>
 </body>
 </html>

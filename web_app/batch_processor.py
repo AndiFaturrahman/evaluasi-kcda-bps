@@ -3,8 +3,12 @@ import glob
 import zipfile
 import openpyxl
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
-from web_app.evaluator import extract_pdf_metadata, analyze_defects
-from web_app.pdf_generator import generate_pdf_report
+try:
+    from evaluator import extract_pdf_metadata, analyze_defects
+    from pdf_generator import generate_pdf_report
+except ImportError:
+    from web_app.evaluator import extract_pdf_metadata, analyze_defects
+    from web_app.pdf_generator import generate_pdf_report
 
 def populate_district_sheet(ws, meta, defects):
     region = meta.get("region", "Wilayah")
@@ -160,6 +164,7 @@ def generate_master_batch_excel(eval_results, output_excel_path, regency_title="
 
     ws_rekap.cell(row=2, column=2, value=f"REKAPITULASI HASIL AUDIT KEPATUHAN FORMAT PUBLIKASI KCDA {eval_results[0]['meta'].get('year', 2026)}").font = font_title
     ws_rekap.cell(row=3, column=2, value=f"Wilayah: {regency_title} | Berdasarkan Pedoman Pembuatan Publikasi BPS 2023 & Standar Evaluasi 2026").font = font_sub
+    ws_rekap.cell(row=4, column=2, value="Basis Data Master Wilayah: Kemendagri (Kepmendagri No. 050-145-2022) & BPS RI 2024 (v2024.1, 7.288 Kecamatan, 514 Kab/Kota)").font = font_sub
 
     rekap_headers = [
         ("No", 6),
@@ -173,17 +178,17 @@ def generate_master_batch_excel(eval_results, output_excel_path, regency_title="
         ("Rincian Temuan Kritis / Saran Estetika", 50)
     ]
 
-    ws_rekap.row_dimensions[5].height = 28
+    ws_rekap.row_dimensions[6].height = 28
     for c_idx, (h_name, w) in enumerate(rekap_headers, start=2):
         col_letter = openpyxl.utils.get_column_letter(c_idx)
         ws_rekap.column_dimensions[col_letter].width = w
-        cell = ws_rekap.cell(row=5, column=c_idx, value=h_name)
+        cell = ws_rekap.cell(row=6, column=c_idx, value=h_name)
         cell.font = font_h
         cell.fill = fill_h
         cell.alignment = align_center
         cell.border = thin_border
 
-    for r_idx, res in enumerate(eval_results, start=6):
+    for r_idx, res in enumerate(eval_results, start=7):
         meta = res["meta"]
         defects = res["defects"]
         tot_d = res["total_defects"]

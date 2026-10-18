@@ -1,6 +1,7 @@
 import os
 import sys
 import uuid
+import time
 import socket
 import shutil
 from typing import Optional, List
@@ -14,17 +15,23 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 if current_dir not in sys.path:
     sys.path.append(current_dir)
 
-from evaluator import extract_pdf_metadata, analyze_defects, generate_excel_report, DEFAULT_API_KEY
+from evaluator import (
+    extract_pdf_metadata,
+    analyze_defects,
+    generate_excel_report,
+    DEFAULT_API_KEY,
+    WILAYAH_METADATA,
+)
 from pdf_generator import generate_pdf_report
 from batch_processor import generate_master_batch_excel, create_batch_zip
 
 app = FastAPI(title="Sistem Otomatisasi Evaluasi Publikasi BPS", version="2.0.0")
 
-# Setup CORS
+# Setup CORS (aman untuk LAN dan tunnel publik)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -32,15 +39,17 @@ app.add_middleware(
 @app.middleware("http")
 async def add_no_cache_header(request, call_next):
     response = await call_next(request)
-    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
-    response.headers["Pragma"] = "no-cache"
-    response.headers["Expires"] = "0"
+    # Jangan cache API dinamis
+    if request.url.path.startswith("/api/"):
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
     return response
 
 # Folder direktori
 BASE_DIR = os.path.dirname(current_dir)
 IS_CLOUD = bool(os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME") or os.environ.get("SPACE_ID") or os.environ.get("HF_SPACE_ID"))
-IS_VERCEL = IS_CLOUD
+IS_VERCEL = bool(os.environ.get("VERCEL"))
 
 if IS_CLOUD:
     UPLOAD_DIR = "/tmp/uploads"
@@ -58,6 +67,34 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # Mount static files
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+def cleanup_old_files(max_age_hours: int = 3):
+    """Menghapus berkas sementara di uploads/ dan outputs/ yang berusia lebih dari max_age_hours."""
+    now = time.time()
+    cutoff = now - (max_age_hours * 3600)
+    cleaned_count = 0
+    cleaned_bytes = 0
+    for folder in [UPLOAD_DIR, OUTPUT_DIR]:
+        if not os.path.exists(folder):
+            continue
+        for fname in os.listdir(folder):
+            if fname.startswith("."):
+                continue
+            fpath = os.path.join(folder, fname)
+            try:
+                if os.path.isfile(fpath) and os.path.getmtime(fpath) < cutoff:
+                    sz = os.path.getsize(fpath)
+                    os.remove(fpath)
+                    cleaned_count += 1
+                    cleaned_bytes += sz
+            except Exception:
+                pass
+    if cleaned_count > 0:
+        print(f"[Auto-Cleanup] Berhasil membersihkan {cleaned_count} berkas lawas ({round(cleaned_bytes / (1024*1024), 1)} MB)")
+
+@app.on_event("startup")
+def on_startup():
+    cleanup_old_files(max_age_hours=3)
 
 def get_lan_ip():
     """Mendapatkan alamat IP lokal LAN agar rekan sekantor bisa akses"""
@@ -81,18 +118,26 @@ async def serve_index():
     return HTMLResponse("<h1>Index file not found</h1>", status_code=404)
 
 @app.get("/api/system-info")
-async def get_system_info():
+def get_system_info():
     lan_ip = get_lan_ip()
     return {
         "status": "online",
         "lan_ip": lan_ip,
         "lan_url": f"http://{lan_ip}:8000",
         "has_default_api_key": bool(DEFAULT_API_KEY),
-        "is_vercel": IS_VERCEL
+        "is_vercel": IS_VERCEL,
+        "dataset_info": WILAYAH_METADATA or {
+            "source": "Kemendagri (Kepmendagri No. 050-145-2022) & BPS RI Master Wilayah 2024",
+            "version": "v2024.1-Kemendagri-BPS",
+            "release_date": "Semester I 2024 / Edisi Publikasi 2026",
+            "total_provinces": 38,
+            "total_regencies": 514,
+            "total_districts": 7288
+        }
     }
 
 @app.get("/api/sample-files")
-async def list_sample_files():
+def list_sample_files():
     samples = []
     for d in [SAMPLE_DIR, BASE_DIR]:
         if os.path.exists(d):
@@ -108,13 +153,14 @@ async def list_sample_files():
     return {"samples": samples}
 
 @app.post("/api/analyze-sample")
-async def analyze_sample(
+def analyze_sample(
     filename: str = Form(...),
     custom_api_key: Optional[str] = Form(None)
 ):
-    pdf_path = os.path.join(SAMPLE_DIR, filename)
+    safe_filename = os.path.basename(filename)
+    pdf_path = os.path.join(SAMPLE_DIR, safe_filename)
     if not os.path.exists(pdf_path):
-        pdf_path = os.path.join(BASE_DIR, filename)
+        pdf_path = os.path.join(BASE_DIR, safe_filename)
     if not os.path.exists(pdf_path):
         raise HTTPException(status_code=404, detail="File sampel tidak ditemukan.")
     
@@ -149,51 +195,73 @@ async def analyze_sample(
         "download_url": f"/api/download/{excel_filename}",
         "excel_download_url": f"/api/download/{excel_filename}",
         "pdf_download_url": f"/api/download/{pdf_filename}",
-        "source_pdf_filename": filename,
-        "source_pdf_url": f"/api/view-pdf/{filename}"
+        "source_pdf_filename": safe_filename,
+        "source_pdf_url": f"/api/view-pdf/{safe_filename}"
     }
 
 @app.post("/api/analyze-upload")
-async def analyze_upload(
+def analyze_upload(
     pdf_file: UploadFile = File(...),
     excel_file: Optional[UploadFile] = File(None),
     custom_api_key: Optional[str] = Form(None)
 ):
-    if not pdf_file.filename.lower().endswith(".pdf"):
+    if not pdf_file.filename or not pdf_file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="File harus berformat PDF.")
     
     task_id = str(uuid.uuid4())[:8]
-    saved_pdf_name = f"upload_{task_id}_{pdf_file.filename}"
+    safe_pdf_orig = os.path.basename(pdf_file.filename)
+    saved_pdf_name = f"upload_{task_id}_{safe_pdf_orig}"
     saved_pdf_path = os.path.join(UPLOAD_DIR, saved_pdf_name)
     
+    MAX_UPLOAD_SIZE = 150 * 1024 * 1024  # 150 MB
+    file_bytes_written = 0
     with open(saved_pdf_path, "wb") as f:
-        shutil.copyfileobj(pdf_file.file, f)
+        while chunk := pdf_file.file.read(1024 * 1024):  # 1MB buffer
+            file_bytes_written += len(chunk)
+            if file_bytes_written > MAX_UPLOAD_SIZE:
+                f.close()
+                if os.path.exists(saved_pdf_path):
+                    os.remove(saved_pdf_path)
+                raise HTTPException(status_code=400, detail="Ukuran file PDF melebihi batas maksimal yang diizinkan (150 MB).")
+            f.write(chunk)
         
     base_template_path = None
     if excel_file and excel_file.filename:
-        saved_excel_name = f"upload_tpl_{task_id}_{excel_file.filename}"
+        safe_excel_orig = os.path.basename(excel_file.filename)
+        saved_excel_name = f"upload_tpl_{task_id}_{safe_excel_orig}"
         base_template_path = os.path.join(UPLOAD_DIR, saved_excel_name)
         with open(base_template_path, "wb") as f:
             shutil.copyfileobj(excel_file.file, f)
     else:
         base_template_path = None
             
-    # Ekstraksi dan Analisis
-    meta = extract_pdf_metadata(saved_pdf_path)
-    defects = analyze_defects(meta, custom_api_key=custom_api_key)
-    
-    total_defects = sum(len(items) for items in defects.values())
-    clean_sections = sum(1 for items in defects.values() if len(items) == 0)
-    
-    # Generate Excel Report
-    excel_filename = f"Evaluasi_{meta['region'].replace(' ', '_')}_{meta['year']}_{task_id}.xlsx"
-    excel_path = os.path.join(OUTPUT_DIR, excel_filename)
-    generate_excel_report(meta, defects, excel_path, base_template_path=base_template_path)
-    
-    # Generate Executive PDF Report
-    pdf_filename = f"Laporan_Evaluasi_{meta['region'].replace(' ', '_')}_{meta['year']}_{task_id}.pdf"
-    pdf_path = os.path.join(OUTPUT_DIR, pdf_filename)
-    generate_pdf_report(meta, defects, pdf_path)
+    # Ekstraksi dan Analisis dengan perlindungan crash
+    try:
+        meta = extract_pdf_metadata(saved_pdf_path)
+        defects = analyze_defects(meta, custom_api_key=custom_api_key)
+        
+        total_defects = sum(len(items) for items in defects.values())
+        clean_sections = sum(1 for items in defects.values() if len(items) == 0)
+        
+        # Generate Excel Report
+        excel_filename = f"Evaluasi_{meta['region'].replace(' ', '_')}_{meta['year']}_{task_id}.xlsx"
+        excel_path = os.path.join(OUTPUT_DIR, excel_filename)
+        generate_excel_report(meta, defects, excel_path, base_template_path=base_template_path)
+        
+        # Generate Executive PDF Report
+        pdf_filename = f"Laporan_Evaluasi_{meta['region'].replace(' ', '_')}_{meta['year']}_{task_id}.pdf"
+        pdf_path = os.path.join(OUTPUT_DIR, pdf_filename)
+        generate_pdf_report(meta, defects, pdf_path)
+    except Exception as e:
+        if os.path.exists(saved_pdf_path):
+            try:
+                os.remove(saved_pdf_path)
+            except Exception:
+                pass
+        err_str = str(e)
+        if any(term in err_str.lower() for term in ["fitz", "filedataerror", "cannot open", "password", "corrupt", "damaged"]):
+            raise HTTPException(status_code=400, detail="File PDF rusak, terenkripsi kata sandi, atau format tidak dapat dibaca oleh engine analisis.")
+        raise HTTPException(status_code=500, detail=f"Gagal memproses evaluasi publikasi: {err_str}")
     
     return {
         "success": True,
@@ -210,7 +278,7 @@ async def analyze_upload(
     }
 
 @app.post("/api/analyze-batch-bangkep")
-async def analyze_batch_bangkep(custom_api_key: Optional[str] = Form(None)):
+def analyze_batch_bangkep(custom_api_key: Optional[str] = Form(None)):
     sample_files = []
     if os.path.exists(SAMPLE_DIR):
         for f in sorted(os.listdir(SAMPLE_DIR)):
@@ -228,7 +296,7 @@ async def analyze_batch_bangkep(custom_api_key: Optional[str] = Form(None)):
     total_clean_districts = 0
     total_mismatch_districts = 0
 
-    for pdf_path in sample_files:
+    for item_idx, pdf_path in enumerate(sample_files):
         meta = extract_pdf_metadata(pdf_path)
         defects = analyze_defects(meta, custom_api_key=custom_api_key)
         tot_d = sum(len(items) for items in defects.values())
@@ -241,12 +309,13 @@ async def analyze_batch_bangkep(custom_api_key: Optional[str] = Form(None)):
             total_clean_districts += 1
         total_aggregate_defects += tot_d
 
-        pdf_fn = f"Laporan_Evaluasi_{meta['region'].replace(' ', '_')}_{meta['year']}_{task_id}.pdf"
+        safe_reg = meta['region'].replace(' ', '_').replace('/', '_')
+        pdf_fn = f"Laporan_Evaluasi_{safe_reg}_{meta['year']}_{task_id}_{item_idx+1}.pdf"
         pdf_out_path = os.path.join(OUTPUT_DIR, pdf_fn)
         generate_pdf_report(meta, defects, pdf_out_path)
         zip_items.append((pdf_out_path, pdf_fn))
 
-        excel_fn = f"Evaluasi_{meta['region'].replace(' ', '_')}_{meta['year']}_{task_id}.xlsx"
+        excel_fn = f"Evaluasi_{safe_reg}_{meta['year']}_{task_id}_{item_idx+1}.xlsx"
         excel_out_path = os.path.join(OUTPUT_DIR, excel_fn)
         generate_excel_report(meta, defects, excel_out_path, base_template_path=None)
 
@@ -304,7 +373,7 @@ async def analyze_batch_bangkep(custom_api_key: Optional[str] = Form(None)):
     }
 
 @app.post("/api/analyze-batch-upload")
-async def analyze_batch_upload(
+def analyze_batch_upload(
     pdf_files: List[UploadFile] = File(...),
     custom_api_key: Optional[str] = Form(None)
 ):
@@ -320,32 +389,45 @@ async def analyze_batch_upload(
     total_mismatch_districts = 0
 
     import zipfile
-    pdf_paths_to_process = []
+    pdf_items_to_process = []
     for file_obj in pdf_files:
-        fname = file_obj.filename.lower()
-        if fname.endswith(".zip"):
-            zip_saved_path = os.path.join(UPLOAD_DIR, f"zip_{task_id}_{file_obj.filename}")
+        safe_orig_name = os.path.basename(file_obj.filename)
+        fname_lower = safe_orig_name.lower()
+        if fname_lower.endswith(".zip"):
+            zip_saved_path = os.path.join(UPLOAD_DIR, f"zip_{task_id}_{safe_orig_name}")
             with open(zip_saved_path, "wb") as f:
                 shutil.copyfileobj(file_obj.file, f)
             try:
                 with zipfile.ZipFile(zip_saved_path, 'r') as zf:
                     for member in zf.namelist():
-                        if member.lower().endswith(".pdf") and not member.startswith("__MACOSX") and not os.path.basename(member).startswith("."):
-                            extracted_name = f"batch_{task_id}_{os.path.basename(member)}"
+                        member_base = os.path.basename(member)
+                        if member_base.lower().endswith(".pdf") and not member.startswith("__MACOSX") and not member_base.startswith("."):
+                            extracted_name = f"batch_{task_id}_{member_base}"
                             extracted_path = os.path.join(UPLOAD_DIR, extracted_name)
                             with open(extracted_path, "wb") as out_f, zf.open(member) as in_f:
                                 shutil.copyfileobj(in_f, out_f)
-                            pdf_paths_to_process.append(extracted_path)
+                            pdf_items_to_process.append({
+                                "path": extracted_path,
+                                "saved_name": extracted_name,
+                                "display_name": member_base
+                            })
             except Exception as e:
-                print(f"[ZIP Upload] Error extracting zip {file_obj.filename}: {e}")
-        elif fname.endswith(".pdf"):
-            saved_name = f"batch_{task_id}_{file_obj.filename}"
+                print(f"[ZIP Upload] Error extracting zip {safe_orig_name}: {e}")
+        elif fname_lower.endswith(".pdf"):
+            saved_name = f"batch_{task_id}_{safe_orig_name}"
             saved_path = os.path.join(UPLOAD_DIR, saved_name)
             with open(saved_path, "wb") as f:
                 shutil.copyfileobj(file_obj.file, f)
-            pdf_paths_to_process.append(saved_path)
+            pdf_items_to_process.append({
+                "path": saved_path,
+                "saved_name": saved_name,
+                "display_name": safe_orig_name
+            })
 
-    for saved_path in pdf_paths_to_process:
+    for item_idx, item in enumerate(pdf_items_to_process):
+        saved_path = item["path"]
+        saved_name = item["saved_name"]
+        display_name = item["display_name"]
 
         meta = extract_pdf_metadata(saved_path)
         defects = analyze_defects(meta, custom_api_key=custom_api_key)
@@ -359,12 +441,13 @@ async def analyze_batch_upload(
             total_clean_districts += 1
         total_aggregate_defects += tot_d
 
-        pdf_fn = f"Laporan_Evaluasi_{meta['region'].replace(' ', '_')}_{meta['year']}_{task_id}.pdf"
+        safe_reg = meta['region'].replace(' ', '_').replace('/', '_')
+        pdf_fn = f"Laporan_Evaluasi_{safe_reg}_{meta['year']}_{task_id}_{item_idx+1}.pdf"
         pdf_out_path = os.path.join(OUTPUT_DIR, pdf_fn)
         generate_pdf_report(meta, defects, pdf_out_path)
         zip_items.append((pdf_out_path, pdf_fn))
 
-        excel_fn = f"Evaluasi_{meta['region'].replace(' ', '_')}_{meta['year']}_{task_id}.xlsx"
+        excel_fn = f"Evaluasi_{safe_reg}_{meta['year']}_{task_id}_{item_idx+1}.xlsx"
         excel_out_path = os.path.join(OUTPUT_DIR, excel_fn)
         generate_excel_report(meta, defects, excel_out_path, base_template_path=None)
 
@@ -424,40 +507,39 @@ async def analyze_batch_upload(
     }
 
 @app.get("/api/download/{filename}")
-async def download_file(filename: str):
-    file_path = os.path.join(OUTPUT_DIR, filename)
-    if not os.path.exists(file_path):
+def download_file(filename: str):
+    safe_fn = os.path.basename(filename)
+    file_path = os.path.realpath(os.path.join(OUTPUT_DIR, safe_fn))
+    output_dir_real = os.path.realpath(OUTPUT_DIR)
+    
+    if not file_path.startswith(output_dir_real) or not os.path.exists(file_path) or not os.path.isfile(file_path):
         raise HTTPException(status_code=404, detail="File unduhan tidak ditemukan.")
     
-    if filename.lower().endswith(".zip"):
+    if safe_fn.lower().endswith(".zip"):
         media_type = "application/zip"
-    elif filename.lower().endswith(".pdf"):
+    elif safe_fn.lower().endswith(".pdf"):
         media_type = "application/pdf"
     else:
         media_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
     return FileResponse(
         path=file_path,
-        filename=filename,
+        filename=safe_fn,
         media_type=media_type
     )
 
 @app.get("/api/view-pdf/{filename}")
-async def view_pdf(filename: str):
+def view_pdf(filename: str):
     clean_fn = os.path.basename(filename)
-    candidate_paths = [
-        os.path.join(UPLOAD_DIR, clean_fn),
-        os.path.join(SAMPLE_DIR, clean_fn),
-        os.path.join(OUTPUT_DIR, clean_fn),
-        os.path.join(BASE_DIR, clean_fn)
-    ]
+    allowed_dirs = [os.path.realpath(d) for d in [UPLOAD_DIR, SAMPLE_DIR, OUTPUT_DIR, BASE_DIR] if os.path.exists(d)]
     target_path = None
-    for cp in candidate_paths:
-        if os.path.exists(cp):
-            target_path = cp
+    for ad in allowed_dirs:
+        cand = os.path.realpath(os.path.join(ad, clean_fn))
+        if cand.startswith(ad) and os.path.exists(cand) and os.path.isfile(cand):
+            target_path = cand
             break
             
-    if not target_path:
+    if not target_path or not target_path.lower().endswith(".pdf"):
         raise HTTPException(status_code=404, detail="Berkas PDF tidak ditemukan.")
         
     return FileResponse(
@@ -473,3 +555,4 @@ if __name__ == "__main__":
     import uvicorn
     print(f"Starting BPS KcDA Review Web App on http://0.0.0.0:8000...")
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
