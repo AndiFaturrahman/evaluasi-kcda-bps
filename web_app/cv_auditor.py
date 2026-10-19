@@ -286,20 +286,22 @@ class CVPublicationAuditor:
         # 2. Spectrum Check (Kesesuaian Warna Baku BPS)
         hues = hsv[:, :, 0][color_mask]
         if len(hues) > 50:
-            blue_px = np.sum((hues >= 95) & (hues <= 135))
-            green_px = np.sum((hues >= 35) & (hues <= 85))
-            orange_px = np.sum((hues >= 5) & (hues <= 25))
-            bps_std_px = blue_px + green_px + orange_px
+            # Gunakan rentang spektrum toleran agar kompatibel dengan konversi CMYK-RGB dan latar foto kover
+            blue_px = np.sum((hues >= 90) & (hues <= 140))
+            green_px = np.sum((hues >= 25) & (hues <= 90))
+            orange_px = np.sum((hues <= 30) | (hues >= 170))
+            bps_std_px = min(len(hues), int(blue_px + green_px + orange_px))
             fidelity = float(bps_std_px / len(hues))
             info["color_fidelity"] = round(fidelity, 4)
             
-            if fidelity < 0.70:
+            # Hanya beri peringatan jika warna logo menyimpang ekstrem (misal diubah ke ungu/pink/magenta pekat)
+            if fidelity < 0.35:
                 info["has_color_distortion"] = True
                 info["logo_is_ori"] = False
                 info["defects"].append(
-                    f'Penyimpangan warna logo BPS pada {location_name}: Spektrum warna logo tidak sesuai standar palet baku BPS '
-                    f'(Biru BPS #023F88, Hijau BPS #74B72E, Oranye BPS #FFA200). '
-                    f'Wajib menggunakan file logo aset resmi (ORI) tanpa penyesuaian filter warna (hue shift).'
+                    f'Penyimpangan warna logo BPS pada {location_name}: Spektrum warna logo tidak memuat palet standar BPS '
+                    f'(Biru BPS, Hijau BPS, Oranye BPS). '
+                    f'Wajib menggunakan file logo aset resmi (ORI).'
                 )
 
         # 3. Deteksi Garis Tepi Tambahan (Stroke / Outline)
@@ -486,16 +488,8 @@ class CVPublicationAuditor:
                 f'(Pedoman 2023 hal. 58 & Instrumen baris 8), terjemahan judul bahasa asing wajib dicetak miring (italic).'
             )
 
-        # D. Deteksi Residu Huruf Template 'A'
-        cover_txt = page.get_text("text")
-        if "A\n" in cover_txt[:30] or "\nA\n" in cover_txt[:50]:
-            info["has_template_letter_a"] = True
-            info["defects"].append(
-                'Terdapat residu teks template tersembunyi (huruf "A") di pojok kanan bawah kover depan: '
-                'Huruf "A" (kode varian Template A master BPS) masih tertanam di text layer PDF bersama teks "XXXXX Dalam Angka 2024". '
-                'Meskipun secara visual tercetak putih/tertutup latar, kotak teks sisa template ini wajib dihapus dari desain asli.'
-            )
-
+        # D. Residu format master tidak kasat mata (tersembunyi) diabaikan
+        info["has_template_letter_a"] = False
         return info
 
     # ─────────────────────────────────────────────────────────────────────────
@@ -558,7 +552,19 @@ class CVPublicationAuditor:
         non_white_ratio = float(np.sum(non_white_mask) / non_white_mask.size)
         info["background_non_white_ratio"] = round(non_white_ratio, 4)
 
-        if non_white_ratio > 0.15:
+        # Cek apakah ada raster image besar (foto pemandangan/kover) pada HJU
+        has_large_raster = False
+        try:
+            for img_info in page.get_images():
+                base_img = page.parent.extract_image(img_info[0])
+                if base_img and (base_img.get("width", 0) > 350 and base_img.get("height", 0) > 350):
+                    has_large_raster = True
+                    break
+        except Exception:
+            pass
+
+        # Foto alam duplikasi kover depan memiliki non_white_ratio > 45% atau menyertakan raster foto besar
+        if has_large_raster or non_white_ratio > 0.45:
             info["has_illustration_background"] = True
             info["defects"].append(
                 'Pelanggaran format latar belakang Halaman Judul Utama: Memuat gambar/foto pemandangan alam (duplikasi visual kover depan). '
@@ -808,31 +814,61 @@ class CVPublicationAuditor:
         h, w, _ = img.shape
 
         # A. Inspeksi Barcode pada Paruh Bawah Kover Belakang
-        bc_crop = img[int(h * 0.50):int(h * 0.95), 0:int(w * 0.60)]
-        gray_bc = cv2.cvtColor(bc_crop, cv2.COLOR_BGR2GRAY)
-        _, thresh_bc = cv2.threshold(gray_bc, 100, 255, cv2.THRESH_BINARY_INV)
+        # Barcode hanya dicek jika ada pola barcode riil (garis vertikal hitam-putih rapat kontras tinggi pada latar terang)
+        has_real_barcode = False
+        barcode_box = None
+        bc_area = img[int(h * 0.55):int(h * 0.98), :]
 
-        v_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (1, 15))
-        vert = cv2.morphologyEx(thresh_bc, cv2.MORPH_OPEN, v_kernel)
-        h_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (20, 1))
-        bars_connected = cv2.morphologyEx(vert, cv2.MORPH_CLOSE, h_kernel)
+        try:
+            b_det = cv2.barcode.BarcodeDetector()
+            b_ret, b_points = b_det.detect(bc_area)
+            if b_ret and b_points is not None:
+                has_real_barcode = True
+        except Exception:
+            pass
 
-        cnts, _ = cv2.findContours(bars_connected, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        barcode_boxes = [cv2.boundingRect(c) for c in cnts if cv2.boundingRect(c)[2] > 60 and cv2.boundingRect(c)[3] > 30]
+        thresh_bc = None
+        if not has_real_barcode:
+            gray_bc = cv2.cvtColor(bc_area, cv2.COLOR_BGR2GRAY)
+            # Barcode BPS berada di atas latar putih/terang dengan garis hitam pekat
+            _, thresh_bc = cv2.threshold(gray_bc, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+            v_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (1, 15))
+            vert = cv2.morphologyEx(thresh_bc, cv2.MORPH_OPEN, v_kernel)
+            h_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (12, 1))
+            bars_connected = cv2.morphologyEx(vert, cv2.MORPH_CLOSE, h_kernel)
 
-        if barcode_boxes:
+            cnts, _ = cv2.findContours(bars_connected, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            for c in cnts:
+                bx, by, bw, bh = cv2.boundingRect(c)
+                # Ukuran proporsional barcode di kover: lebar 70-260 px, tinggi 30-110 px, AR 1.2-3.8
+                if 70 <= bw <= min(260, int(w * 0.35)) and 30 <= bh <= min(110, int(h * 0.15)):
+                    ar = bw / float(bh)
+                    if 1.2 <= ar <= 3.8:
+                        # Wajib berada di atas latar terang (rata-rata intensitas abu-abu > 140)
+                        region_gray = gray_bc[by:by+bh, bx:bx+bw]
+                        if np.mean(region_gray) > 140:
+                            # Hitung kerapatan garis batang vertikal (minimal 25 transisi hitam-putih)
+                            mid_line = thresh_bc[by + bh // 2, bx:bx+bw]
+                            transitions = np.sum(np.abs(np.diff(mid_line > 128)))
+                            if transitions >= 25:
+                                has_real_barcode = True
+                                barcode_box = (bx, by, bw, bh)
+                                break
+
+        if has_real_barcode:
             info["has_barcode"] = True
-            bx, by, bw, bh = barcode_boxes[0]
-            sub_y = by + bh
-            digits_area = thresh_bc[sub_y:min(sub_y + 30, thresh_bc.shape[0]), bx:bx + bw]
-            d_cnts, _ = cv2.findContours(digits_area, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            digit_boxes = [cv2.boundingRect(c) for c in d_cnts if 5 < cv2.boundingRect(c)[3] < 25 and 2 < cv2.boundingRect(c)[2] < 25]
-            if len(digit_boxes) < 4:
-                info["has_barcode_digits"] = False
-                info["defects"].append(
-                    'Peringatan Barcode ISSN pada kover belakang: Garis barcode terdeteksi, namun deretan angka seri (human-readable) '
-                    'di bawah barcode tidak terbaca jelas atau tidak dicantumkan. Pastikan deretan angka ISSN tertera jelas di bawah garis barcode.'
-                )
+            if barcode_box and thresh_bc is not None:
+                bx, by, bw, bh = barcode_box
+                sub_y = by + bh
+                digits_area = thresh_bc[sub_y:min(sub_y + 35, thresh_bc.shape[0]), max(0, bx - 10):min(thresh_bc.shape[1], bx + bw + 10)]
+                d_cnts, _ = cv2.findContours(digits_area, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                digit_boxes = [cv2.boundingRect(c) for c in d_cnts if 5 < cv2.boundingRect(c)[3] < 25 and 2 < cv2.boundingRect(c)[2] < 25]
+                if len(digit_boxes) < 4:
+                    info["has_barcode_digits"] = False
+                    info["defects"].append(
+                        'Peringatan Barcode ISSN pada kover belakang: Garis barcode terdeteksi, namun deretan angka seri (human-readable) '
+                        'di bawah barcode tidak terbaca jelas atau tidak dicantumkan. Pastikan deretan angka ISSN tertera jelas di bawah garis barcode.'
+                    )
 
         # B. Inspeksi Cluster Logo Pojok Kanan Atas
         tr_crop = img[0:int(h * 0.25), int(w * 0.50):w]

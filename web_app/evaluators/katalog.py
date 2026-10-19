@@ -55,6 +55,12 @@ def evaluate_katalog(meta, kabupaten_str, kab_upper, kab_raw, level_id, level_en
                 'Nomor ISSN pada Halaman Katalog belum dicantumkan atau masih berupa tanda titik-titik ("...") / placeholder. '
                 'Wajib dicantumkan nomor ISSN resmi publikasi.'
             )
+        elif not meta.get("catalog_has_issn_line", True) and (meta.get("is_serial") or (issn and issn != "-") or meta.get("catalog", "").startswith("1102001")):
+            halaman_katalog.append(
+                'Baris nomor ISSN tidak dicantumkan pada Halaman Katalog: '
+                'Sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.2 (hal. 37), Template KCDA 2026, dan Instrumen baris 26, '
+                'publikasi berkala (Kecamatan Dalam Angka) wajib mencantumkan baris "ISSN: [Nomor ISSN]" di bawah baris nomor katalog dan di atas baris nomor publikasi.'
+            )
         if meta.get("catalog_pages_placeholder"):
             halaman_katalog.append(
                 'Jumlah halaman pada baris "Jumlah Halaman/Number of Pages" masih berupa draf titik-titik ("...+... halaman/pages"). '
@@ -85,11 +91,7 @@ def evaluate_katalog(meta, kabupaten_str, kab_upper, kab_raw, level_id, level_en
                 'Kesalahan tanda baca pada baris Jumlah Halaman: Terdapat spasi sebelum tanda garis miring pada teks satuan "halaman /pages". '
                 'Sesuai kaidah dwibahasa BPS, penulisan satuan baku ditulis rapat tanpa spasi sebelum dan sesudah garis miring ("halaman/pages").'
             )
-        if meta.get("space_before_colon_pages"):
-            halaman_katalog.append(
-                'Kesalahan tanda baca pada baris Jumlah Halaman: Terdapat spasi sebelum tanda titik dua pada label "Jumlah Halaman/Number of Pages :". '
-                'Penulisan baku ditulis rapat tanpa spasi sebelum titik dua ("Jumlah Halaman/Number of Pages:").'
-            )
+        # Pengecekan spasi sebelum titik dua pada Jumlah Halaman ditiadakan karena kerning font miring (italic)
         if not meta.get("catalog_issn_format_ok", True):
             halaman_katalog.append(
                 f'Penulisan label ISSN salah: tertulis tanpa titik dua atau "ISSN/ISSN: {issn}". '

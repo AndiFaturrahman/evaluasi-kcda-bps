@@ -270,11 +270,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const isArchiveFile = fn => /\.(zip|rar|7z)$/i.test(fn || '');
+
     function handlePdfsSelected(fileList, isAppend = false) {
         if (!fileList || fileList.length === 0) return;
-        const validFiles = Array.from(fileList).filter(f => f.name && (f.name.toLowerCase().endsWith('.pdf') || f.name.toLowerCase().endsWith('.zip')));
+        const validFiles = Array.from(fileList).filter(f => f.name && (f.name.toLowerCase().endsWith('.pdf') || isArchiveFile(f.name)));
         if (validFiles.length === 0) {
-            showToast('Format berkas harus PDF publikasi BPS (.pdf) atau arsip (.zip)!', 'warning', 4000);
+            showToast('Format berkas harus PDF publikasi BPS (.pdf) atau arsip (.zip, .rar, .7z)!', 'warning', 4000);
             return;
         }
 
@@ -291,12 +293,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 showToast('Berkas PDF tersebut sudah ada di antrean.', 'info', 2500);
                 return;
             }
-            showToast(`✓ Ditambahkan ${addedCount} berkas PDF baru ke antrean!`, 'success', 3000);
+            showToast(`✓ Ditambahkan ${addedCount} berkas baru ke antrean!`, 'success', 3000);
         } else {
             selectedPdfFiles = validFiles;
-            const hasZip = validFiles.some(f => f.name.toLowerCase().endsWith('.zip'));
-            if (hasZip) {
-                showToast(`✓ Arsip ZIP dipilih. Sistem akan mengekstrak seluruh PDF di dalamnya!`, 'success', 3500);
+            const hasArchive = validFiles.some(f => isArchiveFile(f.name));
+            if (hasArchive) {
+                showToast(`✓ Berkas arsip dipilih. Sistem akan mengekstrak seluruh PDF di dalamnya!`, 'success', 3500);
             } else {
                 showToast(`✓ ${validFiles.length} berkas PDF dipilih. Klik "Mulai Audit" sekarang!`, 'success', 3500);
             }
@@ -324,25 +326,26 @@ document.addEventListener('DOMContentLoaded', () => {
         const totalBytes = selectedPdfFiles.reduce((acc, f) => acc + f.size, 0);
         const totalMb = (totalBytes / (1024 * 1024)).toFixed(2);
 
-        const hasZip = selectedPdfFiles.some(f => f.name.toLowerCase().endsWith('.zip'));
+        const hasArchive = selectedPdfFiles.some(f => isArchiveFile(f.name));
 
         if (count === 1) {
             const single = selectedPdfFiles[0];
-            const isSingleZip = single.name.toLowerCase().endsWith('.zip');
-            if (fileChosenMainIcon) fileChosenMainIcon.textContent = isSingleZip ? '📦' : '📄';
+            const isSingleArchive = isArchiveFile(single.name);
+            const extName = (single.name.split('.').pop() || 'Arsip').toUpperCase();
+            if (fileChosenMainIcon) fileChosenMainIcon.textContent = isSingleArchive ? '📦' : '📄';
             if (chosenFileName) chosenFileName.textContent = single.name;
-            if (chosenFileSize) chosenFileSize.textContent = isSingleZip 
-                ? `${totalMb} MB • Arsip ZIP (Otomatis Ekstrak Seluruh PDF Kecamatan)` 
+            if (chosenFileSize) chosenFileSize.textContent = isSingleArchive 
+                ? `${totalMb} MB • Arsip ${extName} (Otomatis Ekstrak Seluruh PDF Kecamatan)` 
                 : `${totalMb} MB • Berkas Tunggal Siap Diperiksa`;
             if (btnAnalyze) {
-                btnAnalyze.innerHTML = isSingleZip 
-                    ? `<span>⚡ Mulai Audit Kolektif (Ekstrak & Periksa Arsip ZIP)</span>`
+                btnAnalyze.innerHTML = isSingleArchive 
+                    ? `<span>⚡ Mulai Audit Kolektif (Ekstrak & Periksa Arsip ${extName})</span>`
                     : `<span>🔍 Mulai Audit Kepatuhan & Ekstraksi Kesalahan</span>`;
                 btnAnalyze.disabled = false;
             }
             if (btnInstantAnalyze) {
-                btnInstantAnalyze.innerHTML = isSingleZip 
-                    ? `<span>⚡ Mulai Audit Arsip ZIP</span>`
+                btnInstantAnalyze.innerHTML = isSingleArchive 
+                    ? `<span>⚡ Mulai Audit Arsip ${extName}</span>`
                     : `<span>🚀 Mulai Audit Sekarang</span>`;
             }
             if (chosenFilesList) {
@@ -350,11 +353,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 chosenFilesList.innerHTML = '';
             }
         } else {
-            if (fileChosenMainIcon) fileChosenMainIcon.textContent = hasZip ? '📦' : '📚';
+            if (fileChosenMainIcon) fileChosenMainIcon.textContent = hasArchive ? '📦' : '📚';
             if (chosenFileName) chosenFileName.textContent = `${count} Berkas Terpilih (Kolektif)`;
             if (chosenFileSize) chosenFileSize.textContent = `Total ${totalMb} MB • Mode Audit Kolektif Multi-Kecamatan`;
             if (btnAnalyze) {
-                btnAnalyze.innerHTML = `<span>⚡ Mulai Audit Kolektif (${count} Berkas PDF / ZIP)</span>`;
+                btnAnalyze.innerHTML = `<span>⚡ Mulai Audit Kolektif (${count} Berkas PDF / Arsip)</span>`;
                 btnAnalyze.disabled = false;
             }
             if (btnInstantAnalyze) {
@@ -485,8 +488,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const isZipUpload = selectedPdfFiles.some(f => f.name.toLowerCase().endsWith('.zip'));
-            if (selectedPdfFiles.length > 1 || isZipUpload) {
+            const isArchiveUpload = selectedPdfFiles.some(f => isArchiveFile(f.name));
+            if (selectedPdfFiles.length > 1 || isArchiveUpload) {
                 // Batch Upload Mode
                 const totalBytes = selectedPdfFiles.reduce((sum, f) => sum + f.size, 0);
                 const totalMB = (totalBytes / (1024 * 1024)).toFixed(1);
@@ -505,8 +508,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     formData.append('custom_api_key', apiKeyInput.value.trim());
                 }
 
-                const progressTitle = isZipUpload 
-                    ? `Sedang Mengekstrak Arsip ZIP & Audit Kolektif Publikasi...`
+                const progressTitle = isArchiveUpload 
+                    ? `Sedang Mengekstrak Arsip & Audit Kolektif Publikasi...`
                     : `Sedang Melakukan Audit Kolektif ${selectedPdfFiles.length} Berkas PDF...`;
                 startProgress(
                     progressTitle,
@@ -647,7 +650,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (statClean) statClean.textContent = batchData.clean_districts || 0;
         if (statMismatch) {
             statMismatch.textContent = batchData.mismatch_districts || 0;
-            statMismatch.style.color = (batchData.mismatch_districts > 0) ? '#ef4444' : '#22c55e';
+            statMismatch.style.color = (batchData.mismatch_districts > 0) ? '#dc2626' : '#16a34a';
         }
         if (countBadge) countBadge.textContent = `${batchData.total_districts || 0} Kecamatan`;
 
@@ -680,11 +683,11 @@ document.addEventListener('DOMContentLoaded', () => {
             let statusPill = '';
             let cloneCell = '';
             if (rawTpl.is_pure_template) {
-                statusPill = `<span class="badge-pill-status status-fatal" style="background:#dc2626;color:#fff;">DITOLAK TOTAL</span>`;
-                cloneCell = `<span class="badge-mismatch" style="background:rgba(220,38,38,0.15);color:#ef4444;border:1px solid #ef4444;">🛑 100% Template Mentah (${rawTpl.markers_count || 0} Residu)</span>`;
+                statusPill = `<span class="badge-pill-status status-fatal">DITOLAK TOTAL</span>`;
+                cloneCell = `<span class="badge-mismatch">🛑 100% Template Mentah (${rawTpl.markers_count || 0} Residu)</span>`;
             } else if (rawTpl.is_raw_template) {
-                statusPill = `<span class="badge-pill-status status-fatal" style="background:#b91c1c;color:#fff;">DRAF BELUM TUNTAS</span>`;
-                cloneCell = `<span class="badge-mismatch" style="background:rgba(234,88,12,0.15);color:#f97316;border:1px solid #f97316;">⚠️ Draf Residu Template (${rawTpl.markers_count || 0} Residu)</span>`;
+                statusPill = `<span class="badge-pill-status status-fatal">DRAF BELUM TUNTAS</span>`;
+                cloneCell = `<span class="badge-mismatch">⚠️ Draf Residu Template (${rawTpl.markers_count || 0} Residu)</span>`;
             } else if (isMismatch) {
                 statusPill = `<span class="badge-pill-status status-fatal">REVISI TOTAL</span>`;
                 const domInner = mismatchInfo.dominant_inner_district || 'Beda Wilayah';
@@ -802,7 +805,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (auditBadgeTitle) auditBadgeTitle.textContent = 'DITOLAK TOTAL (TEMPLATE MENTAH)';
             if (auditBadgeCount) auditBadgeCount.textContent = totalDefects;
             if (auditBadgeCaption) {
-                auditBadgeCaption.innerHTML = `<span style="color:#ef4444;font-weight:700;">DITOLAK</span>: Hanya Unggah Template Master (${rawTpl.markers_count} Residu)`;
+                auditBadgeCaption.innerHTML = `<span class="badge-text-danger">DITOLAK</span>: Hanya Unggah Template Master (${rawTpl.markers_count} Residu)`;
             }
         } else if (rawTpl.is_raw_template) {
             if (fatalTplBanner) fatalTplBanner.style.display = 'flex';
@@ -819,7 +822,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (auditBadgeTitle) auditBadgeTitle.textContent = 'REVISI TOTAL (RESIDU TEMPLATE)';
             if (auditBadgeCount) auditBadgeCount.textContent = totalDefects;
             if (auditBadgeCaption) {
-                auditBadgeCaption.innerHTML = `<span style="color:#f59e0b;font-weight:700;">BELUM DIKERJAKAN TUNTAS</span>: ${rawTpl.markers_count} Residu Template Master`;
+                auditBadgeCaption.innerHTML = `<span class="badge-text-warning">BELUM DIKERJAKAN TUNTAS</span>: ${rawTpl.markers_count} Residu Template Master`;
             }
         } else if (dMismatch.is_mismatch) {
             if (fatalTplBanner) fatalTplBanner.style.display = 'none';
@@ -837,7 +840,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (auditBadgeTitle) auditBadgeTitle.textContent = 'REVISI TOTAL (FATAL)';
             if (auditBadgeCount) auditBadgeCount.textContent = totalDefects;
             if (auditBadgeCaption) {
-                auditBadgeCaption.innerHTML = `<span style="color:#ef4444;font-weight:700;">SALAH WILAYAH</span>: Terindikasi Hanya Ubah Kover (${totalDefects} Temuan)`;
+                auditBadgeCaption.innerHTML = `<span class="badge-text-danger">SALAH WILAYAH</span>: Terindikasi Hanya Ubah Kover (${totalDefects} Temuan)`;
             }
         } else {
             if (fatalTplBanner) fatalTplBanner.style.display = 'none';

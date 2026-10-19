@@ -6,6 +6,24 @@ import socket
 import shutil
 import re
 import zipfile
+try:
+    import rarfile
+    if not shutil.which("unrar"):
+        for cand in [
+            r"C:\Program Files\WinRAR\UnRAR.exe",
+            r"C:\Program Files (x86)\WinRAR\UnRAR.exe",
+            r"C:\Program Files\WinRAR\WinRAR.exe",
+        ]:
+            if os.path.exists(cand):
+                rarfile.UNRAR_TOOL = cand
+                break
+except ImportError:
+    rarfile = None
+
+try:
+    import py7zr
+except ImportError:
+    py7zr = None
 from typing import Optional, List
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
@@ -452,6 +470,79 @@ def analyze_batch_upload(
                                 })
             except Exception as e:
                 print(f"[ZIP Upload] Error extracting zip {safe_orig_name}: {e}")
+        elif fname_lower.endswith(".rar"):
+            rar_saved_path = os.path.join(UPLOAD_DIR, f"rar_{task_id}_{safe_orig_name}")
+            temp_zip_paths.append(rar_saved_path)
+            with open(rar_saved_path, "wb") as f:
+                shutil.copyfileobj(file_obj.file, f)
+            try:
+                if rarfile is not None:
+                    with rarfile.RarFile(rar_saved_path, 'r') as rf:
+                        for member in rf.infolist():
+                            member_base = os.path.basename(member.filename)
+                            if member_base.lower().endswith(".pdf") and not member.filename.startswith("__MACOSX") and not member_base.startswith("."):
+                                safe_member_base = re.sub(r'[\\/*?:"<>|]', '_', member_base)
+                                item_num = len(pdf_items_to_process) + 1
+                                extracted_name = f"batch_{task_id}_{item_num}_{safe_member_base}"
+                                extracted_path = os.path.join(UPLOAD_DIR, extracted_name)
+                                with open(extracted_path, "wb") as out_f, rf.open(member) as in_f:
+                                    shutil.copyfileobj(in_f, out_f)
+                                if os.path.exists(extracted_path) and os.path.getsize(extracted_path) > 500:
+                                    pdf_items_to_process.append({
+                                        "path": extracted_path,
+                                        "saved_name": extracted_name,
+                                        "display_name": member_base
+                                    })
+                else:
+                    # Fallback menggunakan Windows bsdtar jika rarfile tidak terpasang
+                    import subprocess
+                    tar_bin = shutil.which("tar") or "tar.exe"
+                    tar_extract_dir = os.path.join(UPLOAD_DIR, f"rar_ext_{task_id}")
+                    os.makedirs(tar_extract_dir, exist_ok=True)
+                    subprocess.run([tar_bin, "-xf", rar_saved_path, "-C", tar_extract_dir], capture_output=True)
+                    for root_dir, _, files_in_dir in os.walk(tar_extract_dir):
+                        for f_in in files_in_dir:
+                            if f_in.lower().endswith(".pdf") and not f_in.startswith("."):
+                                safe_member_base = re.sub(r'[\\/*?:"<>|]', '_', f_in)
+                                item_num = len(pdf_items_to_process) + 1
+                                extracted_name = f"batch_{task_id}_{item_num}_{safe_member_base}"
+                                extracted_path = os.path.join(UPLOAD_DIR, extracted_name)
+                                shutil.copy2(os.path.join(root_dir, f_in), extracted_path)
+                                if os.path.exists(extracted_path) and os.path.getsize(extracted_path) > 500:
+                                    pdf_items_to_process.append({
+                                        "path": extracted_path,
+                                        "saved_name": extracted_name,
+                                        "display_name": f_in
+                                    })
+            except Exception as e:
+                print(f"[RAR Upload] Error extracting rar {safe_orig_name}: {e}")
+        elif fname_lower.endswith(".7z"):
+            sz_saved_path = os.path.join(UPLOAD_DIR, f"7z_{task_id}_{safe_orig_name}")
+            temp_zip_paths.append(sz_saved_path)
+            with open(sz_saved_path, "wb") as f:
+                shutil.copyfileobj(file_obj.file, f)
+            try:
+                if py7zr is not None:
+                    sz_ext_dir = os.path.join(UPLOAD_DIR, f"7z_ext_{task_id}")
+                    os.makedirs(sz_ext_dir, exist_ok=True)
+                    with py7zr.SevenZipFile(sz_saved_path, 'r') as szf:
+                        szf.extractall(path=sz_ext_dir)
+                    for root_dir, _, files_in_dir in os.walk(sz_ext_dir):
+                        for f_in in files_in_dir:
+                            if f_in.lower().endswith(".pdf") and not f_in.startswith("."):
+                                safe_member_base = re.sub(r'[\\/*?:"<>|]', '_', f_in)
+                                item_num = len(pdf_items_to_process) + 1
+                                extracted_name = f"batch_{task_id}_{item_num}_{safe_member_base}"
+                                extracted_path = os.path.join(UPLOAD_DIR, extracted_name)
+                                shutil.copy2(os.path.join(root_dir, f_in), extracted_path)
+                                if os.path.exists(extracted_path) and os.path.getsize(extracted_path) > 500:
+                                    pdf_items_to_process.append({
+                                        "path": extracted_path,
+                                        "saved_name": extracted_name,
+                                        "display_name": f_in
+                                    })
+            except Exception as e:
+                print(f"[7Z Upload] Error extracting 7z {safe_orig_name}: {e}")
         elif fname_lower.endswith(".pdf"):
             item_num = len(pdf_items_to_process) + 1
             saved_name = f"batch_{task_id}_{item_num}_{safe_orig_name}"

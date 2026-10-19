@@ -42,10 +42,11 @@ def evaluate_kover_depan(meta, kabupaten_str, kab_upper, kab_raw, level_id, leve
             f'Kesalahan spasi pada nomor katalog: Tertulis "Katalog/Catalogue : {catalog_no}" '
             f'(terdapat spasi sebelum tanda titik dua). Koreksi seharusnya: "Katalog/Catalogue: {catalog_no}".'
         )
+    is_serial_pub = meta.get("is_serial", False) or (issn and issn != "-") or meta.get("catalog", "").startswith("1102001")
     if meta.get("cover_has_colon"):
         target_disp_issn = meta.get("issn_correct_from_registry")
         if not target_disp_issn:
-            if issn != "-" and validate_issn_checksum(issn)[0]:
+            if issn and issn != "-" and validate_issn_checksum(issn)[0]:
                 target_disp_issn = issn
             else:
                 target_disp_issn = "[Nomor ISSN]"
@@ -61,28 +62,23 @@ def evaluate_kover_depan(meta, kabupaten_str, kab_upper, kab_raw, level_id, leve
             f'Sesuai Pedoman Pembuatan Publikasi BPS 2023 hal. 35 & Instrumen baris 13, publikasi berkala yang memiliki ISSN wajib '
             f'mencantumkan tulisan "ISSN {target_disp_issn}" TANPA tanda titik dua di pojok kanan atas kover depan.'
         )
-    elif issn and issn != "-" and not meta.get("cover_has_issn"):
-        target_disp_issn = meta.get("issn_correct_from_registry") or (issn if validate_issn_checksum(issn)[0] else "[Nomor ISSN]")
+    elif is_serial_pub and not meta.get("cover_has_issn"):
+        target_disp_issn = meta.get("issn_correct_from_registry") or (issn if (issn != "-" and validate_issn_checksum(issn)[0]) else "[Nomor ISSN]")
+        if target_disp_issn != "[Nomor ISSN]":
+            target_str = f"resmi ({target_disp_issn})"
+            sample_issn = f"ISSN {target_disp_issn}"
+        else:
+            target_str = "(seperti publikasi berkala Kecamatan Dalam Angka)"
+            sample_issn = "ISSN [Nomor ISSN]"
         kover_depan.append(
-            f'Nomor ISSN tidak dicantumkan pada kover depan: Publikasi berkala yang memiliki ISSN resmi ({target_disp_issn}) '
-            f'wajib mencantumkan tulisan "ISSN {target_disp_issn}" tanpa tanda titik dua di pojok kanan atas kover depan di atas nomor katalog (Pedoman hal. 35 & Instrumen baris 13).'
+            f'Nomor ISSN tidak dicantumkan pada kover depan: Publikasi berkala yang memiliki ISSN {target_str} '
+            f'wajib mencantumkan tulisan "{sample_issn}" tanpa tanda titik dua di pojok kanan atas kover depan di bawah nomor katalog (Pedoman hal. 35 & Instrumen baris 13).'
         )
     if not meta.get("cover_title_is_italic", True):
         kover_depan.append(
             f'Kesalahan tipografi judul bahasa Inggris: Terjemahan judul "{region_up} {level_en_upper} IN FIGURES {year}" '
             f'pada kover depan belum dicetak miring (masih reguler/tegak). Sesuai kaidah publikasi dwibahasa BPS '
             f'(Pedoman 2023 hal. 58 & Instrumen baris 8), terjemahan judul bahasa asing wajib dicetak miring (italic).'
-        )
-    if meta.get("cover_has_template_leak"):
-        kover_depan.append(
-            'Terdapat residu teks placeholder template pada kover depan: Tertulis teks sisa template "XXXXX Dalam Angka 2024" '
-            'di text layer pojok bawah kover depan. Kotak teks sisa template master tersebut wajib dihapus dari dokumen desain asli.'
-        )
-    if meta.get("cover_has_letter_a"):
-        kover_depan.append(
-            'Terdapat residu teks template tersembunyi (huruf "A") di pojok kanan bawah kover depan: '
-            'Huruf "A" (kode varian Template A master BPS) masih tertanam di text layer PDF pada koordinat pojok bawah bersama teks "XXXXX Dalam Angka 2024". '
-            'Meskipun secara visual tercetak putih/tertutup gambar latar, objek teks sisa template ini wajib dihapus dari file desain asli agar tidak terbaca oleh sistem pengindeks repositori publikasi BPS.'
         )
     if meta.get("cover_publisher_not_bilingual"):
         kover_depan.append(

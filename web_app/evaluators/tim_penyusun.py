@@ -46,10 +46,12 @@ def evaluate_tim_penyusun(meta, kabupaten_str, kab_upper, kab_raw, level_id, lev
                 f'Nomor ISSN di pojok kanan atas halaman Tim Penyusun menggunakan titik dua: tertulis "ISSN: {team_issn}". '
                 f'Wajib dicantumkan tanpa titik dua: "ISSN {team_issn}".'
             )
-        elif meta.get("team_issn_missing"):
+        elif meta.get("team_issn_missing") and (meta.get("is_serial") or (issn and issn != "-") or (team_issn and team_issn != "-") or meta.get("catalog", "").startswith("1102001")):
+            disp_team_issn = meta.get("issn_correct_from_registry") or (team_issn if (team_issn != "-" and validate_issn_checksum(team_issn)[0]) else (issn if (issn != "-" and validate_issn_checksum(issn)[0]) else "[Nomor ISSN]"))
+            sample_issn = f"ISSN {disp_team_issn}" if disp_team_issn != "[Nomor ISSN]" else "ISSN [Nomor ISSN]"
             tim_penyusun.append(
                 f'Nomor ISSN tidak dicantumkan di pojok kanan atas halaman Tim Penyusun: '
-                f'Publikasi berkala yang memiliki ISSN wajib mencantumkan "ISSN {team_issn}" di pojok kanan atas tanpa tanda titik dua (Pedoman hal. 35 & Instrumen baris 39).'
+                f'Publikasi berkala yang memiliki ISSN wajib mencantumkan "{sample_issn}" di pojok kanan atas tanpa tanda titik dua (Pedoman hal. 35 & Instrumen baris 39).'
             )
         for item in meta.get("jabatan_errors", []):
             if len(item) == 3:

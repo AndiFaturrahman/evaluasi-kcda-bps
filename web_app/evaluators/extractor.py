@@ -22,6 +22,93 @@ if HAVE_CV2:
     import cv2
     import numpy as np
 
+def verify_label_slash_space(catalog_raw, label_id, label_en):
+    """
+    Memverifikasi apakah terdapat spasi riil sebelum atau sesudah garis miring '/'
+    pada label dwibahasa katalog (misal: 'Jumlah Halaman/Number of Pages').
+    Mencegah false positive akibat kerning antar-font (regular vs italic) yang diinterpretasikan
+    oleh PyMuPDF layout reconstructor sebagai karakter spasi sintetis.
+    
+    Returns:
+        (has_space_before: bool, has_space_after: bool)
+    """
+    if not catalog_raw:
+        return True, True
+
+    all_spans = []
+    for b in catalog_raw.get("blocks", []):
+        for l in b.get("lines", []):
+            for s in l.get("spans", []):
+                all_spans.append(s)
+
+    target_slash = None
+    target_idx = None
+    target_c_idx = None
+
+    for idx, s in enumerate(all_spans):
+        chars = s.get("chars", [])
+        span_text = "".join(c["c"] for c in chars)
+        if "/" in span_text:
+            is_match = False
+            if label_id.lower() in span_text.lower():
+                is_match = True
+            elif idx > 0 and label_id.lower() in "".join(c["c"] for c in all_spans[idx - 1].get("chars", [])).lower():
+                is_match = True
+            elif label_en.lower() in span_text.lower():
+                is_match = True
+            elif idx + 1 < len(all_spans) and label_en.lower() in "".join(c["c"] for c in all_spans[idx + 1].get("chars", [])).lower():
+                is_match = True
+
+            if is_match:
+                for c_idx, c in enumerate(chars):
+                    if c["c"] == "/":
+                        target_slash = c
+                        target_idx = idx
+                        target_c_idx = c_idx
+                        break
+            if target_slash:
+                break
+
+    if not target_slash:
+        return False, False
+
+    s = all_spans[target_idx]
+    chars = s.get("chars", [])
+
+    # 1. Cek spasi sebelum tanda slash '/'
+    has_space_before = False
+    if target_c_idx > 0:
+        prev_c = chars[target_c_idx - 1]
+        has_space_before = prev_c["c"] in (" ", "\t", "\xa0")
+    elif target_idx > 0:
+        prev_s = all_spans[target_idx - 1]
+        prev_chars = prev_s.get("chars", [])
+        if prev_chars:
+            last_c = prev_chars[-1]
+            if last_c["c"] in (" ", "\t", "\xa0"):
+                has_space_before = True
+            else:
+                dx = target_slash["bbox"][0] - last_c["bbox"][2]
+                has_space_before = (dx >= 2.8)
+
+    # 2. Cek spasi sesudah tanda slash '/'
+    has_space_after = False
+    if target_c_idx + 1 < len(chars):
+        next_c = chars[target_c_idx + 1]
+        has_space_after = next_c["c"] in (" ", "\t", "\xa0")
+    elif target_idx + 1 < len(all_spans):
+        next_s = all_spans[target_idx + 1]
+        next_chars = next_s.get("chars", [])
+        if next_chars:
+            first_c = next_chars[0]
+            if first_c["c"] in (" ", "\t", "\xa0"):
+                has_space_after = True
+            else:
+                dx = first_c["bbox"][0] - target_slash["bbox"][2]
+                has_space_after = (dx >= 2.8)
+
+    return has_space_before, has_space_after
+
 def extract_pdf_metadata(pdf_path):
     doc = fitz.open(pdf_path)
     num_pages = len(doc)
@@ -161,8 +248,9 @@ def extract_pdf_metadata(pdf_path):
     cover_issn_text = m_cov_col.group(0).strip() if m_cov_col else None
     cover_has_colon = bool(m_cov_col)
     cover_has_issn = bool(re.search(r'ISSN', cover_text, re.IGNORECASE))
-    cover_has_template_leak = bool(re.search(r'XXXXX\s+Dalam\s+Angka', cover_text, re.I)) or "Dalam Angka 2024" in cover_text
-    cover_has_letter_a = bool(re.search(r'(?:^|\n)\s*A\s*(?:\n|$)', cover_text)) or (bool(re.search(r'\bA\b', cover_text[-50:])) if len(cover_text) > 50 else False)
+    # Residu format master tidak kasat mata (tersembunyi di balik kover) diabaikan
+    cover_has_template_leak = False
+    cover_has_letter_a = False
 
     # Deteksi kebocoran placeholder / draft template pada Kover Depan
     cover_issn_placeholder = bool(re.search(r'XXXX\s*-\s*XXXX|ISSN\s+XXXX', cover_text, re.I)) or (cover_has_issn and not bool(re.search(r'ISSN\s*[:/]?\s*\d{4}[-\u2013]\d{3}[\dX]', cover_text, re.I)))
@@ -210,6 +298,19 @@ def extract_pdf_metadata(pdf_path):
     p3_has_image = False
     p3_logo_monochrome = False
     if actual_hju_p >= 0 and actual_hju_p < num_pages:
+        # 1. Cek apakah ada raster image besar (foto pemandangan/kover depan) pada HJU
+        has_large_raster = False
+        try:
+            for img_info in doc[actual_hju_p].get_images():
+                base_img = doc.extract_image(img_info[0])
+                if base_img and (base_img.get("width", 0) > 350 and base_img.get("height", 0) > 350):
+                    has_large_raster = True
+                    break
+        except Exception:
+            pass
+
+        # 2. Cek rasio keputihan latar belakang (foto pemandangan kover depan memiliki non_white_ratio > 45%)
+        has_dense_bg = False
         try:
             pix = doc[actual_hju_p].get_pixmap(dpi=100)
             img = cv2.imdecode(np.frombuffer(pix.tobytes("png"), np.uint8), cv2.IMREAD_COLOR)
@@ -218,10 +319,14 @@ def extract_pdf_metadata(pdf_path):
                 center = img[int(h * 0.35):int(h * 0.65), int(w * 0.20):int(w * 0.80)]
                 center_hsv = cv2.cvtColor(center, cv2.COLOR_BGR2HSV)
                 non_white_mask = ~((center_hsv[:, :, 1] < 20) & (center_hsv[:, :, 2] > 235))
-                if (np.sum(non_white_mask) / non_white_mask.size) > 0.15:
-                    p3_has_image = True
+                non_white_ratio = float(np.sum(non_white_mask) / non_white_mask.size)
+                if non_white_ratio > 0.45:
+                    has_dense_bg = True
         except Exception:
             pass
+
+        if has_large_raster or has_dense_bg:
+            p3_has_image = True
     p3_text_full = pages_text.get(actual_hju_p, "") if (actual_hju_p >= 0 and actual_hju_p < num_pages) else ""
     p3_has_issn = bool(re.search(r'ISSN', p3_text_full, re.IGNORECASE))
     m_p3_col = re.search(r'ISSN\s*:\s*\d{4}[-\u2013]\d{3}[\dX]|ISSN\s*:\s*\d{4}', p3_text_full)
@@ -258,15 +363,57 @@ def extract_pdf_metadata(pdf_path):
                     hju_catalog_pos_wrong = "kiri"
                     break
 
-    p3_lines = pages_lines.get(actual_hju_p, []) if (actual_hju_p >= 0 and actual_hju_p < num_pages) else []
-    # Abaikan watermark web portal BPS (bps.go.id), hanya deteksi running title riil
-    p3_content_lines = [l for l in p3_lines if "bps.go.id" not in l.lower()]
-    p3_has_rt = any("DALAM ANGKA" in l.upper() or "IN FIGURES" in l.upper() or (l.isdigit() and int(l) > 10) for l in p3_content_lines[:2])
+    # Deteksi running title atau nomor halaman fisik pada HJU (hanya pada header y <= 8% atau footer y >= 93%)
+    p3_has_rt = False
+    if actual_hju_p >= 0 and actual_hju_p < num_pages:
+        hju_page = doc[actual_hju_p]
+        pw_hju = hju_page.rect.width
+        ph_hju = hju_page.rect.height
+        for b in hju_page.get_text("blocks"):
+            x0, y0, x1, y1, text, block_no, block_type = b
+            txt_clean = text.strip()
+            if not txt_clean or "bps.go.id" in txt_clean.lower():
+                continue
+            # Abaikan klaster nomor katalog & ISSN di pojok kanan atas
+            if y0 < ph_hju * 0.25 and x0 > pw_hju * 0.40:
+                continue
+            # Running title pada header atas di luar klaster katalog
+            if y1 <= ph_hju * 0.08:
+                p3_has_rt = True
+                break
+            # Nomor halaman atau running title pada margin footer bawah
+            if y0 >= ph_hju * 0.93:
+                lines_footer = [l.strip() for l in txt_clean.splitlines() if l.strip()]
+                for lf in lines_footer:
+                    if re.match(r'^(?:-?\s*\d+\s*-?|-?\s*[ivxlcdm]+\s*-?|halaman\s+\d+|hal\.?\s*\d+)$', lf, re.I):
+                        p3_has_rt = True
+                        break
+                    if "DALAM ANGKA" in lf.upper() or "IN FIGURES" in lf.upper():
+                        p3_has_rt = True
+                        break
+                if p3_has_rt:
+                    break
 
     # ── HALAMAN KATALOG ──
-    cat_match = re.search(r'Katalog[^\d]*(\d{7,10}\.\d+)', catalog_text + " " + all_prelim, re.IGNORECASE)
+    catalog_raw = None
+    if catalog_idx is not None and 0 <= catalog_idx < num_pages:
+        try:
+            catalog_raw = doc[catalog_idx].get_text("rawdict")
+        except Exception:
+            catalog_raw = None
+
+    cat_match = re.search(r'Katalog[^\n:]*:\s*([0-9][0-9\.\s-]{3,}[0-9])', catalog_text + " " + all_prelim, re.IGNORECASE)
+    if not cat_match:
+        cat_match = re.search(r'Katalog[^\d]*(\d{7,10}\.\d+|\d{4,10}(?:\.\d+)+)', catalog_text + " " + all_prelim, re.IGNORECASE)
     catalog_no = cat_match.group(1).strip() if cat_match else "-"
-    catalog_slash = bool(re.search(r'Katalog\s+/Catalogue', catalog_text + all_prelim))
+    if catalog_no != "-":
+        digits_count = sum(c.isdigit() for c in catalog_no)
+        if digits_count < 5:
+            catalog_no = "-"
+    catalog_slash = False
+    if re.search(r'Katalog\s+/Catalogue', catalog_text + all_prelim):
+        sb, _ = verify_label_slash_space(catalog_raw, "Katalog", "Catalogue")
+        catalog_slash = sb
 
     catalog_volume_empty = bool(re.search(r'Volume\s+(?:xx|XX|\.\.\.)', catalog_text))
     catalog_no_empty = bool(re.search(r'Katalog[^\n:]*:\s*(?:\.{2,}|-|—|\s*$)', catalog_text)) or (catalog_no in ["-", "", "...."])
@@ -278,7 +425,16 @@ def extract_pdf_metadata(pdf_path):
     issn_match = re.search(r'ISSN\s*[:/]?\s*(\d{4}[-\u2013]\d{3}[\dX])', catalog_text + all_prelim, re.IGNORECASE)
     issn_val = issn_match.group(1).strip() if issn_match else "-"
     issn_val = issn_val.replace('\u2013', '-').replace('\u2014', '-')
-    catalog_issn_format_ok = bool(re.search(r'ISSN\s*:\s*\d{4}[-\u2013]\d{3}[\dX]', catalog_text))
+    catalog_has_issn_line = bool(re.search(r'\bISSN\b', catalog_text))
+    catalog_issn_has_colon = bool(re.search(r'\bISSN\s*:', catalog_text))
+    catalog_issn_bilingual = bool(re.search(r'ISSN\s*/\s*ISSN', catalog_text, re.I))
+    catalog_issn_format_ok = (catalog_issn_has_colon and not catalog_issn_bilingual) if catalog_has_issn_line else True
+    is_serial = (
+        "DALAM ANGKA" in cover_text.upper()
+        or "IN FIGURES" in cover_text.upper()
+        or catalog_no.startswith("1102001")
+        or bool(re.search(r'Volume\s+(?:\d+|xx)', cover_text + " " + catalog_text, re.I))
+    )
 
     pub_num_match = re.search(r'Nomor Publikasi[^\n]*:\s*([^\n]+)', catalog_text, re.IGNORECASE)
     pub_num = pub_num_match.group(1).strip() if pub_num_match else "-"
@@ -305,10 +461,14 @@ def extract_pdf_metadata(pdf_path):
     catalog_roman = roman_match.group(1).lower() if roman_match else "-"
     catalog_arab = roman_match.group(2) if roman_match else "-"
     uses_hal_not_hlm = bool(roman_match and roman_match.group(3).lower() in ['hal', 'hlm'])
-    space_before_slash_label_pages = bool(re.search(r'Jumlah\s+Halaman\s+/Number', catalog_text, re.I))
+    space_before_slash_label_pages = False
+    if re.search(r'Jumlah\s+Halaman\s+/Number', catalog_text, re.I):
+        sb, _ = verify_label_slash_space(catalog_raw, "Jumlah Halaman", "Number of Pages")
+        space_before_slash_label_pages = sb
     space_before_slash_unit_pages = bool(re.search(r'(?:halaman|hlm|hal)\s+/pages', catalog_text, re.I))
     space_before_slash_pages = space_before_slash_label_pages or space_before_slash_unit_pages
-    space_before_colon_pages = bool(re.search(r'Jumlah\s+Halaman[^\n:]*?\s+:', catalog_text))
+    # Diabaikan karena kerning font italic 'Number of Pages' sering menyisipkan spasi mikro di text layer
+    space_before_colon_pages = False
     space_around_plus_pages = bool(re.search(r'([ivxlcdmIVXLCDM]+)\s+\+|\+\s+(\d+)', catalog_text))
     copyright_space_after_symbol = bool(re.search(r'©\s+[^\n]+', catalog_text))
 
@@ -784,58 +944,80 @@ def extract_pdf_metadata(pdf_path):
     marker_locations = []
 
     if re.search(r'\bCOVER\s+DEPAN\b', cover_full_txt, re.I):
-        template_markers_found.append('Label teks instruksi master "COVER DEPAN" tercetak di kover depan')
+        template_markers_found.append('Label teks instruksi master "COVER DEPAN" tercetak di kover depan (Hal. 1)')
         marker_locations.append('kover_depan')
     if re.search(r'\bCOVER\s+BELAKANG\b', back_full_txt, re.I):
-        template_markers_found.append('Label teks instruksi master "COVER BELAKANG" tercetak di kover belakang')
+        template_markers_found.append(f'Label teks instruksi master "COVER BELAKANG" tercetak di kover belakang (Hal. {num_pages})')
         marker_locations.append('kover_belakang')
     if re.search(r'\bYYYYY\b', full_doc_text):
-        template_markers_found.append('Nama wilayah template "YYYYY" ("KECAMATAN YYYYY" / "YYYYY DISTRICT IN FIGURES") masih tersebar di dalam dokumen')
+        pages_y = [str(i + 1) for i in range(num_pages) if re.search(r'\bYYYYY\b', pages_text.get(i, ""))]
+        p_str = f" (terdeteksi di Hal. {', '.join(pages_y)})" if pages_y else ""
+        template_markers_found.append(f'Nama wilayah template "YYYYY" ("KECAMATAN YYYYY" / "YYYYY DISTRICT IN FIGURES"){p_str}')
         marker_locations.append('batang_tubuh')
     if re.search(r'\bKecamatan\s+XXX\b|\bKecamatan\s+XXXXX\b', full_doc_text):
-        template_markers_found.append('Placeholder nama kecamatan "Kecamatan XXX" masih tercantum di judul tabel/ulasan')
+        pages_k = [str(i + 1) for i in range(num_pages) if re.search(r'\bKecamatan\s+XXX\b|\bKecamatan\s+XXXXX\b', pages_text.get(i, ""))]
+        p_str = f" (terdeteksi di Hal. {', '.join(pages_k)})" if pages_k else ""
+        template_markers_found.append(f'Placeholder nama kecamatan "Kecamatan XXX"{p_str} masih tercantum di judul tabel/ulasan')
         marker_locations.append('batang_tubuh')
     if re.search(r'KABUPATEN/KOTA\s+XXXX', full_doc_text, re.I) or re.search(r'BPS-STATISTICS\s+XXXX', full_doc_text, re.I):
-        template_markers_found.append('Identitas satker dummy master "KABUPATEN/KOTA XXXX" masih belum diganti')
+        pages_x = [str(i + 1) for i in range(num_pages) if re.search(r'KABUPATEN/KOTA\s+XXXX|BPS-STATISTICS\s+XXXX', pages_text.get(i, ""), re.I)]
+        p_str = f" (terdeteksi di Hal. {', '.join(pages_x)})" if pages_x else ""
+        template_markers_found.append(f'Identitas satker dummy master "KABUPATEN/KOTA XXXX"{p_str} masih belum diganti')
         if re.search(r'KABUPATEN/KOTA\s+XXXX', p3_txt, re.I) and not re.search(r'KABUPATEN/KOTA\s+XXXX', full_doc_text.replace(p3_txt, ''), re.I):
             marker_locations.append('hju')
         else:
             marker_locations.append('multi_section')
     if re.search(r'nama\s+kepala\s+BPS\s+Kako\s+tanpa\s+gelar', full_doc_text, re.I):
-        template_markers_found.append('Teks instruksi template "nama kepala BPS Kako tanpa gelar" pada halaman Tim Penyusun')
+        pages_nk = [str(i + 1) for i in range(num_pages) if re.search(r'nama\s+kepala\s+BPS\s+Kako\s+tanpa\s+gelar', pages_text.get(i, ""), re.I)]
+        p_str = f" (terdeteksi di Hal. {', '.join(pages_nk)})" if pages_nk else ""
+        template_markers_found.append(f'Teks instruksi template "nama kepala BPS Kako tanpa gelar"{p_str} pada halaman Tim Penyusun')
         marker_locations.append('tim_penyusun')
     if re.search(r'\bNAMA\s+TANPA\s+GELAR\b', full_doc_text):
-        template_markers_found.append('Teks instruksi template "NAMA TANPA GELAR" pada halaman Kata Pengantar / Preface')
+        pages_ntg = [str(i + 1) for i in range(num_pages) if re.search(r'\bNAMA\s+TANPA\s+GELAR\b', pages_text.get(i, ""))]
+        p_str = f" (terdeteksi di Hal. {', '.join(pages_ntg)})" if pages_ntg else ""
+        template_markers_found.append(f'Teks instruksi template "NAMA TANPA GELAR"{p_str} pada halaman Kata Pengantar / Preface')
         marker_locations.append('kata_pengantar')
     # Personil dummy hanya dicek pada halaman Tim Penyusun (mencegah false match pada nomor ISSN XXXX-XXXX)
     if re.search(r'xxxxx\s*[•\*]\s*xxxxx', team_txt, re.I) or ('xxxxx' in team_txt and '•' in team_txt):
         template_markers_found.append('Placeholder nama personil penyusun "xxxxx • xxxxx" pada susunan tim')
         marker_locations.append('tim_penyusun')
     if re.search(r'lorem\s+ipsum\s+dolor\s+sit\s+amet', full_doc_text, re.I):
-        template_markers_found.append('Ulasan statistik dan sambutan masih berupa teks dummy Latin "Lorem ipsum dolor sit amet..."')
+        pages_lorem = [str(i + 1) for i in range(num_pages) if re.search(r'lorem\s+ipsum\s+dolor\s+sit\s+amet', pages_text.get(i, ""), re.I)]
+        p_str = f" (terdeteksi di Hal. {', '.join(pages_lorem)})" if pages_lorem else ""
+        template_markers_found.append(f'Ulasan statistik dan sambutan masih berupa teks dummy Latin "Lorem ipsum dolor sit amet..."{p_str}')
         marker_locations.append('batang_tubuh')
     if re.search(r'1102001\.(?:xx|xxxx)\b', full_doc_text, re.I):
-        template_markers_found.append('Nomor katalog masih berupa placeholder template "1102001.xx" / "1102001.xxxx"')
+        pages_kat = [str(i + 1) for i in range(num_pages) if re.search(r'1102001\.(?:xx|xxxx)\b', pages_text.get(i, ""), re.I)]
+        p_str = f" (terdeteksi di Hal. {', '.join(pages_kat)})" if pages_kat else ""
+        template_markers_found.append(f'Nomor katalog masih berupa placeholder template "1102001.xx" / "1102001.xxxx"{p_str}')
         if re.search(r'1102001\.(?:xx|xxxx)\b', p3_txt, re.I) and not re.search(r'1102001\.(?:xx|xxxx)\b', full_doc_text.replace(p3_txt, ''), re.I):
             marker_locations.append('hju')
         else:
             marker_locations.append('katalog')
     if re.search(r'ISSN\s*XXXX\s*-\s*XXXX', full_doc_text, re.I):
-        template_markers_found.append('Nomor ISSN masih berupa template bawaan "ISSN XXXX -XXXX"')
+        pages_issn = [str(i + 1) for i in range(num_pages) if re.search(r'ISSN\s*XXXX\s*-\s*XXXX', pages_text.get(i, ""), re.I)]
+        p_str = f" (terdeteksi di Hal. {', '.join(pages_issn)})" if pages_issn else ""
+        template_markers_found.append(f'Nomor ISSN masih berupa template bawaan "ISSN XXXX -XXXX"{p_str}')
         if re.search(r'ISSN\s*XXXX\s*-\s*XXXX', p3_txt, re.I) and not re.search(r'ISSN\s*XXXX\s*-\s*XXXX', full_doc_text.replace(p3_txt, ''), re.I):
             marker_locations.append('hju')
         else:
             marker_locations.append('multi_section')
     if re.search(r'Dinas\s+xxx\b', full_doc_text, re.I):
-        template_markers_found.append('Daftar kontributor data masih memuat "Dinas xxx"')
+        pages_dinas = [str(i + 1) for i in range(num_pages) if re.search(r'Dinas\s+xxx\b', pages_text.get(i, ""), re.I)]
+        p_str = f" (terdeteksi di Hal. {', '.join(pages_dinas)})" if pages_dinas else ""
+        template_markers_found.append(f'Daftar kontributor data masih memuat "Dinas xxx"{p_str}')
         marker_locations.append('katalog')
     if re.search(r'Jl\.\s*\.{2,}|Telp\.:\s*\.{2,}|@bps\.go\.id', back_full_txt, re.I) and '...' in back_full_txt:
-        template_markers_found.append('Alamat, kontak, dan email pada kover belakang masih berupa placeholder titik-titik ("Jl. ... Telp.: ...")')
+        template_markers_found.append(f'Alamat, kontak, dan email pada kover belakang masih berupa placeholder titik-titik ("Jl. ... Telp.: ...") (Hal. {num_pages})')
         marker_locations.append('kover_belakang')
 
     unique_marker_sections = set(marker_locations)
     has_lorem = bool(re.search(r'lorem\s+ipsum\s+dolor\s+sit\s+amet', full_doc_text, re.I))
-    has_yyyyy_body = len(re.findall(r'\bYYYYY\b', full_doc_text)) >= 3
+    
+    # Hitung kemunculan YYYYY di batang tubuh naskah (di luar HJU)
+    yyyyy_pages = [i + 1 for i in range(num_pages) if re.search(r'\bYYYYY\b', pages_text.get(i, ""))]
+    # Hanya dianggap masif jika tersebar di banyak halaman batang tubuh (>= 5 halaman)
+    has_yyyyy_body_massive = len(yyyyy_pages) >= 5
 
     is_pure_template = (
         bool(re.search(r'\bCOVER\s+DEPAN\b', cover_full_txt, re.I)) or
@@ -843,16 +1025,16 @@ def extract_pdf_metadata(pdf_path):
         len(template_markers_found) >= 10
     )
     
-    # Draf setengah jadi masif HANYA aktif jika:
-    # 1. Dokumen merupakan template murni, ATAU
+    # Draf setengah jadi masif HANYA aktif jika benar-benar draf mentah yang belum dikerjakan:
+    # 1. Dokumen merupakan template murni 100%, ATAU
     # 2. Ada ulasan Latin Lorem Ipsum, ATAU
-    # 3. Running title di batang tubuh masih YYYYY secara masif, ATAU
-    # 4. Residu template tersebar di MINIMAL 2 seksi anatomi di luar HJU.
+    # 3. Running title YYYYY tersebar masif di batang tubuh (>= 5 halaman), ATAU
+    # 4. Residu template tersebar masif di >= 5 seksi dan >= 3 seksi di luar HJU.
     is_raw_template = (
         is_pure_template or
         has_lorem or
-        has_yyyyy_body or
-        (len(template_markers_found) >= 4 and len(unique_marker_sections - {'hju'}) >= 2)
+        has_yyyyy_body_massive or
+        (len(template_markers_found) >= 5 and len(unique_marker_sections - {'hju'}) >= 3)
     )
 
     is_hju_only_leak = (len(template_markers_found) > 0 and unique_marker_sections == {'hju'})
@@ -965,16 +1147,20 @@ def extract_pdf_metadata(pdf_path):
         # 2. Spasi sebelum garis miring pada label
         if re.search(rf'{label_id}\s+/{label_en}', catalog_text, re.I):
             if label_id not in ["Katalog", "Jumlah Halaman"]:  # Sudah memiliki deteksi mandiri
-                catalog_label_errors.append(
-                    f'Terdapat spasi sebelum garis miring pada label "{label_id} /{label_en}". '
-                    f'Penulisan baku dwibahasa BPS ditulis rapat tanpa spasi sebelum garis miring ("{label_id}/{label_en}").'
-                )
+                sb, _ = verify_label_slash_space(catalog_raw, label_id, label_en)
+                if sb:
+                    catalog_label_errors.append(
+                        f'Terdapat spasi sebelum garis miring pada label "{label_id} /{label_en}". '
+                        f'Penulisan baku dwibahasa BPS ditulis rapat tanpa spasi sebelum garis miring ("{label_id}/{label_en}").'
+                    )
         # 3. Spasi setelah garis miring pada label
         if re.search(rf'{label_id}/\s+{label_en}', catalog_text, re.I):
-            catalog_label_errors.append(
-                f'Terdapat spasi setelah garis miring pada label "{label_id}/ {label_en}". '
-                f'Penulisan baku dwibahasa BPS ditulis rapat setelah garis miring ("{label_id}/{label_en}").'
-            )
+            _, sa = verify_label_slash_space(catalog_raw, label_id, label_en)
+            if sa:
+                catalog_label_errors.append(
+                    f'Terdapat spasi setelah garis miring pada label "{label_id}/ {label_en}". '
+                    f'Penulisan baku dwibahasa BPS ditulis rapat setelah garis miring ("{label_id}/{label_en}").'
+                )
 
     # ── TIM PENYUSUN ──
     team_has_issn = bool(re.search(r'ISSN', team_text, re.IGNORECASE))
@@ -1243,8 +1429,17 @@ def extract_pdf_metadata(pdf_path):
     daftar_gambar_has_xxx = False
     if toc_figure_idx >= 0:
         fig_text_combined = "".join([pages_text.get(fi, "") for fi in range(toc_figure_idx, min(toc_figure_idx + 4, num_pages))])
-        daftar_gambar_placeholder = bool(re.search(r'\.\.\s*\n', fig_text_combined)) or ("..." in fig_text_combined and "Gambar" in fig_text_combined)
-        daftar_gambar_has_xxx = bool(re.search(r'\bxxx\b', fig_text_combined, re.I))
+        for line in fig_text_combined.splitlines():
+            line_clean = line.strip()
+            if not line_clean:
+                continue
+            if re.search(r'\b(?:Judul\s+Gambar|Figure\s+Title|Judul\s+Grafik|Chart\s+Title|Nama\s+Gambar)\b', line_clean, re.I):
+                daftar_gambar_placeholder = True
+                break
+            if re.match(r'^(?:Gambar\s+)?\d+(?:\.\d+)*\s*[\.]{3,}\s*\d+$', line_clean, re.I):
+                daftar_gambar_placeholder = True
+                break
+        daftar_gambar_has_xxx = bool(re.search(r'\b(?:xxx|XXX)\b', fig_text_combined))
 
     toc_preface_not_italic = False
     if toc_idx >= 0 and toc_idx < num_pages:
@@ -1897,7 +2092,7 @@ def extract_pdf_metadata(pdf_path):
             'kover belakang secara proporsional.'
         )
 
-    # 3. Cek posisi horizontal barcode pada kover belakang (wajib pojok kanan bawah)
+    # 3. Cek posisi horizontal barcode pada kover belakang (wajib pojok kanan bawah jika ada)
     back_cover_barcode_pos_wrong = None
     if num_pages > 0:
         try:
@@ -1905,7 +2100,7 @@ def extract_pdf_metadata(pdf_path):
             pw_kb, ph_kb = last_p_obj.rect.width, last_p_obj.rect.height
             for b in last_p_obj.get_text('blocks'):
                 txt_b = b[4].strip()
-                if any(k in txt_b.upper() for k in ['BARCODE', '977', '978']) or ('ISSN' in txt_b.upper() and (b[1]+b[3])/2.0 > ph_kb * 0.65):
+                if any(k in txt_b.upper() for k in ['BARCODE', '977', '978']):
                     bx = (b[0] + b[2]) / 2.0
                     if bx < pw_kb * 0.45:
                         back_cover_barcode_pos_wrong = "kiri"
@@ -1919,8 +2114,19 @@ def extract_pdf_metadata(pdf_path):
                         if 35 < img_w < 180 and 20 < img_h < 120:
                             bc_x = (bb[0] + bb[2]) / 2.0
                             if bc_x < pw_kb * 0.45:
-                                back_cover_barcode_pos_wrong = "kiri"
-                                break
+                                # Verifikasi apakah gambar ini benar-benar barcode (bukan logo BPS)
+                                try:
+                                    clip_rect = fitz.Rect(bb)
+                                    pix_clip = last_p_obj.get_pixmap(clip=clip_rect, dpi=150)
+                                    c_img = cv2.imdecode(np.frombuffer(pix_clip.tobytes('png'), np.uint8), cv2.IMREAD_COLOR)
+                                    if c_img is not None:
+                                        b_det = cv2.barcode.BarcodeDetector()
+                                        ret_bc, _ = b_det.detect(c_img)
+                                        if ret_bc:
+                                            back_cover_barcode_pos_wrong = "kiri"
+                                            break
+                                except Exception:
+                                    pass
         except Exception:
             pass
 
@@ -2040,6 +2246,8 @@ def extract_pdf_metadata(pdf_path):
         "bps_abbreviated_id": bps_abbreviated_id,
         "bps_of_en": bps_of_en,
         "copyright_typo_regency": copyright_typo_regency,
+        "is_serial": is_serial,
+        "catalog_has_issn_line": catalog_has_issn_line,
         "catalog_issn_format_ok": catalog_issn_format_ok,
         "catalog_pages_mismatch": catalog_pages_mismatch,
         "catalog_label_errors": catalog_label_errors,

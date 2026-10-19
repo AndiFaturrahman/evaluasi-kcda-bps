@@ -38,10 +38,12 @@ def evaluate_daftar_isi(meta):
                 'Nomor ISSN di pojok kanan atas halaman Daftar Isi masih berupa draf template ("ISSN XXXX -XXXX") / belum dicantumkan nomor resmi valid. '
                 'Wajib mencantumkan nomor ISSN resmi publikasi tanpa tanda titik dua (Instrumen baris 69).'
             )
-        elif meta.get("toc_issn_missing"):
+        elif meta.get("toc_issn_missing") and (meta.get("is_serial") or (issn and issn != "-") or meta.get("catalog", "").startswith("1102001")):
+            disp_issn_toc = meta.get("issn_correct_from_registry") or (issn if (issn != "-" and validate_issn_checksum(issn)[0]) else "[Nomor ISSN]")
+            sample_issn = f"ISSN {disp_issn_toc}" if disp_issn_toc != "[Nomor ISSN]" else "ISSN [Nomor ISSN]"
             daftar_isi.append(
                 f'Nomor ISSN tidak dicantumkan di pojok kanan atas halaman Daftar Isi: '
-                f'Publikasi berkala yang memiliki ISSN wajib mencantumkan "ISSN {issn}" tanpa tanda titik dua (Instrumen baris 69).'
+                f'Publikasi berkala yang memiliki ISSN wajib mencantumkan "{sample_issn}" tanpa tanda titik dua (Instrumen baris 69).'
             )
         for err in meta.get("toc_errors", []):
             daftar_isi.append(f'Ketidaksinkronan rujukan nomor halaman pada Daftar Isi: {err}.')

@@ -24,20 +24,12 @@ def evaluate_halaman_judul(meta, kabupaten_str, kab_upper, kab_raw, level_id, le
             'Halaman Judul Utama WAJIB diletakkan pada halaman GANJIL (recto / halaman kanan, umumnya halaman fisik 3).'
         )
     else:
-        if meta.get("p3_is_template"):
-            if meta.get("p3_has_bg_illustration") or meta.get("p3_has_image"):
-                halaman_judul.append(
-                    f'Residu teks template tersembunyi pada Halaman Judul Utama: Terdeteksi placeholder template master '
-                    f'("1102001.xxxx", "ISSN XXXX -XXXX", "KABUPATEN/KOTA XXXX", "Kecamatan Yyy", atau "Volume XX") '
-                    f'yang masih tertanam di text layer PDF pada HJU (halaman fisik 3) di balik gambar desain/ilustrasi. '
-                    f'Meskipun secara visual telah ditimpa gambar, kotak teks sisa template master pada file asli (Word/InDesign) wajib dihapus agar tidak terbaca oleh sistem pengindeks repositori digital BPS.'
-                )
-            else:
-                halaman_judul.append(
-                    f'Halaman Judul Utama masih berupa format template master yang belum disesuaikan: '
-                    f'Terdeteksi placeholder nomor katalog ("1102001.xxxx"), nomor ISSN ("ISSN XXXX -XXXX"), volume ("Volume XX"), atau pilihan ganda ("KABUPATEN/KOTA"). '
-                    f'Seluruh identitas buku wajib disesuaikan dengan data resmi {level_id} {region}.'
-                )
+        if meta.get("p3_is_template") and not (meta.get("p3_has_bg_illustration") or meta.get("p3_has_image")):
+            halaman_judul.append(
+                f'Halaman Judul Utama masih berupa format template master yang belum disesuaikan: '
+                f'Terdeteksi placeholder nomor katalog ("1102001.xxxx"), nomor ISSN ("ISSN XXXX -XXXX"), volume ("Volume XX"), atau pilihan ganda ("KABUPATEN/KOTA"). '
+                f'Seluruh identitas buku wajib disesuaikan dengan data resmi {level_id} {region}.'
+            )
         if meta.get("p3_typo_kecamatan"):
             halaman_judul.append(
                 f'Saltik spasi pada penulisan kata "{level_id.upper()}" di Halaman Judul Utama: Tertulis "{level_id.upper()[:-1]} {level_id.upper()[-1]}" '
@@ -55,10 +47,11 @@ def evaluate_halaman_judul(meta, kabupaten_str, kab_upper, kab_raw, level_id, le
                 'Sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.1 (hal. 36) & Instrumen Pemeriksaan baris 21, '
                 'logo dan nama BPS penerbit pada Halaman Judul Utama wajib ditampilkan berwarna (biru dan hijau BPS).'
             )
-        if issn and issn != "-":
+        is_serial_pub = meta.get("is_serial", False) or (issn and issn != "-") or meta.get("catalog", "").startswith("1102001")
+        if is_serial_pub:
             target_disp_hju = meta.get("issn_correct_from_registry")
             if not target_disp_hju:
-                if issn != "-" and validate_issn_checksum(issn)[0]:
+                if issn and issn != "-" and validate_issn_checksum(issn)[0]:
                     target_disp_hju = issn
                 else:
                     target_disp_hju = "[Nomor ISSN]"
@@ -71,10 +64,16 @@ def evaluate_halaman_judul(meta, kabupaten_str, kab_upper, kab_raw, level_id, le
                     f'Sesuai Pedoman 2023 Bab 4.3.1 hal. 36 & Instrumen baris 19, penulisan nomor ISSN pada Halaman Judul Utama wajib ditulis "ISSN {target_disp_hju}" tanpa tanda titik dua.'
                 )
             elif not meta.get("p3_has_issn", False):
+                if target_disp_hju != "[Nomor ISSN]":
+                    target_str = f"resmi ({target_disp_hju})"
+                    sample_issn = f"ISSN {target_disp_hju}"
+                else:
+                    target_str = "(seperti publikasi berkala Kecamatan Dalam Angka)"
+                    sample_issn = "ISSN [Nomor ISSN]"
                 halaman_judul.append(
                     f'Nomor ISSN tidak dicantumkan di pojok kanan atas Halaman Judul Utama: '
-                    f'Publikasi berkala yang memiliki ISSN resmi ({target_disp_hju}) wajib mencantumkan tulisan "ISSN {target_disp_hju}" '
-                    f'di pojok kanan atas (di atas baris nomor katalog) tanpa tanda titik dua (Pedoman 2023 hal. 35 & Instrumen baris 19).'
+                    f'Publikasi berkala yang memiliki ISSN {target_str} wajib mencantumkan tulisan "{sample_issn}" '
+                    f'di pojok kanan atas di bawah baris nomor katalog tanpa tanda titik dua (Pedoman 2023 hal. 35 & Instrumen baris 19).'
                 )
         if meta.get("hju_catalog_space_colon"):
             halaman_judul.append(

@@ -314,12 +314,23 @@ def validate_issn_checksum(issn_str):
 
 def scan_cover_raster_header(page):
     """
-    Memindai blok raster kover depan / halaman judul utama (sudut kanan atas)
+    Memindai blok kover depan / halaman judul utama (sudut kanan atas)
     untuk mendeteksi secara akurat keberadaan ISSN, titik dua pada ISSN,
     dan spasi sebelum titik dua pada label Katalog.
     """
     try:
-        rect = fitz.Rect(page.rect.width * 0.40, 0, page.rect.width, page.rect.height * 0.18)
+        rect = fitz.Rect(page.rect.width * 0.40, 0, page.rect.width, page.rect.height * 0.22)
+        txt_clip = page.get_text("text", clip=rect)
+        if txt_clip and any(c.isalnum() for c in txt_clip):
+            has_issn = bool(re.search(r'\bISSN\b', txt_clip, re.IGNORECASE))
+            has_colon = bool(re.search(r'\bISSN\s*:', txt_clip, re.IGNORECASE))
+            catalog_space_colon = bool(re.search(r'(?:Katalog|Catalogue)\s+:', txt_clip, re.IGNORECASE))
+            return {
+                "has_issn": has_issn,
+                "has_colon": has_colon,
+                "catalog_space_colon": catalog_space_colon
+            }
+
         pix = page.get_pixmap(clip=rect, dpi=200)
         img_bytes = pix.tobytes("png")
         nparr = np.frombuffer(img_bytes, np.uint8)
@@ -366,8 +377,8 @@ def scan_cover_raster_header(page):
                     if gap >= 4:
                         res["catalog_space_colon"] = True
                         
-        # Baris 2: ISSN : [Nomor]
-        if len(sorted_lines) >= 2:
+        # Baris ISSN (pada layout raster, minimal 3 baris jika label & nomor katalog terpisah baris)
+        if len(sorted_lines) >= 3:
             l2 = sorted(sorted_lines[1], key=lambda b: b[0])
             res["has_issn"] = True
             dots = [b for b in l2 if b[2] <= 8 and b[3] <= 8]

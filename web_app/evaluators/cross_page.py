@@ -254,10 +254,9 @@ def apply_cross_page_checks(meta, defects_dict):
         m_list = "; ".join(raw_tpl.get("markers", [])[:5])
         m_cnt = raw_tpl.get("markers_count", 0)
         draft_msg = (
-            f'[FATAL KELALAIAN - RESIDU TEMPLATE MASTER MASIF] Dokumen terindikasi belum dikerjakan secara tuntas '
-            f'(kemungkinan besar hanya mengubah kover namun isi naskah masih memuat residu template mentah masif). '
-            f'Terdeteksi {m_cnt} residu template master: {m_list}. '
-            f'Publikasi wajib dilengkapi dengan naskah dan data resmi riil sebelum dapat dirilis.'
+            f'[PERINGATAN GLOBAL DOKUMEN - RESIDU TEMPLATE MASTER] Dokumen masih memuat teks bawaan master template BPS '
+            f'yang belum diganti/dihapus pada naskah. Terdeteksi {m_cnt} residu template master: {m_list}. '
+            f'Publikasi wajib dibersihkan dari teks dummy master template sebelum dapat dirilis resmi.'
         )
         kover_depan.insert(0, draft_msg)
         halaman_judul.insert(0, draft_msg)
@@ -265,6 +264,34 @@ def apply_cross_page_checks(meta, defects_dict):
         tim_penyusun.insert(0, draft_msg)
         kata_pengantar.insert(0, draft_msg)
         layout_isi.insert(0, draft_msg)
+    elif raw_tpl.get("markers"):
+        # Residu terisolasi / minor (misal: layer tersembunyi HJU atau running header tersisa):
+        # Hanya dimasukkan sebagai catatan revisi di halaman yang bersangkutan (tidak mengotori halaman lain)
+        n_p = meta.get("num_pages", 0)
+        for m in raw_tpl.get("markers", []):
+            m_low = m.lower()
+            res_item = f'[CATATAN REVISI - RESIDU TEKS TEMPLATE] {m}. Mohon periksa dan bersihkan pada file sumber.'
+            if 'hju' in m_low or 'hal. 3' in m_low or 'xxxx' in m_low:
+                if not (meta.get("p3_has_bg_illustration") or meta.get("p3_has_image")):
+                    if not any(m[:25].lower() in x.lower() for x in halaman_judul):
+                        halaman_judul.append(res_item)
+            if 'daftar pustaka' in m_low or ('yyyyy' in m_low and any(f"hal. {p}" in m_low for p in range(max(1, n_p - 15), n_p + 1))):
+                if not any(m[:25].lower() in x.lower() for x in daftar_pustaka):
+                    daftar_pustaka.append(res_item)
+            elif 'kover depan' in m_low or 'hal. 1' in m_low:
+                pass  # Residu teks master tidak kasat mata pada kover depan diabaikan
+            elif 'kover belakang' in m_low:
+                if not any(m[:25].lower() in x.lower() for x in kover_belakang):
+                    kover_belakang.append(res_item)
+            elif 'tim penyusun' in m_low:
+                if not any(m[:25].lower() in x.lower() for x in tim_penyusun):
+                    tim_penyusun.append(res_item)
+            elif 'kata pengantar' in m_low:
+                if not any(m[:25].lower() in x.lower() for x in kata_pengantar):
+                    kata_pengantar.append(res_item)
+            elif 'katalog' in m_low:
+                if not any(m[:25].lower() in x.lower() for x in halaman_katalog):
+                    halaman_katalog.append(res_item)
 
     # ── PENGGABUNGAN TEMUAN HASIL INSPEKSI COMPUTER VISION TINGKAT TINGGI ──
     cv_audit = meta.get("cv_audit", {})
