@@ -196,6 +196,11 @@ def extract_pdf_metadata(pdf_path):
 
     singkatan_idx = find_page_with_text(doc, "DAFTAR SINGKATAN", end_page=25)
     biblio_idx = find_page_with_text(doc, "DAFTAR PUSTAKA", start_page=max(0, num_pages - 15))
+    glosarium_idx = find_page_with_text(doc, "GLOSARIUM", start_page=max(0, num_pages - 20))
+    if glosarium_idx == -1:
+        glosarium_idx = find_page_with_text(doc, "DAFTAR ISTILAH", start_page=max(0, num_pages - 20))
+    indeks_idx = find_page_with_text(doc, "INDEKS", start_page=max(0, num_pages - 20))
+    lampiran_idx = find_page_with_text(doc, "LAMPIRAN", start_page=max(0, num_pages - 25))
 
     # ── ATURAN PENEMPATAN HALAMAN GANJIL/GENAP (ODD/EVEN SECTION PLACEMENT RULES) ──
     # Sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3 & Instrumen Pemeriksaan Publikasi
@@ -211,6 +216,9 @@ def extract_pdf_metadata(pdf_path):
     toc_figure_is_even = (toc_figure_idx + 1) if (toc_figure_idx >= 0 and (toc_figure_idx + 1) % 2 == 0) else None
     penjelasan_is_even = (penjelasan_idx + 1) if (penjelasan_idx >= 0 and (penjelasan_idx + 1) % 2 == 0) else None
     biblio_is_even = (biblio_idx + 1) if (biblio_idx >= 0 and (biblio_idx + 1) % 2 == 0) else None
+    glosarium_is_even = (glosarium_idx + 1) if (glosarium_idx >= 0 and (glosarium_idx + 1) % 2 == 0) else None
+    indeks_is_even = (indeks_idx + 1) if (indeks_idx >= 0 and (indeks_idx + 1) % 2 == 0) else None
+    lampiran_is_even = (lampiran_idx + 1) if (lampiran_idx >= 0 and (lampiran_idx + 1) % 2 == 0) else None
 
     # Deteksi lembar pembatas bab yang diletakkan pada halaman genap
     divider_even_pages = []
@@ -736,6 +744,12 @@ def extract_pdf_metadata(pdf_path):
     uses_daftar_grafik = bool(
         re.search(r'\bDAFTAR\s+GRAFIK\b', all_prelim, re.I)
         or re.search(r'\bLIST\s+OF\s+CHARTS\b', all_prelim, re.I)
+    )
+
+    # ── LARANGAN PENCANTUMAN LEMBAR DAFTAR PETA (Instrumen Row 180) ──
+    uses_daftar_peta = bool(
+        re.search(r'\bDAFTAR\s+PETA\b', all_prelim, re.I)
+        or re.search(r'\bLIST\s+OF\s+MAPS\b', all_prelim, re.I)
     )
 
     # ── RESIDU TEMPLATE DAFTAR PUSTAKA ──
@@ -2690,6 +2704,10 @@ def extract_pdf_metadata(pdf_path):
         "penjelasan_has_rt": penjelasan_has_rt,
         "team_has_rt": team_has_rt,
         "team_has_page_num": team_has_page_num,
+        "uses_daftar_peta": uses_daftar_peta,
+        "glosarium_is_even": glosarium_is_even,
+        "indeks_is_even": indeks_is_even,
+        "lampiran_is_even": lampiran_is_even,
         "section_pages": {
             "kover_depan": 1,
             "hju": (actual_hju_p + 1) if actual_hju_p >= 0 else 3,

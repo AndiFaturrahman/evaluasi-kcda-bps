@@ -153,5 +153,13 @@ def evaluate_daftar_tabel_gambar(meta):
             'Sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.9 hal. 44 & Instrumen baris 92, '
             'nomor gambar pada Daftar Gambar TIDAK PERLU diakhiri tanda titik (contoh baku: "Gambar 1 Judul", bukan "Gambar 1. Judul").'
         )
+    if meta.get("uses_daftar_peta"):
+        daftar_tabel_gambar.append(
+            'Ditemukan lembar Daftar Peta pada bagian pendahuluan: '
+            'Berdasarkan Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3 & Instrumen baris 180, '
+            'peta merupakan bagian dari gambar dan wajib diberikan nomor serta judul Gambar (bukan Peta), '
+            'serta tidak diperkenankan membuat halaman lembar "Daftar Peta" tersendiri (seluruh peta wajib dihimpun ke dalam Daftar Gambar).'
+        )
 
     return daftar_tabel_gambar
+

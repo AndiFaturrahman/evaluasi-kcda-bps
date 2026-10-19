@@ -33,5 +33,26 @@ def evaluate_daftar_pustaka(meta):
                 'halaman daftar pustaka wajib diberikan nomor halaman berangka Arab berkelanjutan dari batang tubuh.'
             )
 
+    if meta.get("indeks_is_even"):
+        daftar_pustaka.append(
+            f'Kesalahan penempatan halaman (Indeks pada Halaman Genap): Bagian Indeks dimulai pada halaman fisik {meta["indeks_is_even"]} (GENAP). '
+            f'Berdasarkan Pedoman Pembuatan Publikasi BPS 2023 Bab 4.6 & Instrumen baris 190, '
+            f'lembar Indeks WAJIB dimulai pada halaman GANJIL (recto / halaman kanan).'
+        )
+
+    if meta.get("glosarium_is_even"):
+        daftar_pustaka.append(
+            f'Kesalahan penempatan halaman (Glosarium pada Halaman Genap): Bagian Daftar Istilah/Glosarium dimulai pada halaman fisik {meta["glosarium_is_even"]} (GENAP). '
+            f'Berdasarkan Pedoman Pembuatan Publikasi BPS 2023 Bab 4.7 & Instrumen baris 194, '
+            f'lembar Daftar Istilah/Glosarium WAJIB dimulai pada halaman GANJIL (recto / halaman kanan).'
+        )
+
+    if meta.get("lampiran_is_even"):
+        daftar_pustaka.append(
+            f'Kesalahan penempatan halaman (Lampiran pada Halaman Genap): Bagian Lampiran dimulai pada halaman fisik {meta["lampiran_is_even"]} (GENAP). '
+            f'Berdasarkan Pedoman Pembuatan Publikasi BPS 2023 Bab 4.8 & Instrumen baris 198, '
+            f'lembar Lampiran WAJIB dimulai pada halaman GANJIL (recto / halaman kanan).'
+        )
 
     return daftar_pustaka
+
