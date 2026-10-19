@@ -85,6 +85,17 @@ def evaluate_tim_penyusun(meta, kabupaten_str, kab_upper, kab_raw, level_id, lev
                 'Pencantuman NIP pada Halaman Tim Penyusun: Sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4 hal. 80 & Instrumen Baris 41–42, '
                 'susunan anggota tim penyusun ditulis tanpa mencantumkan NIP.'
             )
-
+        if meta.get("team_has_rt"):
+            tim_penyusun.append(
+                'Running title tercetak pada Halaman Tim Penyusun. '
+                'Sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.3 & Instrumen baris 43, '
+                'Halaman Tim Penyusun (halaman romawi iii) dilarang mencantumkan running title.'
+            )
+        if meta.get("team_has_page_num"):
+            tim_penyusun.append(
+                'Nomor halaman tercetak pada Halaman Tim Penyusun. '
+                'Sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.3 & Instrumen baris 43, '
+                'Halaman Tim Penyusun dihitung sebagai halaman romawi iii tetapi DILARANG mencantumkan nomor halaman secara fisik (blind folio).'
+            )
 
     return tim_penyusun

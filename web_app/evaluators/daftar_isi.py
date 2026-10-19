@@ -3,6 +3,8 @@ Anatomi 6 & 8: Daftar Isi, Daftar Tabel, Daftar Gambar, dan Daftar Lampiran
 Memeriksa struktur hierarki bab, penempatan halaman ganjil (recto), keberadaan entri dummy ("xxx"),
 syarat minimal 3 gambar riil, dan format dwibahasa sesuai Pedoman 2023 Bab 4.3.6–4.3.9.
 """
+from .common import validate_issn_checksum
+
 def evaluate_daftar_isi(meta):
     region = meta.get("region", "Wilayah")
     year = meta.get("year", 2026)
@@ -139,6 +141,17 @@ def evaluate_daftar_tabel_gambar(meta):
             'Judul gambar pada Daftar Gambar masih berupa placeholder titik-titik "...". '
             'Judul seluruh grafik dan infografis wajib didefinisikan secara substantif.'
         )
-
+    if meta.get("toc_table_has_trailing_dot"):
+        daftar_tabel_gambar.append(
+            'Nomor tabel pada lembar Daftar Tabel diakhiri tanda titik: '
+            'Sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.8 hal. 44 & Instrumen baris 83, '
+            'nomor tabel pada Daftar Tabel TIDAK PERLU diakhiri tanda titik (contoh baku: "Tabel 1.1 Judul", bukan "Tabel 1.1. Judul").'
+        )
+    if meta.get("toc_figure_has_trailing_dot"):
+        daftar_tabel_gambar.append(
+            'Nomor gambar pada lembar Daftar Gambar diakhiri tanda titik: '
+            'Sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.9 hal. 44 & Instrumen baris 92, '
+            'nomor gambar pada Daftar Gambar TIDAK PERLU diakhiri tanda titik (contoh baku: "Gambar 1 Judul", bukan "Gambar 1. Judul").'
+        )
 
     return daftar_tabel_gambar

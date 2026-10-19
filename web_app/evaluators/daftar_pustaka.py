@@ -19,11 +19,19 @@ def evaluate_daftar_pustaka(meta):
             'Daftar Pustaka SAMA SEKALI TIDAK ADA di dalam buku (dokumen langsung berakhir tanpa lembar daftar pustaka). '
             'Pada publikasi hasil kegiatan dan kajian statistik BPS, Daftar Pustaka bersifat WAJIB dicantumkan (Instrumen baris 181).'
         )
-    if meta.get("biblio_has_template_dots"):
-        daftar_pustaka.append(
-            'Daftar Pustaka masih memuat teks sisa draft/placeholder template master (titik-titik "............................"). '
-            'Seluruh entri daftar pustaka wajib diisi referensi resmi publikasi riil atau dibersihkan dari titik-titik template.'
-        )
+    if meta.get("has_daftar_pustaka"):
+        if not meta.get("biblio_has_rt", True):
+            daftar_pustaka.append(
+                'Running title tidak tercantum pada Halaman Daftar Pustaka. '
+                'Sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4.5 & Instrumen baris 189, '
+                'halaman daftar pustaka wajib memuat running title (judul kepala).'
+            )
+        if not meta.get("biblio_has_arabic_page", True):
+            daftar_pustaka.append(
+                'Nomor halaman Arab tidak tercantum pada Halaman Daftar Pustaka. '
+                'Sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4.5 & Instrumen baris 189, '
+                'halaman daftar pustaka wajib diberikan nomor halaman berangka Arab berkelanjutan dari batang tubuh.'
+            )
 
 
     return daftar_pustaka

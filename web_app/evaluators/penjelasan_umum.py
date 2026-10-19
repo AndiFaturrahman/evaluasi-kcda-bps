@@ -20,6 +20,11 @@ def evaluate_penjelasan_umum(meta):
             'padanan istilah statistik bahasa Inggris (contoh: Not applicable, Data not available, dll.) '
             'terdeteksi belum dicetak miring (italic). Sesuai kaidah dwibahasa BPS, istilah bahasa asing WAJIB dicetak miring.'
         )
-
+    if meta.get("penjelasan_has_rt"):
+        penjelasan_umum.append(
+            'Running title tercetak pada lembar Penjelasan Umum. '
+            'Sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.10 hal. 45 & Instrumen baris 106, '
+            'halaman Penjelasan Umum pada bagian pendahuluan (angka Romawi) DILARANG mencantumkan running title.'
+        )
 
     return penjelasan_umum

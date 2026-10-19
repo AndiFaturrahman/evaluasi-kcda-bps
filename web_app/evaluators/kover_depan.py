@@ -115,5 +115,11 @@ def evaluate_kover_depan(meta, kabupaten_str, kab_upper, kab_raw, level_id, leve
             f'tidak perlu mencantumkan kata "Tahun", melainkan langsung mencantumkan angka tahun data '
             f'(contoh baku: "{level_id} {region} Dalam Angka {year}").'
         )
+    if meta.get("p2_has_leak"):
+        kover_depan.append(
+            'Running title atau nomor halaman tercetak pada halaman kosong setelah kover depan (halaman fisik 2). '
+            'Sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4.2 hal. 35 & Instrumen baris 16, lembar setelah kover depan '
+            'merupakan halaman kosong penyelarasan tanpa running title dan tanpa nomor halaman (tidak dihitung sebagai halaman).'
+        )
 
     return kover_depan

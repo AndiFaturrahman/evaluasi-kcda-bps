@@ -133,6 +133,23 @@ def evaluate_layout_isi(meta, kabupaten_str, kab_upper, kab_raw, level_id, level
             f'Sesuai Pedoman Pembuatan Publikasi BPS 2023 hal. 101 & Instrumen Baris 169, judul gambar tidak perlu menampilkan kata "Tahun", '
             f'tetapi cukup diberikan tanda koma sebelum keterangan tahun (contoh: "..., 2024").'
         )
-
+    for p_num, p_lbl, fig_txt, fig_corr, dot_type in meta.get("fig_has_trailing_dot", []):
+        layout_isi.append(
+            f'Gambar pada halaman {p_lbl} (hal fisik {p_num}): Terdapat tanda titik (.) di akhir {dot_type} gambar (\'{fig_txt}\'). '
+            f'Sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4.4 hal. 69 & Instrumen baris 164, nomor dan judul gambar '
+            f'TIDAK BOLEH diakhiri tanda titik (contoh perbaikan: \'{fig_corr}\').'
+        )
+    for p_num, p_lbl in meta.get("fig_note_has_keterangan", []):
+        layout_isi.append(
+            f'Gambar pada halaman {p_lbl} (hal fisik {p_num}): Catatan di bawah gambar menggunakan kata "Keterangan:". '
+            f'Sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4.4 & Instrumen baris 172, penjelasan atau catatan di bawah gambar '
+            f'WAJIB didahului dengan kata "Catatan:" bukan "Keterangan:".'
+        )
+    for p_num, p_lbl, wrong_sub, corr_sub in meta.get("body_subchapter_has_trailing_dot", []):
+        layout_isi.append(
+            f'Subbab pada halaman {p_lbl} (hal fisik {p_num}): Nomor subbab diakhiri tanda titik (\'{wrong_sub}\'). '
+            f'Sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4.4 hal. 55 & Instrumen baris 130, nomor subbab tidak boleh diakhiri '
+            f'tanda titik (contoh yang benar: \'{corr_sub}\').'
+        )
 
     return layout_isi

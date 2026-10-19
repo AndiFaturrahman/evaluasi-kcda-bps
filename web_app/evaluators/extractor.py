@@ -173,7 +173,27 @@ def extract_pdf_metadata(pdf_path):
             toc_figure_idx = p_cand
             break
 
+    # Cek tanda titik setelah nomor tabel pada Daftar Tabel (Instrumen Row 83)
+    toc_table_has_trailing_dot = False
+    if toc_table_idx >= 0:
+        tt_txt = pages_text.get(toc_table_idx, "")
+        if re.search(r'(?:Tabel\s+)?\b[1-7]\.\d+\.\s+[A-Za-z]', tt_txt):
+            toc_table_has_trailing_dot = True
+
+    # Cek tanda titik setelah nomor gambar pada Daftar Gambar (Instrumen Row 92)
+    toc_figure_has_trailing_dot = False
+    if toc_figure_idx >= 0:
+        tf_txt = pages_text.get(toc_figure_idx, "")
+        if re.search(r'(?:Gambar\s+)?\b[1-7](?:\.\d+)?\.\s+[A-Za-z]', tf_txt):
+            toc_figure_has_trailing_dot = True
+
     penjelasan_idx = find_page_with_text(doc, "PENJELASAN UMUM", end_page=25)
+    penjelasan_has_rt = False
+    if penjelasan_idx >= 0:
+        p_lines = pages_lines.get(penjelasan_idx, [])
+        if any("DALAM ANGKA" in l.upper() or "IN FIGURES" in l.upper() for l in p_lines[:3]):
+            penjelasan_has_rt = True
+
     singkatan_idx = find_page_with_text(doc, "DAFTAR SINGKATAN", end_page=25)
     biblio_idx = find_page_with_text(doc, "DAFTAR PUSTAKA", start_page=max(0, num_pages - 15))
 
@@ -683,9 +703,16 @@ def extract_pdf_metadata(pdf_path):
             preface_has_nip = True
 
     team_has_nip = False
+    team_has_rt = False
+    team_has_page_num = False
     if team_idx >= 0 and team_idx < num_pages:
         if re.search(r'\bNIP[\.:]?\s*\d{8,}', pages_text.get(team_idx, ""), re.I):
             team_has_nip = True
+        t_lines = pages_lines.get(team_idx, [])
+        if any("DALAM ANGKA" in l.upper() or "IN FIGURES" in l.upper() for l in t_lines[:3]):
+            team_has_rt = True
+        if t_lines and (t_lines[0].isdigit() or t_lines[0].lower() in ['iii', 'iv', 'v']):
+            team_has_page_num = True
 
     # ── FORMAT DWIBAHASA DAFTAR ISI (Kata Pengantar/Preface dsb) ──
     toc_bilingual_slash_error = False
@@ -1661,6 +1688,8 @@ def extract_pdf_metadata(pdf_path):
     empty_grafik_jarak = False
     real_figures_found = 0
     fig_has_tahun = []
+    fig_has_trailing_dot = []
+    fig_note_has_keterangan = []
     for p in range(min(20, num_pages), num_pages - 1):
         p_txt = pages_text.get(p, "")
         lines = pages_lines.get(p, [])
@@ -1677,6 +1706,22 @@ def extract_pdf_metadata(pdf_path):
             m_fig_thn = re.search(r'(?:Gambar|Figure)\s*[\d\.]+\s+.*?\bTahun\s+\d{4}\b', p_txt, re.I)
             if m_fig_thn:
                 fig_has_tahun.append((p + 1, p_lbl, m_fig_thn.group(0).strip()))
+
+            # Cek titik di akhir nomor gambar atau judul gambar (Instrumen Baris 164)
+            m_fig_all = re.search(r'(?:Gambar|Figure)\s*([1-7](?:\.\d+)?|\d+)(\.)?\s+([^\n]+)', p_txt)
+            if m_fig_all:
+                f_num = m_fig_all.group(1)
+                has_dot_num = (m_fig_all.group(2) == '.')
+                f_title = m_fig_all.group(3).strip()
+                if has_dot_num:
+                    fig_has_trailing_dot.append((p + 1, p_lbl, f"Gambar {f_num}.", f"Gambar {f_num}", "nomor"))
+                elif f_title.endswith('.'):
+                    fig_has_trailing_dot.append((p + 1, p_lbl, f_title, f_title.rstrip('.'), "judul"))
+
+            # Cek Keterangan: alih-alih Catatan: di bawah gambar (Instrumen Baris 172)
+            if re.search(r'^\s*Keterangan\s*[:/]', p_txt, re.MULTILINE | re.IGNORECASE) and ('Gambar' in p_txt or 'Figure' in p_txt) and 'Tabel' not in p_txt:
+                fig_note_has_keterangan.append((p + 1, p_lbl))
+
             if fig_idx_str == "1" and ("Peta Wilayah" in p_txt or "Map of" in p_txt):
                 imgs = [im for im in doc[p].get_image_info() if im.get('width', 0) > 150 and im.get('height', 0) > 150]
                 if len(imgs) == 0:
@@ -1721,16 +1766,28 @@ def extract_pdf_metadata(pdf_path):
                         ch_num = ch_m.group(1) or ch_m.group(2) if ch_m else str(len(even_start_chapters) + 5)
                         even_start_chapters.append((ch_num, next_prt))
 
-    # ── SCANNER NARASI (ULASAN KOSONG PER BAB) ──
+    # ── SCANNER NARASI (ULASAN KOSONG PER BAB & SUBBAB TITIK AKHIR) ──
     empty_ulasan_chapters = []
+    body_subchapter_has_trailing_dot = []
     for p in range(20, num_pages - 4):
         txt = pages_text.get(p, "")
+        lines = pages_lines.get(p, [])
+        pg_num = lines[0] if lines and lines[0].isdigit() else str(p + 1)
+
+        # Cek nomor subbab dengan tanda titik di akhir pada batang tubuh (Instrumen Baris 130)
+        for line in lines:
+            line_s = line.strip()
+            m_sub = re.match(r'^([1-7]\.\d+)\.\s+([A-Z][A-Za-z\s]{3,})$', line_s)
+            if m_sub:
+                sub_code = m_sub.group(1)
+                sub_title = m_sub.group(2).strip()
+                if not any(k in sub_title.upper() for k in ["TABEL", "TABLE", "GAMBAR", "FIGURE", "LAMPIRAN", "GRAFIK"]):
+                    body_subchapter_has_trailing_dot.append((p + 1, pg_num, line_s, f"{sub_code} {sub_title}"))
+
         if "ULASAN" in txt.upper() and "DESCRIPTION" in txt.upper():
-            lines = pages_lines.get(p, [])
             content_lines = [l for l in lines if not any(k in l.upper() for k in [
                 "ULASAN", "DESCRIPTION", "DISTRICT IN FIGURES", "DALAM ANGKA", "HTTPS://", "BPS.GO.ID"
             ]) and not l.isdigit()]
-            pg_num = lines[0] if lines and lines[0].isdigit() else str(p + 1)
             if len(content_lines) < 3:
                 bab_name = ""
                 for back_p in range(max(0, p - 3), p):
@@ -1869,6 +1926,16 @@ def extract_pdf_metadata(pdf_path):
         elif ellipsis_count >= 10:
             table_findings.append(
                 f"{tbl_label}: Data tabel kosong total / belum tersedia. Seluruh sel data numerik hanya menyajikan tanda elipsis ('…' atau '...'). Jika data tidak tersedia, tabel opsional sebaiknya tidak ditampilkan atau diisi data riil."
+            )
+
+        # Cek penggunaan angka 0, 0,0, 0,00 pada sel data tabel (Instrumen Row 156)
+        bare_zeros = [l for l in lines if l in ['0', '0,0', '0,00']]
+        if len(bare_zeros) >= 3 and is_table_structure:
+            table_findings.append(
+                f"{tbl_label}: Ditemukan penggunaan angka nol ('{bare_zeros[0]}') pada {len(bare_zeros)} sel tabel. "
+                f"Sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4 hal. 69 & Instrumen baris 156, nilai nol mutlak (tidak ada) "
+                f"WAJIB disajikan dengan tanda strip panjang En Dash ('–'), sedangkan nilai mendekati nol dilambangkan dengan '~0' "
+                f"(dilarang menggunakan angka 0, 0,0, maupun 0,00 dalam sel tabel statistik)."
             )
 
         # Catatan/Sumber sampah
@@ -2058,6 +2125,18 @@ def extract_pdf_metadata(pdf_path):
 
     # ── DAFTAR PUSTAKA & KOVER BELAKANG ──
     has_daftar_pustaka = (biblio_idx >= 0)
+    biblio_has_rt = False
+    biblio_has_arabic_page = False
+    if biblio_idx >= 0:
+        b_lines = pages_lines.get(biblio_idx, [])
+        if b_lines and b_lines[0].isdigit():
+            biblio_has_arabic_page = True
+        b_txt = pages_text.get(biblio_idx, "").upper()
+        if len(b_lines) > 1 and any(k in b_lines[1].upper() for k in ["DALAM ANGKA", "IN FIGURES", "BIBLIOGRAPHY", "DAFTAR PUSTAKA", "DISTRICT"]):
+            biblio_has_rt = True
+        elif any(k in b_txt for k in ["DALAM ANGKA", "IN FIGURES"]) and len(b_lines) >= 3:
+            biblio_has_rt = True
+
     last_page_text = pages_text.get(num_pages - 1, "")
     kover_belakang_errors = []
     if str(num_pages) in last_page_text or str(num_pages - 1) in last_page_text:
@@ -2299,6 +2378,24 @@ def extract_pdf_metadata(pdf_path):
         kover_belakang_errors.append(
             f'Running title atau teks tercetak pada lembar kosong sebelum kover belakang (halaman fisik {num_pages-1}). '
             f'Sesuai Pedoman BPS 2023 hal. 64 & Instrumen baris 205, halaman kosong sebelum kover belakang wajib bersih tanpa running title dan nomor halaman.'
+        )
+
+    # 6. Cek kelengkapan identitas kontak BPS penerbit pada kover belakang (Instrumen Row 210 Poin 4)
+    back_cover_missing_contact = []
+    if num_pages > 0:
+        kb_txt = last_page_text.lower()
+        if not re.search(r'\bbps\.go\.id\b', kb_txt):
+            back_cover_missing_contact.append('alamat homepage/website resmi (bps.go.id)')
+        if not re.search(r'[\w\.-]+@bps\.go\.id', kb_txt) and '@' not in kb_txt:
+            back_cover_missing_contact.append('alamat e-mail resmi')
+        if not any(k in kb_txt for k in ['telp', 'telepon', 'phone', '(0']):
+            back_cover_missing_contact.append('nomor telepon resmi')
+    if back_cover_missing_contact:
+        missing_items_str = ", ".join(back_cover_missing_contact)
+        kover_belakang_errors.append(
+            f'Identitas kontak penerbit BPS pada kover belakang belum lengkap: Komponen {missing_items_str} tidak ditemukan. '
+            f'Sesuai Pedoman Pembuatan Publikasi BPS 2023 hal. 64 & Instrumen baris 210 poin 4, alamat BPS penerbit pada kover belakang '
+            f'wajib dilengkapi dengan kode pos, nomor telepon, homepage situs web, dan alamat email resmi.'
         )
 
     # ── ADVANCED COMPUTER VISION AUDIT ──
@@ -2582,6 +2679,17 @@ def extract_pdf_metadata(pdf_path):
         "uses_daftar_grafik": uses_daftar_grafik,
         "back_cover_has_abstraction": back_cover_has_abstraction,
         "pre_back_cover_has_leak": pre_back_cover_has_leak,
+        "p2_has_leak": p2_has_leak,
+        "body_subchapter_has_trailing_dot": body_subchapter_has_trailing_dot,
+        "fig_has_trailing_dot": fig_has_trailing_dot,
+        "fig_note_has_keterangan": fig_note_has_keterangan,
+        "biblio_has_rt": biblio_has_rt,
+        "biblio_has_arabic_page": biblio_has_arabic_page,
+        "toc_table_has_trailing_dot": toc_table_has_trailing_dot,
+        "toc_figure_has_trailing_dot": toc_figure_has_trailing_dot,
+        "penjelasan_has_rt": penjelasan_has_rt,
+        "team_has_rt": team_has_rt,
+        "team_has_page_num": team_has_page_num,
         "section_pages": {
             "kover_depan": 1,
             "hju": (actual_hju_p + 1) if actual_hju_p >= 0 else 3,

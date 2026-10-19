@@ -4,6 +4,7 @@ Memeriksa konsistensi nomor ISSN antar-halaman, nomor halaman Romawi pendahuluan
 deteksi kelalaian ganti kover (District Identity Mismatch), deteksi upload template mentah (Raw Template),
 penggabungan hasil Computer Vision, dan rekomendasi estetika BPS.
 """
+import re
 from .common import get_aesthetic_and_standard_suggestions
 
 def _to_roman_uncached(n):
