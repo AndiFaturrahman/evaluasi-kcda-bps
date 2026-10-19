@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  evaluasi-bps:
+    build: .
+    container_name: evaluasi-kcda-bps
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - uploads_data:/app/web_app/uploads
+      - outputs_data:/app/web_app/outputs
+
+volumes:
+  uploads_data:
+  outputs_data:
