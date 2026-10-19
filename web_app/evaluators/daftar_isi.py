@@ -74,7 +74,14 @@ def evaluate_daftar_isi(meta):
                 'contoh "Kata Pengantar/Preface" dan "Daftar Isi/Contents", dengan padanan bahasa Inggris dicetak miring (italic) '
                 'sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.6.'
             )
-
+        if meta.get("toc_subchapter_has_trailing_dot"):
+            sample_dots = meta["toc_subchapter_has_trailing_dot"][:5]
+            dots_str = ", ".join(f"'{s[0]}' pada subbab {s[2]}" for s in sample_dots)
+            daftar_isi.append(
+                f'Nomor subbab pada Daftar Isi diakhiri tanda titik: Ditemukan {dots_str}. '
+                f'Sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.6 & Instrumen baris 74, '
+                f'setelah nomor subbab tidak boleh ada tanda titik (contoh baku: "1.1 {sample_dots[0][2]}", bukan "{sample_dots[0][0]} {sample_dots[0][2]}").'
+            )
 
     return daftar_isi
 
@@ -84,6 +91,13 @@ def evaluate_daftar_tabel_gambar(meta):
     dummy_figs = meta.get("dummy_figures", [])
     
     daftar_tabel_gambar = []
+    if meta.get("uses_daftar_grafik"):
+        daftar_tabel_gambar.append(
+            'Penggunaan istilah "Daftar Grafik" tidak sesuai standar: '
+            'Sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.9 hal. 44 & Instrumen baris 94, '
+            'publikasi BPS WAJIB menggunakan istilah "Daftar Gambar" (atau "DAFTAR GAMBAR/LIST OF FIGURES") '
+            'meskipun seluruh isinya adalah grafik/diagram.'
+        )
     if meta.get("toc_table_is_even"):
         daftar_tabel_gambar.append(
             f'Kesalahan penempatan halaman (Daftar Tabel pada Halaman Genap): Lembar Daftar Tabel dimulai pada halaman fisik {meta["toc_table_is_even"]} (GENAP). '

@@ -102,6 +102,18 @@ def evaluate_kover_depan(meta, kabupaten_str, kab_upper, kab_raw, level_id, leve
             'Sesuai Pedoman Pembuatan Publikasi BPS 2023 (hal. 35) dan Instrumen Pemeriksaan baris 13, klaster nomor katalog dan ISSN '
             'WAJIB diposisikan di pojok kanan atas kover depan dengan perataan rata kanan (right-aligned).'
         )
-
+    if meta.get("cover_katalog_issn_order_wrong"):
+        kover_depan.append(
+            'Urutan posisi Nomor Katalog dan ISSN pada kover depan terbalik: Nomor ISSN terpasang di atas Nomor Katalog. '
+            'Sesuai Pedoman Pembuatan Publikasi BPS 2023 hal. 35 & Instrumen baris 5–6, Nomor Katalog WAJIB diposisikan '
+            'di ATAS nomor ISSN pada pojok kanan atas kover depan.'
+        )
+    if meta.get("cover_title_has_tahun_word"):
+        kover_depan.append(
+            f'Judul buku pada kover depan memuat kata "Tahun" sebelum angka tahun terbit/data. '
+            f'Sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4.2 hal. 35 & Instrumen baris 8 poin 7, penulisan judul buku '
+            f'tidak perlu mencantumkan kata "Tahun", melainkan langsung mencantumkan angka tahun data '
+            f'(contoh baku: "{level_id} {region} Dalam Angka {year}").'
+        )
 
     return kover_depan

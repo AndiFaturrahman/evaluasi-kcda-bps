@@ -283,14 +283,28 @@ def extract_pdf_metadata(pdf_path):
 
     # Cek posisi klaster nomor katalog & ISSN pada Kover Depan (wajib pojok kanan atas)
     cover_catalog_pos_wrong = None
+    cover_katalog_issn_order_wrong = False
     if num_pages > 0:
         pw_cov, ph_cov = doc[0].rect.width, doc[0].rect.height
+        y_kat_cov = None
+        y_issn_cov = None
         for b in doc[0].get_text('blocks'):
             txt_b = b[4].upper()
+            if 'KATALOG' in txt_b or 'CATALOGUE' in txt_b:
+                y_kat_cov = (b[1] + b[3]) / 2.0
+            if 'ISSN' in txt_b and 'BARCODE' not in txt_b:
+                y_issn_cov = (b[1] + b[3]) / 2.0
             if 'KATALOG' in txt_b or 'CATALOGUE' in txt_b or ('ISSN' in txt_b and 'BARCODE' not in txt_b):
                 if (b[1] + b[3]) / 2.0 < ph_cov * 0.30 and (b[0] + b[2]) / 2.0 < pw_cov * 0.40:
                     cover_catalog_pos_wrong = "kiri"
-                    break
+        if y_kat_cov is not None and y_issn_cov is not None and y_issn_cov < y_kat_cov and abs(y_kat_cov - y_issn_cov) > 5:
+            cover_katalog_issn_order_wrong = True
+
+    # Deteksi pencantuman kata 'Tahun' pada judul buku kover depan (Instrumen Row 8)
+    cover_title_has_tahun_word = bool(
+        re.search(r'Dalam\s+Angka\s+Tahun\s+\d{4}', cover_text, re.I)
+        or re.search(r'In\s+Figures\s+Year\s+\d{4}', cover_text, re.I)
+    )
 
     # ── HALAMAN KOSONG SETELAH KOVER DEPAN (Halaman fisik 2) ──
     p2_lines = pages_lines.get(1, [])
@@ -366,14 +380,22 @@ def extract_pdf_metadata(pdf_path):
 
     # Cek posisi klaster nomor katalog & ISSN pada HJU (wajib pojok kanan atas)
     hju_catalog_pos_wrong = None
+    hju_katalog_issn_order_wrong = False
     if actual_hju_p >= 0 and actual_hju_p < num_pages:
         pw_hju, ph_hju = doc[actual_hju_p].rect.width, doc[actual_hju_p].rect.height
+        y_kat_h = None
+        y_issn_h = None
         for b in doc[actual_hju_p].get_text('blocks'):
             txt_b = b[4].upper()
+            if 'KATALOG' in txt_b or 'CATALOGUE' in txt_b:
+                y_kat_h = (b[1] + b[3]) / 2.0
+            if 'ISSN' in txt_b and 'BARCODE' not in txt_b:
+                y_issn_h = (b[1] + b[3]) / 2.0
             if 'KATALOG' in txt_b or 'CATALOGUE' in txt_b or ('ISSN' in txt_b and 'BARCODE' not in txt_b):
                 if (b[1] + b[3]) / 2.0 < ph_hju * 0.30 and (b[0] + b[2]) / 2.0 < pw_hju * 0.40:
                     hju_catalog_pos_wrong = "kiri"
-                    break
+        if y_kat_h is not None and y_issn_h is not None and y_issn_h < y_kat_h and abs(y_kat_h - y_issn_h) > 5:
+            hju_katalog_issn_order_wrong = True
 
     # Deteksi running title atau nomor halaman fisik pada HJU (hanya pada header y <= 8% atau footer y >= 93%)
     p3_has_rt = False
@@ -504,6 +526,39 @@ def extract_pdf_metadata(pdf_path):
                 break
         if last_arab > 0 and str(last_arab) != str(catalog_arab):
             catalog_pages_mismatch = (catalog_arab, last_arab)
+
+    # ── VALIDASI JUMLAH HALAMAN ROMAWI HARUS GENAP (Instrumen Row 28 Poin 4) ──
+    def _roman_to_int_val(s):
+        r_dict = {'i': 1, 'v': 5, 'x': 10, 'l': 50, 'c': 100, 'd': 500, 'm': 1000}
+        s_clean = s.lower().strip()
+        val = 0
+        for idx_c in range(len(s_clean)):
+            if idx_c + 1 < len(s_clean) and r_dict.get(s_clean[idx_c], 0) < r_dict.get(s_clean[idx_c + 1], 0):
+                val -= r_dict.get(s_clean[idx_c], 0)
+            else:
+                val += r_dict.get(s_clean[idx_c], 0)
+        return val
+
+    catalog_roman_is_odd = None
+    if catalog_roman != "-":
+        r_val = _roman_to_int_val(catalog_roman)
+        if r_val > 0 and r_val % 2 == 1:
+            catalog_roman_is_odd = (catalog_roman, r_val)
+
+    # ── LARANGAN PENYINGKATAN NOMOR PUBLIKASI (Instrumen Row 26 Poin 5) ──
+    catalog_pub_no_abbreviated = bool(
+        re.search(r'\bNo\.?\s*Publikasi\b', catalog_text, re.I)
+        or re.search(r'\bNo\.?\s*Publication\b', catalog_text, re.I)
+    )
+
+    # ── URUTAN PENOMORAN KATALOG, ISSN, NOMOR PUBLIKASI (Instrumen Row 26 Poin 2) ──
+    catalog_numbering_order_wrong = False
+    m_p_kat = re.search(r'\bKatalog\b', catalog_text, re.I)
+    m_p_issn = re.search(r'\bISSN\b', catalog_text, re.I)
+    m_p_pub = re.search(r'\bNomor\s+Publikasi\b', catalog_text, re.I)
+    if m_p_kat and m_p_issn and m_p_pub:
+        if not (m_p_kat.start() < m_p_issn.start() < m_p_pub.start()):
+            catalog_numbering_order_wrong = True
 
     # Cek larangan nama individu pada Penyusun Naskah, Penyunting, dan Pembuat Kover (Instrumen Baris 29-31)
     catalog_individual_roles = []
@@ -640,6 +695,21 @@ def extract_pdf_metadata(pdf_path):
             if not re.search(r'Kata\s+Pengantar\s*/\s*Preface', toc_full_txt, re.I):
                 if "Preface" in toc_full_txt:
                     toc_bilingual_slash_error = True
+
+    # ── TANDA TITIK SETELAH NOMOR SUBBAB PADA DAFTAR ISI (Instrumen Row 74) ──
+    toc_subchapter_has_trailing_dot = []
+    if toc_idx >= 0 and toc_idx < num_pages:
+        t_lines = pages_lines.get(toc_idx, [])
+        for tl in t_lines:
+            m_sdot = re.match(r'^\s*([1-7](?:\.\d+)+)\.\s+([A-Za-z]{3,})', tl)
+            if m_sdot:
+                toc_subchapter_has_trailing_dot.append((m_sdot.group(1) + '.', m_sdot.group(1), m_sdot.group(2)))
+
+    # ── PENGGUNAAN ISTILAH DAFTAR GRAFIK ALIH-ALIH DAFTAR GAMBAR (Instrumen Row 94) ──
+    uses_daftar_grafik = bool(
+        re.search(r'\bDAFTAR\s+GRAFIK\b', all_prelim, re.I)
+        or re.search(r'\bLIST\s+OF\s+CHARTS\b', all_prelim, re.I)
+    )
 
     # ── RESIDU TEMPLATE DAFTAR PUSTAKA ──
     biblio_has_template_dots = False
@@ -2200,6 +2270,37 @@ def extract_pdf_metadata(pdf_path):
             'Sesuai Pedoman Pembuatan Publikasi BPS 2023 (hal. 64) dan Template Baku KCDA 2026, barcode WAJIB diletakkan di pojok kanan bawah kover belakang.'
         )
 
+    # 4. Larangan penambahan abstraksi pada kover belakang (Instrumen Row 204)
+    back_cover_has_abstraction = False
+    if num_pages > 0:
+        p_last_txt = pages_text.get(num_pages - 1, "")
+        if "ABSTRAKSI" in p_last_txt.upper() or "ABSTRAK" in p_last_txt.upper():
+            back_cover_has_abstraction = True
+        else:
+            for block in doc[num_pages - 1].get_text("blocks"):
+                btxt = block[4].strip()
+                if len(btxt) > 180 and not any(k in btxt.upper() for k in ["BADAN PUSAT STATISTIK", "DATA MENCERDASKAN BANGSA", "JL.", "JALAN", "HTTP", "BPS.GO.ID", "TELEPON", "E-MAIL"]) and btxt.count('.') >= 2:
+                    back_cover_has_abstraction = True
+                    break
+    if back_cover_has_abstraction:
+        kover_belakang_errors.append(
+            'Pelanggaran penambahan abstraksi pada kover belakang: Ditemukan teks narasi/abstraksi pada kover belakang. '
+            'Sesuai Pedoman Pembuatan Publikasi BPS 2023 hal. 64 & Instrumen baris 204, tidak diperkenankan menambahkan teks abstraksi/sinopsis pada kover belakang buku BPS.'
+        )
+
+    # 5. Cek halaman kosong sebelum kover belakang (Instrumen Row 205)
+    pre_back_cover_has_leak = False
+    if num_pages >= 3:
+        p_pre = pages_text.get(num_pages - 2, "").strip()
+        p_pre_no_web = re.sub(r'https?://\S+', '', p_pre).strip()
+        if any(k in p_pre.upper() for k in ["DALAM ANGKA", "IN FIGURES", "BAB "]) and len(p_pre_no_web) < 100:
+            pre_back_cover_has_leak = True
+    if pre_back_cover_has_leak:
+        kover_belakang_errors.append(
+            f'Running title atau teks tercetak pada lembar kosong sebelum kover belakang (halaman fisik {num_pages-1}). '
+            f'Sesuai Pedoman BPS 2023 hal. 64 & Instrumen baris 205, halaman kosong sebelum kover belakang wajib bersih tanpa running title dan nomor halaman.'
+        )
+
     # ── ADVANCED COMPUTER VISION AUDIT ──
     cv_audit = {}
     if cv_auditor:
@@ -2470,6 +2571,17 @@ def extract_pdf_metadata(pdf_path):
         "last_page_text": pages_text.get(num_pages - 1, "") if num_pages > 0 else "",
         "divider_texts": divider_texts,
         "sample_tables": sample_tables,
+        # ── Standarisasi Penuh Sesuai Instrumen BPS 2023 (Rows 4-211) ──
+        "cover_title_has_tahun_word": cover_title_has_tahun_word,
+        "cover_katalog_issn_order_wrong": cover_katalog_issn_order_wrong,
+        "hju_katalog_issn_order_wrong": hju_katalog_issn_order_wrong,
+        "catalog_roman_is_odd": catalog_roman_is_odd,
+        "catalog_pub_no_abbreviated": catalog_pub_no_abbreviated,
+        "catalog_numbering_order_wrong": catalog_numbering_order_wrong,
+        "toc_subchapter_has_trailing_dot": toc_subchapter_has_trailing_dot,
+        "uses_daftar_grafik": uses_daftar_grafik,
+        "back_cover_has_abstraction": back_cover_has_abstraction,
+        "pre_back_cover_has_leak": pre_back_cover_has_leak,
         "section_pages": {
             "kover_depan": 1,
             "hju": (actual_hju_p + 1) if actual_hju_p >= 0 else 3,

@@ -174,6 +174,25 @@ def evaluate_katalog(meta, kabupaten_str, kab_upper, kab_raw, level_id, level_en
                 'Kesalahan spasi pada klausul Hak Cipta / Penerbit: Terdapat spasi setelah simbol hak cipta "©". '
                 'Sesuai Pedoman Pembuatan Publikasi BPS 2023 & Instrumen baris 32 poin 4, setelah simbol hak cipta tidak perlu ada spasi ("©Badan Pusat Statistik...").'
             )
-
+        if meta.get("catalog_roman_is_odd"):
+            r_str, r_int = meta["catalog_roman_is_odd"]
+            halaman_katalog.append(
+                f'Jumlah halaman Romawi pada baris Jumlah Halaman bernilai ganjil: Tertulis "{r_str}" ({r_int} halaman). '
+                f'Sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.2 hal. 37 & Instrumen baris 28 poin 4, '
+                f'jumlah halaman Romawi HARUS GENAP. Tambahkan satu halaman kosong tanpa nomor halaman dan running title '
+                f'jika bagian pendahuluan berakhir di halaman ganjil agar halaman batang tubuh 1 tetap dimulai pada halaman ganjil.'
+            )
+        if meta.get("catalog_pub_no_abbreviated"):
+            halaman_katalog.append(
+                'Penulisan "Nomor Publikasi" disingkat pada Halaman Katalog: Tertulis "No. Publikasi" atau "No Publikasi". '
+                'Sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.2 & Instrumen baris 26 poin 5, penulisan "Nomor Publikasi" '
+                'TIDAK BOLEH DISINGKAT (wajib ditulis lengkap "Nomor Publikasi" atau "Nomor Publikasi/Publication Number").'
+            )
+        if meta.get("catalog_numbering_order_wrong"):
+            halaman_katalog.append(
+                'Urutan penomoran publikasi pada Halaman Katalog tidak baku: '
+                'Sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.2 & Instrumen baris 26 poin 2, urutan penulisan penomoran '
+                'publikasi yang baku adalah Katalog terlebih dahulu, diikuti ISSN/ISBN, kemudian Nomor Publikasi.'
+            )
 
     return halaman_katalog

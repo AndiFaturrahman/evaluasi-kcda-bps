@@ -114,6 +114,11 @@ def evaluate_halaman_judul(meta, kabupaten_str, kab_upper, kab_raw, level_id, le
                 'Sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.1 (hal. 36) dan Instrumen baris 18, klaster nomor katalog dan ISSN '
                 'WAJIB diletakkan di pojok kanan atas halaman dengan perataan rata kanan (right-aligned).'
             )
-
+        if meta.get("hju_katalog_issn_order_wrong"):
+            halaman_judul.append(
+                'Urutan posisi Nomor Katalog dan ISSN pada Halaman Judul Utama terbalik: Nomor ISSN terpasang di atas Nomor Katalog. '
+                'Sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.1 (hal. 36) & Instrumen baris 18, Nomor Katalog WAJIB diposisikan '
+                'di ATAS nomor ISSN pada pojok kanan atas Halaman Judul Utama.'
+            )
 
     return halaman_judul
