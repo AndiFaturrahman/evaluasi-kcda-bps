@@ -15,6 +15,7 @@ from .batang_tubuh import evaluate_layout_isi
 from .daftar_pustaka import evaluate_daftar_pustaka
 from .kover_belakang import evaluate_kover_belakang
 from .cross_page import apply_cross_page_checks
+from .dwibahasa import audit_bilingual_compliance
 
 def analyze_defects(meta, custom_api_key=None):
     """
@@ -69,5 +70,6 @@ def analyze_defects(meta, custom_api_key=None):
         "Kover belakang: -": kover_belakang,
     }
 
+    audit_bilingual_compliance(meta, raw_res)
     apply_cross_page_checks(meta, raw_res)
     return deduplicate_all_defects(raw_res)

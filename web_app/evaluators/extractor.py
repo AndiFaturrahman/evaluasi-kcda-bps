@@ -1622,10 +1622,13 @@ def extract_pdf_metadata(pdf_path):
     divider_has_running_title = False
     divider_has_page_num = False
     chapter_opening_has_rt = []
+    divider_texts = []
     for p in range(20, num_pages - 3):
         txt = pages_text.get(p, "").strip()
         txt_no_web = re.sub(r'https?://\S+', '', txt).strip()
         is_divider = len(doc[p].get_images()) >= 1 and len(txt_no_web) < 40
+        if is_divider or bool(re.search(r'\bBAB\s*[1-7]\b', txt, re.I) and len(txt_no_web) < 120):
+            divider_texts.append(txt)
         if is_divider:
             if any("DALAM ANGKA" in l.upper() or "IN FIGURES" in l.upper() for l in pages_lines.get(p, [])):
                 divider_has_running_title = True
@@ -1670,6 +1673,7 @@ def extract_pdf_metadata(pdf_path):
 
     # ── SCANNER TABEL (GRANULAR PER HALAMAN) ──
     table_findings = []
+    sample_tables = []
     for p in range(20, num_pages - 3):
         txt = pages_text.get(p, "")
         lines = pages_lines.get(p, [])
@@ -1698,6 +1702,19 @@ def extract_pdf_metadata(pdf_path):
                 current_tbl_num = "Lanjutan " + m_lanj.group(1)
         
         tbl_label = f"Tabel {current_tbl_num} (hal {pg_num}, hal fisik {p+1})" if current_tbl_num else f"Tabel pada halaman {pg_num} (hal fisik {p+1})"
+
+        if current_tbl_num or ('Tabel' in txt) or ('Table' in txt):
+            is_tbl_bi = bool(
+                re.search(r'\bTable\b', txt, re.I)
+                or re.search(r'/\s*Table', txt, re.I)
+                or ("Source" in txt and "Sumber" in txt)
+                or ("Note" in txt and "Catatan" in txt)
+            )
+            sample_tables.append({
+                "page": p + 1,
+                "tbl_num": current_tbl_num,
+                "is_bilingual": is_tbl_bi
+            })
 
         # Titik di akhir judul tabel (Instrumen Row 141)
         if candidate_title and candidate_title.endswith('.'):
@@ -2441,6 +2458,18 @@ def extract_pdf_metadata(pdf_path):
         "hju_catalog_pos_wrong": hju_catalog_pos_wrong,
         "back_cover_barcode_pos_wrong": back_cover_barcode_pos_wrong,
         "chapter_opening_has_rt": chapter_opening_has_rt,
+        # ── Teks Halaman untuk Audit Dwibahasa (Bilingual Compliance) ──
+        "team_text": team_text,
+        "preface_text": preface_text,
+        "preface_en_text": preface_en_text,
+        "has_preface_en": (preface_en_idx >= 0) or ("PREFACE" in (preface_text + " " + preface_en_text).upper()),
+        "toc_text": toc_text,
+        "toc_table_text": pages_text.get(toc_table_idx, "") if toc_table_idx >= 0 else "",
+        "toc_figure_text": pages_text.get(toc_figure_idx, "") if toc_figure_idx >= 0 else "",
+        "penjelasan_text": pages_text.get(penjelasan_idx, "") if penjelasan_idx >= 0 else "",
+        "last_page_text": pages_text.get(num_pages - 1, "") if num_pages > 0 else "",
+        "divider_texts": divider_texts,
+        "sample_tables": sample_tables,
         "section_pages": {
             "kover_depan": 1,
             "hju": (actual_hju_p + 1) if actual_hju_p >= 0 else 3,
