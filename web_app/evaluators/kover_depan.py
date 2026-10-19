@@ -74,7 +74,14 @@ def evaluate_kover_depan(meta, kabupaten_str, kab_upper, kab_raw, level_id, leve
             f'Nomor ISSN tidak dicantumkan pada kover depan: Publikasi berkala yang memiliki ISSN {target_str} '
             f'wajib mencantumkan tulisan "{sample_issn}" tanpa tanda titik dua di pojok kanan atas kover depan di bawah nomor katalog (Pedoman hal. 35 & Instrumen baris 13).'
         )
-    if not meta.get("cover_title_is_italic", True):
+    if is_serial_pub and not meta.get("cover_has_english_title", True):
+        kover_depan.append(
+            f'Judul terjemahan bahasa Inggris belum dicantumkan pada kover depan: '
+            f'Publikasi Kecamatan Dalam Angka merupakan publikasi dwibahasa yang wajib menyertakan terjemahan judul bahasa asing '
+            f'("{region_up} {level_en_upper} IN FIGURES {year}") dengan cetak miring (italic) di bawah judul bahasa Indonesia '
+            f'(Pedoman Pembuatan Publikasi BPS 2023 hal. 58, Template KCDA 2026, dan Instrumen baris 8).'
+        )
+    elif meta.get("cover_has_english_title") and not meta.get("cover_title_is_italic", True):
         kover_depan.append(
             f'Kesalahan tipografi judul bahasa Inggris: Terjemahan judul "{region_up} {level_en_upper} IN FIGURES {year}" '
             f'pada kover depan belum dicetak miring (masih reguler/tegak). Sesuai kaidah publikasi dwibahasa BPS '

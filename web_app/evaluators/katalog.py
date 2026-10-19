@@ -76,6 +76,23 @@ def evaluate_katalog(meta, kabupaten_str, kab_upper, kab_raw, level_id, level_en
                 'Pencantuman nama instansi BPS pada Halaman Katalog masih memuat pilihan ganda template "Kabupaten/Kota" atau "Regency/Municipality". '
                 'Wajib disesuaikan dengan status wilayah kabupaten yang bersangkutan.'
             )
+        if (meta.get("is_serial") or meta.get("cover_is_bilingual") or meta.get("catalog", "").startswith("1102001")):
+            missing_bilingual = meta.get("catalog_bilingual_missing", [])
+            if len(missing_bilingual) >= 3:
+                missing_str = "; ".join(missing_bilingual)
+                halaman_katalog.append(
+                    f'Halaman Katalog belum disajikan dalam format dwibahasa (bilingual): '
+                    f'Publikasi Kecamatan Dalam Angka merupakan publikasi dwibahasa yang wajib menyajikan judul dan seluruh label metadata katalog dalam dua bahasa (Indonesia/Inggris) '
+                    f'sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.2 (hal. 37), Template KCDA 2026, dan Instrumen Pemeriksaan baris 24–33. '
+                    f'Komponen yang belum memuat padanan bahasa Inggris meliputi: {missing_str}.'
+                )
+            elif len(missing_bilingual) > 0:
+                for item_mis in missing_bilingual:
+                    halaman_katalog.append(
+                        f'Label/komponen "{item_mis}" pada Halaman Katalog belum dwibahasa: '
+                        f'Sesuai kaidah publikasi dwibahasa BPS (Pedoman 2023 hal. 37 & Instrumen baris 24–33), '
+                        f'komponen tersebut wajib memuat padanan bahasa Inggris resmi.'
+                    )
         if meta.get("catalog_slash"):
             halaman_katalog.append(
                 f'Kesalahan tanda baca pada baris Katalog: Tertulis "Katalog /Catalogue: {catalog_no}" '

@@ -52,12 +52,12 @@ class CVPublicationAuditor:
         except Exception as e:
             print(f"[CV Auditor] Warning loading Haar cascade: {e}")
 
-    def check_title_english_is_italic(self, page):
+    def check_title_english(self, page):
         """
-        Mendeteksi apakah terjemahan judul bahasa Inggris ('... DISTRICT IN FIGURES')
-        pada halaman kover depan atau HJU dicetak miring (italic).
-        Mendukung pengecekan teks berbasis font-flags PyMuPDF dan pemindaian kemiringan visual (moment slant) OpenCV.
-        Mengembalikan True jika miring (italic), False jika tegak (reguler).
+        Mendeteksi keberadaan dan tipografi terjemahan judul bahasa Inggris ('... DISTRICT IN FIGURES' / '... IN FIGURES')
+        pada halaman kover depan atau HJU.
+        Returns:
+            (has_english_title: bool, is_italic: bool)
         """
         # 1. Cek Text Layer (PyMuPDF blocks/spans jika tersedia)
         try:
@@ -71,18 +71,22 @@ class CVPublicationAuditor:
                                 font_name = s.get("font", "").lower()
                                 flags = s.get("flags", 0)
                                 if (flags & 2) or "italic" in font_name or "oblique" in font_name or "slanted" in font_name:
-                                    return True
+                                    return True, True
                                 else:
-                                    return False
+                                    return True, False
+            # Jika halaman memiliki text layer yang memadai tetapi tidak ada "IN FIGURES"
+            page_text = page.get_text()
+            if len(page_text.strip()) > 15 and "IN FIGURES" not in page_text.upper():
+                return False, False
         except Exception:
             pass
 
-        # 2. Pemindaian Visual OpenCV (Slant / Shear moment analysis)
+        # 2. Pemindaian Visual OpenCV (hanya jika halaman berupa raster tanpa text layer)
         try:
             pix = page.get_pixmap(dpi=200)
             img = cv2.imdecode(np.frombuffer(pix.tobytes("png"), np.uint8), cv2.IMREAD_COLOR)
             if img is None:
-                return True
+                return True, True
             h, w, _ = img.shape
             crop = img[int(h * 0.15):int(h * 0.55), int(w * 0.08):int(w * 0.80)]
             gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
@@ -115,8 +119,13 @@ class CVPublicationAuditor:
                     if len(comps) >= 8:
                         candidate_lines.append((cy, comps))
 
+            # Pada kover BPS dwibahasa, judul memuat minimal 3-4 baris (Kecamatan, Dalam Angka, District In Figures, Tahun)
+            # Jika baris yang ditemukan <= 2 (hanya judul Indonesia + tahun), maka judul Inggris tidak ada
+            if len(candidate_lines) <= 2:
+                return False, False
+
             if candidate_lines:
-                target_line = candidate_lines[-1][1]
+                target_line = candidate_lines[-2][1] if len(candidate_lines) >= 3 else candidate_lines[-1][1]
                 slants = []
                 for c in target_line:
                     idx = c[5]
@@ -131,13 +140,17 @@ class CVPublicationAuditor:
                 if slants:
                     med_slant = np.median(slants)
                     if med_slant <= -5.0:
-                        return True
+                        return True, True
                     else:
-                        return False
+                        return True, False
         except Exception as e:
-            print(f"[check_title_english_is_italic] Error: {e}")
+            print(f"[check_title_english] Error: {e}")
 
-        return True
+        return True, True
+
+    def check_title_english_is_italic(self, page):
+        has_en, is_it = self.check_title_english(page)
+        return is_it
 
     def audit_document(self, doc, region_name="Wilayah", year="2026", catalog_no="-", issn_val="-"):
         """
@@ -477,11 +490,19 @@ class CVPublicationAuditor:
 
         # C. Inspeksi Tipografi Subtitle Bahasa Asing (Italic vs Reguler)
         # Sesuai pedoman dwibahasa, judul bahasa asing wajib dicetak miring
-        is_italic = self.check_title_english_is_italic(page)
+        has_en_title, is_italic = self.check_title_english(page)
+        info["has_english_title"] = has_en_title
         info["title_english_is_italic"] = is_italic
-        info["title_english_is_upright"] = not is_italic
-        if not is_italic:
-            reg_up = region_name.upper()
+        info["title_english_is_upright"] = (has_en_title and not is_italic)
+        reg_up = region_name.upper()
+        if not has_en_title:
+            info["defects"].append(
+                f'Judul terjemahan bahasa Inggris belum dicantumkan pada kover depan: '
+                f'Publikasi Kecamatan Dalam Angka merupakan publikasi dwibahasa yang wajib menyertakan terjemahan judul bahasa Inggris '
+                f'("{reg_up} DISTRICT IN FIGURES {year}") dengan cetak miring (italic) di bawah judul bahasa Indonesia '
+                f'(Pedoman Pembuatan Publikasi BPS 2023 hal. 58, Template KCDA 2026, dan Instrumen baris 8).'
+            )
+        elif not is_italic:
             info["defects"].append(
                 f'Kesalahan tipografi judul bahasa Inggris: Terjemahan judul "{reg_up} DISTRICT IN FIGURES {year}" '
                 f'pada kover depan belum dicetak miring (masih reguler/tegak). Sesuai kaidah publikasi dwibahasa BPS '
@@ -642,11 +663,18 @@ class CVPublicationAuditor:
                         break
 
         # D. Judul Terjemahan Inggris HJU
-        is_italic = self.check_title_english_is_italic(page)
+        has_en_title, is_italic = self.check_title_english(page)
+        info["has_english_title"] = has_en_title
         info["title_english_is_italic"] = is_italic
-        info["title_english_is_upright"] = not is_italic
-        if not is_italic:
-            reg_up = region_name.upper()
+        info["title_english_is_upright"] = (has_en_title and not is_italic)
+        reg_up = region_name.upper()
+        if not has_en_title:
+            info["defects"].append(
+                f'Judul terjemahan bahasa Inggris belum dicantumkan pada Halaman Judul Utama: '
+                f'Publikasi dwibahasa wajib menyertakan terjemahan judul bahasa Inggris ("{reg_up} DISTRICT IN FIGURES {year}") '
+                f'yang dicetak miring (italic) di bawah judul bahasa Indonesia (Pedoman 2023 Bab 4.3.1 hal. 36 & Instrumen baris 18).'
+            )
+        elif not is_italic:
             info["defects"].append(
                 f'Kesalahan tipografi judul bahasa Inggris pada Halaman Judul Utama: Terjemahan judul "{reg_up} DISTRICT IN FIGURES {year}" '
                 f'belum dicetak miring (masih reguler/tegak). Sesuai Pedoman Publikasi BPS 2023 Bab 4.3.1 (hal. 36) & Instrumen baris 18, '

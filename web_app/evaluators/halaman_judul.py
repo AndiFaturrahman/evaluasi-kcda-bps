@@ -80,7 +80,13 @@ def evaluate_halaman_judul(meta, kabupaten_str, kab_upper, kab_raw, level_id, le
                 f'Kesalahan spasi pada nomor katalog Halaman Judul Utama: Tertulis "Katalog/Catalogue : {catalog_no}" '
                 f'(terdapat spasi sebelum tanda titik dua). Seharusnya ditulis tanpa spasi "Katalog/Catalogue: {catalog_no}".'
             )
-        if not meta.get("hju_title_is_italic", True):
+        if is_serial_pub and not meta.get("hju_has_english_title", True):
+            halaman_judul.append(
+                f'Judul terjemahan bahasa Inggris belum dicantumkan pada Halaman Judul Utama: '
+                f'Publikasi Kecamatan Dalam Angka wajib menyertakan judul terjemahan bahasa asing ("{region_up} {level_en_upper} IN FIGURES {year}") '
+                f'yang dicetak miring (italic) di bawah judul bahasa Indonesia (Pedoman 2023 Bab 4.3.1 hal. 36, Template KCDA 2026, dan Instrumen baris 18).'
+            )
+        elif meta.get("hju_has_english_title") and not meta.get("hju_title_is_italic", True):
             halaman_judul.append(
                 f'Kesalahan tipografi judul bahasa Inggris pada Halaman Judul Utama: Terjemahan judul "{region_up} {level_en_upper} IN FIGURES {year}" '
                 f'belum dicetak miring (masih reguler/tegak). Sesuai Pedoman Publikasi BPS 2023 Bab 4.3.1 (hal. 36) & Instrumen baris 18, '

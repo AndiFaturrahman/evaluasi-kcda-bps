@@ -268,10 +268,16 @@ def extract_pdf_metadata(pdf_path):
             cover_has_issn = True
 
     cover_catalog_space_colon = cover_raster_info.get("catalog_space_colon", False)
+    cover_has_english_title = bool(re.search(r'IN\s+FIGURES', cover_text, re.I))
     cover_title_is_italic = True
     if cv_auditor and num_pages > 0:
         try:
-            cover_title_is_italic = cv_auditor.check_title_english_is_italic(doc[0])
+            has_en, is_it = cv_auditor.check_title_english(doc[0])
+            if has_en:
+                cover_has_english_title = True
+                cover_title_is_italic = is_it
+            elif not cover_has_english_title:
+                cover_title_is_italic = True
         except Exception:
             pass
 
@@ -345,10 +351,16 @@ def extract_pdf_metadata(pdf_path):
             p3_has_issn = True
 
     hju_catalog_space_colon = hju_raster_info.get("catalog_space_colon", False)
+    hju_has_english_title = bool(re.search(r'IN\s+FIGURES', p3_text_full, re.I))
     hju_title_is_italic = True
     if cv_auditor and actual_hju_p >= 0 and actual_hju_p < num_pages:
         try:
-            hju_title_is_italic = cv_auditor.check_title_english_is_italic(doc[actual_hju_p])
+            has_en, is_it = cv_auditor.check_title_english(doc[actual_hju_p])
+            if has_en:
+                hju_has_english_title = True
+                hju_title_is_italic = is_it
+            elif not hju_has_english_title:
+                hju_title_is_italic = True
         except Exception:
             pass
 
@@ -510,7 +522,8 @@ def extract_pdf_metadata(pdf_path):
 
     # ── DETEKSI NAMA SATKER DWIBASAHA (BILINGUAL) & TIPOGRAFI ARIAL BOLD ITALIC ──
     cover_is_bilingual = (
-        bool(re.search(r'DISTRICT IN FIGURES', pages_text.get(0, "") + pages_text.get(2, ""), re.I))
+        is_serial
+        or bool(re.search(r'DISTRICT IN FIGURES', pages_text.get(0, "") + pages_text.get(2, ""), re.I))
         or bool(re.search(r'in Figures', all_prelim, re.I))
         or "INDONESIA DAN INGGRIS" in catalog_text.upper()
     )
@@ -523,6 +536,40 @@ def extract_pdf_metadata(pdf_path):
             cover_publisher_not_bilingual = True
         elif not has_bps_en:
             cover_publisher_not_bilingual = True
+
+    # ── DETEKSI FORMAT DWIBAHASA (BILINGUAL) PADA HALAMAN KATALOG ──
+    catalog_has_english_title = bool(re.search(r'IN\s+FIGURES', catalog_text, re.I))
+    catalog_bilingual_missing = []
+
+    if is_serial or cover_is_bilingual:
+        if not catalog_has_english_title:
+            catalog_bilingual_missing.append('Judul Bahasa Inggris ("... District in Figures")')
+        if re.search(r'\bKatalog\b', catalog_text, re.I) and not re.search(r'Catalogue', catalog_text, re.I):
+            catalog_bilingual_missing.append('Katalog/Catalogue')
+        if re.search(r'Nomor\s+Publikasi', catalog_text, re.I) and not re.search(r'Publication\s+Number', catalog_text, re.I):
+            catalog_bilingual_missing.append('Nomor Publikasi/Publication Number')
+        if re.search(r'Ukuran\s+Buku', catalog_text, re.I) and not re.search(r'Book\s+Size', catalog_text, re.I):
+            catalog_bilingual_missing.append('Ukuran Buku/Book Size')
+        if re.search(r'Jumlah\s+Halaman', catalog_text, re.I) and not re.search(r'Number\s+of\s+Pages', catalog_text, re.I):
+            catalog_bilingual_missing.append('Jumlah Halaman/Number of Pages')
+        if re.search(r'Jumlah\s+Halaman', catalog_text, re.I):
+            m_pg = re.search(r'Jumlah\s+Halaman[^\n:]*:[^\n]+', catalog_text, re.I)
+            if m_pg and not re.search(r'pages', m_pg.group(0), re.I):
+                catalog_bilingual_missing.append('Satuan halaman ("... halaman/pages")')
+        if re.search(r'Penyusun\s+Naskah', catalog_text, re.I) and not re.search(r'Manuscript\s+Drafter', catalog_text, re.I):
+            catalog_bilingual_missing.append('Penyusun Naskah/Manuscript Drafter')
+        if re.search(r'Penyunting', catalog_text, re.I) and not re.search(r'Editor', catalog_text, re.I):
+            catalog_bilingual_missing.append('Penyunting/Editor')
+        if re.search(r'Pembuat\s+Kover', catalog_text, re.I) and not re.search(r'Cover\s+Designer', catalog_text, re.I):
+            catalog_bilingual_missing.append('Pembuat Kover/Cover Designer')
+        if re.search(r'Penerbit', catalog_text, re.I) and not re.search(r'Publisher', catalog_text, re.I):
+            catalog_bilingual_missing.append('Penerbit/Publisher')
+        if re.search(r'Sumber\s+Ilustrasi', catalog_text, re.I) and not re.search(r'Illustration\s+Source', catalog_text, re.I):
+            catalog_bilingual_missing.append('Sumber Ilustrasi/Illustration Source')
+        has_cp_id = bool(re.search(r'Dilarang\s+mereproduksi|menggandakan', catalog_text, re.I))
+        has_cp_en = bool(re.search(r'All\s+rights\s+reserved|commercial\s+purposes', catalog_text, re.I))
+        if has_cp_id and not has_cp_en:
+            catalog_bilingual_missing.append('Klausul Hak Cipta bahasa Inggris ("All rights reserved...")')
 
     cover_publisher_not_arial_bi = False
     try:
@@ -2151,6 +2198,8 @@ def extract_pdf_metadata(pdf_path):
                     cover_catalog_space_colon = True
                 if cv_cov.get("has_template_letter_a"):
                     cover_has_letter_a = True
+                if "has_english_title" in cv_cov:
+                    cover_has_english_title = cv_cov["has_english_title"]
                 if "title_english_is_italic" in cv_cov:
                     cover_title_is_italic = cv_cov["title_english_is_italic"]
             if cv_audit.get("hju_visual"):
@@ -2161,6 +2210,8 @@ def extract_pdf_metadata(pdf_path):
                     hju_catalog_space_colon = True
                 p3_has_image = cv_hju.get("has_illustration_background", False)
                 p3_logo_monochrome = cv_hju.get("logo_is_monochrome", False)
+                if "has_english_title" in cv_hju:
+                    hju_has_english_title = cv_hju["has_english_title"]
                 if "title_english_is_italic" in cv_hju:
                     hju_title_is_italic = cv_hju["title_english_is_italic"]
         except Exception as e:
@@ -2256,8 +2307,13 @@ def extract_pdf_metadata(pdf_path):
         "cover_has_issn": cover_has_issn,
         "cover_has_template_leak": cover_has_template_leak,
         "cover_has_letter_a": cover_has_letter_a,
+        "cover_has_english_title": cover_has_english_title,
         "cover_title_is_italic": cover_title_is_italic,
+        "hju_has_english_title": hju_has_english_title,
         "hju_title_is_italic": hju_title_is_italic,
+        "catalog_has_english_title": catalog_has_english_title,
+        "catalog_bilingual_missing": catalog_bilingual_missing,
+        "cover_is_bilingual": cover_is_bilingual,
         "p2_has_leak": p2_has_leak,
         "p3_has_image": p3_has_image,
         "p3_text_full": p3_text_full,
