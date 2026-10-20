@@ -59,6 +59,7 @@ class CVPublicationAuditor:
         Returns:
             (has_english_title: bool, is_italic: bool)
         """
+        has_images = len(page.get_images()) >= 1
         # 1. Cek Text Layer (PyMuPDF blocks/spans jika tersedia)
         try:
             blocks = page.get_text("dict").get("blocks", [])
@@ -74,14 +75,14 @@ class CVPublicationAuditor:
                                     return True, True
                                 else:
                                     return True, False
-            # Jika halaman memiliki text layer yang memadai tetapi tidak ada "IN FIGURES"
+            # Jika halaman memiliki text layer yang memadai TANPA gambar cover, dan tidak ada "IN FIGURES"
             page_text = page.get_text()
-            if len(page_text.strip()) > 15 and "IN FIGURES" not in page_text.upper():
+            if not has_images and len(page_text.strip()) > 15 and "IN FIGURES" not in page_text.upper():
                 return False, False
         except Exception:
             pass
 
-        # 2. Pemindaian Visual OpenCV (hanya jika halaman berupa raster tanpa text layer)
+        # 2. Pemindaian Visual OpenCV & RapidOCR (untuk halaman raster atau halaman dengan gambar/ghost text)
         try:
             pix = page.get_pixmap(dpi=200)
             img = cv2.imdecode(np.frombuffer(pix.tobytes("png"), np.uint8), cv2.IMREAD_COLOR)
@@ -89,9 +90,51 @@ class CVPublicationAuditor:
                 return True, True
             h, w, _ = img.shape
             crop = img[int(h * 0.15):int(h * 0.55), int(w * 0.08):int(w * 0.80)]
+
+            # Cek teks visual menggunakan RapidOCR pada crop judul
+            has_en_ocr = False
+            ocr_bboxes = []
+            try:
+                from rapidocr_onnxruntime import RapidOCR
+                if not hasattr(self, '_rapid_engine') or self._rapid_engine is None:
+                    self._rapid_engine = RapidOCR()
+                ocr_res, _ = self._rapid_engine(crop)
+                if ocr_res:
+                    for r in ocr_res:
+                        txt_r = r[1].upper().replace(" ", "")
+                        if "INFIGURES" in txt_r or "DISTRICT" in txt_r:
+                            has_en_ocr = True
+                            ocr_bboxes.append(r[0])
+            except Exception:
+                pass
+
             gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
             _, thresh = cv2.threshold(gray, 180, 255, cv2.THRESH_BINARY_INV)
             num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(thresh)
+
+            # Jika RapidOCR menemukan teks terjemahan bahasa Inggris visual
+            if has_en_ocr and ocr_bboxes:
+                all_pts = [pt for bbox in ocr_bboxes for pt in bbox]
+                min_y = max(0, int(min(pt[1] for pt in all_pts) - 5))
+                max_y = min(crop.shape[0], int(max(pt[1] for pt in all_pts) + 5))
+                min_x = max(0, int(min(pt[0] for pt in all_pts) - 5))
+                max_x = min(crop.shape[1], int(max(pt[0] for pt in all_pts) + 5))
+
+                slants = []
+                for i in range(1, num_labels):
+                    x, y, cw, ch, area = stats[i]
+                    if min_y <= y <= max_y and min_x <= x <= max_x and 8 < ch < 60 and 15 < area < 3000:
+                        mask = (labels == i).astype(np.uint8)
+                        char_roi = mask[y:y+ch, x:x+cw]
+                        M = cv2.moments(char_roi)
+                        if M['mu02'] > 0 and M['m00'] > 20:
+                            shear = M['mu11'] / M['mu02']
+                            slants.append(np.degrees(np.arctan(shear)))
+
+                if slants:
+                    med_slant = float(np.median(slants))
+                    return True, bool(med_slant <= -4.5)
+                return True, True
 
             lines = {}
             for i in range(1, num_labels):

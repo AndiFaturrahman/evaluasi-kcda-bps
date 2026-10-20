@@ -320,6 +320,34 @@ def scan_cover_raster_header(page):
     """
     try:
         rect = fitz.Rect(page.rect.width * 0.40, 0, page.rect.width, page.rect.height * 0.22)
+        has_images = len(page.get_images()) >= 1
+
+        # Jika halaman memuat objek gambar (raster/cover template), selalu prioritaskan pemindaian visual OCR
+        # untuk menghindari tertipu oleh text layer tak kasat mata (ghost text) di balik gambar.
+        if has_images:
+            try:
+                from rapidocr_onnxruntime import RapidOCR
+                if not hasattr(scan_cover_raster_header, '_rapid_engine'):
+                    scan_cover_raster_header._rapid_engine = RapidOCR()
+                engine = scan_cover_raster_header._rapid_engine
+                pix = page.get_pixmap(clip=rect, dpi=200)
+                img = cv2.imdecode(np.frombuffer(pix.tobytes("png"), np.uint8), cv2.IMREAD_COLOR)
+                if img is not None:
+                    ocr_res, _ = engine(img)
+                    if ocr_res:
+                        ocr_texts = [r[1] for r in ocr_res]
+                        combined_ocr = " ".join(ocr_texts)
+                        has_issn = bool(re.search(r'\bISSN\b', combined_ocr, re.IGNORECASE))
+                        has_colon = bool(re.search(r'\bISSN\s*:', combined_ocr, re.IGNORECASE))
+                        catalog_space_colon = bool(re.search(r'(?:Katalog|Catalogue)\s+:', combined_ocr, re.IGNORECASE))
+                        return {
+                            "has_issn": has_issn,
+                            "has_colon": has_colon,
+                            "catalog_space_colon": catalog_space_colon
+                        }
+            except Exception:
+                pass
+
         txt_clip = page.get_text("text", clip=rect)
         if txt_clip and any(c.isalnum() for c in txt_clip):
             has_issn = bool(re.search(r'\bISSN\b', txt_clip, re.IGNORECASE))

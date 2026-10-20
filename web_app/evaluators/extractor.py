@@ -348,16 +348,10 @@ def extract_pdf_metadata(pdf_path):
     m_cov_col = re.search(r'ISSN\s*:\s*\d{4}[-\u2013]\d{3}[\dX]|ISSN\s*:\s*\d{4}', cover_text)
     cover_issn_text = m_cov_col.group(0).strip() if m_cov_col else None
     cover_has_colon = bool(m_cov_col)
-    cover_has_issn = bool(re.search(r'ISSN', cover_text, re.IGNORECASE))
+    cover_has_issn = bool(re.search(r'\bISSN\b', cover_text, re.IGNORECASE))
     # Residu format master tidak kasat mata (tersembunyi di balik kover) diabaikan
     cover_has_template_leak = False
     cover_has_letter_a = False
-
-    # Deteksi kebocoran placeholder / draft template pada Kover Depan
-    cover_issn_placeholder = bool(re.search(r'XXXX\s*-\s*XXXX|ISSN\s+XXXX', cover_text, re.I)) or (cover_has_issn and not bool(re.search(r'ISSN\s*[:/]?\s*\d{4}[-\u2013]\d{3}[\dX]', cover_text, re.I)))
-    cover_catalog_placeholder = bool(re.search(r'1102001\.\s*xxxx|\.xxxx\b', cover_text, re.I))
-    cover_volume_placeholder = bool(re.search(r'Volume\s+(?:XX|xx|\.\.\.)', cover_text))
-    cover_agency_dual_option = bool(re.search(r'KABUPATEN/KOTA', cover_text) or re.search(r'REGENCY/MUNICIPALITY', cover_text))
 
     # Pemindaian raster OpenCV untuk kover depan
     cover_raster_info = {"has_issn": False, "has_colon": False, "catalog_space_colon": False}
@@ -365,11 +359,24 @@ def extract_pdf_metadata(pdf_path):
         cover_raster_info = scan_cover_raster_header(doc[0])
         if cover_raster_info["has_colon"]:
             cover_has_colon = True
-        if cover_raster_info["has_issn"]:
-            cover_has_issn = True
+        if cover_has_ghost_text or len(doc[0].get_images()) >= 1:
+            cover_has_issn = cover_raster_info["has_issn"] or bool(re.search(r'\bISSN\b', cover_text, re.I))
+        else:
+            if cover_raster_info["has_issn"]:
+                cover_has_issn = True
+
+    # Deteksi kebocoran placeholder / draft template pada Kover Depan
+    if (cover_has_ghost_text or len(doc[0].get_images()) >= 1) and not cover_has_issn:
+        cover_issn_placeholder = False
+    else:
+        cover_issn_placeholder = bool(re.search(r'XXXX\s*-\s*XXXX|ISSN\s+XXXX', cover_text, re.I)) or (cover_has_issn and not bool(re.search(r'ISSN\s*[:/]?\s*\d{4}[-\u2013]\d{3}[\dX]', cover_text, re.I)))
+
+    cover_catalog_placeholder = bool(re.search(r'1102001\.\s*xxxx|\.xxxx\b', cover_text, re.I))
+    cover_volume_placeholder = bool(re.search(r'Volume\s+(?:XX|xx|\.\.\.)', cover_text))
+    cover_agency_dual_option = bool(re.search(r'KABUPATEN/KOTA', cover_text) or re.search(r'REGENCY/MUNICIPALITY', cover_text))
 
     cover_catalog_space_colon = cover_raster_info.get("catalog_space_colon", False)
-    cover_has_english_title = bool(re.search(r'IN\s+FIGURES', cover_text, re.I))
+    cover_has_english_title = bool(re.search(r'IN\s*FIGURES|DISTRICT\s*IN\s*FIGURES', cover_text, re.I))
     cover_title_is_italic = True
     if cv_auditor and num_pages > 0:
         try:
@@ -377,8 +384,11 @@ def extract_pdf_metadata(pdf_path):
             if has_en:
                 cover_has_english_title = True
                 cover_title_is_italic = is_it
-            elif not cover_has_english_title:
-                cover_title_is_italic = True
+            else:
+                if cover_has_ghost_text or len(doc[0].get_images()) >= 1:
+                    cover_has_english_title = False
+                elif not cover_has_english_title:
+                    cover_title_is_italic = True
         except Exception:
             pass
 
