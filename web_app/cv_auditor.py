@@ -56,11 +56,119 @@ class CVPublicationAuditor:
         """
         Mendeteksi keberadaan dan tipografi terjemahan judul bahasa Inggris ('... DISTRICT IN FIGURES' / '... IN FIGURES')
         pada halaman kover depan atau HJU.
+        Prioritas: Pemindaian visual OCR didahulukan pada halaman yang memuat gambar/grafis untuk membaca apa yang kasat mata.
         Returns:
             (has_english_title: bool, is_italic: bool)
         """
         has_images = len(page.get_images()) >= 1
-        # 1. Cek Text Layer (PyMuPDF blocks/spans jika tersedia)
+
+        # 1. Prioritas Visual OCR & OpenCV (untuk halaman dengan objek gambar / kover grafis)
+        if has_images:
+            try:
+                pix = page.get_pixmap(dpi=200)
+                img = cv2.imdecode(np.frombuffer(pix.tobytes("png"), np.uint8), cv2.IMREAD_COLOR)
+                if img is not None:
+                    h, w, _ = img.shape
+                    crop = img[int(h * 0.15):int(h * 0.55), int(w * 0.08):int(w * 0.80)]
+
+                    # Cek teks visual menggunakan RapidOCR pada crop judul
+                    has_en_ocr = False
+                    ocr_bboxes = []
+                    try:
+                        from rapidocr_onnxruntime import RapidOCR
+                        if not hasattr(self, '_rapid_engine') or self._rapid_engine is None:
+                            self._rapid_engine = RapidOCR()
+                        ocr_res, _ = self._rapid_engine(crop)
+                        if ocr_res:
+                            for r in ocr_res:
+                                txt_r = r[1].upper().replace(" ", "")
+                                if "INFIGURES" in txt_r or "DISTRICT" in txt_r:
+                                    has_en_ocr = True
+                                    ocr_bboxes.append(r[0])
+                    except Exception:
+                        pass
+
+                    gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
+                    _, thresh = cv2.threshold(gray, 180, 255, cv2.THRESH_BINARY_INV)
+                    num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(thresh)
+
+                    # Jika RapidOCR menemukan teks terjemahan bahasa Inggris visual
+                    if has_en_ocr and ocr_bboxes:
+                        all_pts = [pt for bbox in ocr_bboxes for pt in bbox]
+                        min_y = max(0, int(min(pt[1] for pt in all_pts) - 5))
+                        max_y = min(crop.shape[0], int(max(pt[1] for pt in all_pts) + 5))
+                        min_x = max(0, int(min(pt[0] for pt in all_pts) - 5))
+                        max_x = min(crop.shape[1], int(max(pt[0] for pt in all_pts) + 5))
+
+                        slants = []
+                        for i in range(1, num_labels):
+                            x, y, cw, ch, area = stats[i]
+                            if min_y <= y <= max_y and min_x <= x <= max_x and 8 < ch < 60 and 15 < area < 3000:
+                                mask = (labels == i).astype(np.uint8)
+                                char_roi = mask[y:y+ch, x:x+cw]
+                                M = cv2.moments(char_roi)
+                                if M['mu02'] > 0 and M['m00'] > 20:
+                                    shear = M['mu11'] / M['mu02']
+                                    slants.append(np.degrees(np.arctan(shear)))
+
+                        if slants:
+                            med_slant = float(np.median(slants))
+                            return True, bool(med_slant <= -4.5)
+                        return True, True
+
+                    # Fallback ke deteksi candidate_lines jika OCR tidak menemukan teks
+                    lines = {}
+                    for i in range(1, num_labels):
+                        x, y, cw, ch, area = stats[i]
+                        if 10 < area < 5000 and 8 < ch < 100:
+                            cy = y + ch // 2
+                            assigned = False
+                            for lk in lines:
+                                if abs(cy - lk) < 15:
+                                    lines[lk].append((x, y, cw, ch, area, i))
+                                    assigned = True
+                                    break
+                            if not assigned:
+                                lines[cy] = [(x, y, cw, ch, area, i)]
+
+                    candidate_lines = []
+                    for cy in sorted(lines.keys()):
+                        comps = lines[cy]
+                        if len(comps) >= 15:
+                            candidate_lines.append((cy, comps))
+
+                    if not candidate_lines:
+                        for cy in sorted(lines.keys()):
+                            comps = lines[cy]
+                            if len(comps) >= 8:
+                                candidate_lines.append((cy, comps))
+
+                    if len(candidate_lines) <= 2 and not has_en_ocr:
+                        return False, False
+
+                    if candidate_lines:
+                        target_line = candidate_lines[-2][1] if len(candidate_lines) >= 3 else candidate_lines[-1][1]
+                        slants = []
+                        for c in target_line:
+                            idx = c[5]
+                            mask = (labels == idx).astype(np.uint8)
+                            x, y, cw, ch = c[0], c[1], c[2], c[3]
+                            char_roi = mask[y:y+ch, x:x+cw]
+                            M = cv2.moments(char_roi)
+                            if M['mu02'] > 0 and M['m00'] > 20:
+                                shear = M['mu11'] / M['mu02']
+                                slants.append(np.degrees(np.arctan(shear)))
+
+                        if slants:
+                            med_slant = np.median(slants)
+                            if med_slant <= -5.0:
+                                return True, True
+                            else:
+                                return True, False
+            except Exception as e:
+                print(f"[check_title_english] Visual scan error: {e}")
+
+        # 2. Cek Text Layer (PyMuPDF blocks/spans jika tersedia dan halaman digital tanpa gambar)
         try:
             blocks = page.get_text("dict").get("blocks", [])
             for b in blocks:
@@ -75,119 +183,11 @@ class CVPublicationAuditor:
                                     return True, True
                                 else:
                                     return True, False
-            # Jika halaman memiliki text layer yang memadai TANPA gambar cover, dan tidak ada "IN FIGURES"
             page_text = page.get_text()
             if not has_images and len(page_text.strip()) > 15 and "IN FIGURES" not in page_text.upper():
                 return False, False
         except Exception:
             pass
-
-        # 2. Pemindaian Visual OpenCV & RapidOCR (untuk halaman raster atau halaman dengan gambar/ghost text)
-        try:
-            pix = page.get_pixmap(dpi=200)
-            img = cv2.imdecode(np.frombuffer(pix.tobytes("png"), np.uint8), cv2.IMREAD_COLOR)
-            if img is None:
-                return True, True
-            h, w, _ = img.shape
-            crop = img[int(h * 0.15):int(h * 0.55), int(w * 0.08):int(w * 0.80)]
-
-            # Cek teks visual menggunakan RapidOCR pada crop judul
-            has_en_ocr = False
-            ocr_bboxes = []
-            try:
-                from rapidocr_onnxruntime import RapidOCR
-                if not hasattr(self, '_rapid_engine') or self._rapid_engine is None:
-                    self._rapid_engine = RapidOCR()
-                ocr_res, _ = self._rapid_engine(crop)
-                if ocr_res:
-                    for r in ocr_res:
-                        txt_r = r[1].upper().replace(" ", "")
-                        if "INFIGURES" in txt_r or "DISTRICT" in txt_r:
-                            has_en_ocr = True
-                            ocr_bboxes.append(r[0])
-            except Exception:
-                pass
-
-            gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
-            _, thresh = cv2.threshold(gray, 180, 255, cv2.THRESH_BINARY_INV)
-            num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(thresh)
-
-            # Jika RapidOCR menemukan teks terjemahan bahasa Inggris visual
-            if has_en_ocr and ocr_bboxes:
-                all_pts = [pt for bbox in ocr_bboxes for pt in bbox]
-                min_y = max(0, int(min(pt[1] for pt in all_pts) - 5))
-                max_y = min(crop.shape[0], int(max(pt[1] for pt in all_pts) + 5))
-                min_x = max(0, int(min(pt[0] for pt in all_pts) - 5))
-                max_x = min(crop.shape[1], int(max(pt[0] for pt in all_pts) + 5))
-
-                slants = []
-                for i in range(1, num_labels):
-                    x, y, cw, ch, area = stats[i]
-                    if min_y <= y <= max_y and min_x <= x <= max_x and 8 < ch < 60 and 15 < area < 3000:
-                        mask = (labels == i).astype(np.uint8)
-                        char_roi = mask[y:y+ch, x:x+cw]
-                        M = cv2.moments(char_roi)
-                        if M['mu02'] > 0 and M['m00'] > 20:
-                            shear = M['mu11'] / M['mu02']
-                            slants.append(np.degrees(np.arctan(shear)))
-
-                if slants:
-                    med_slant = float(np.median(slants))
-                    return True, bool(med_slant <= -4.5)
-                return True, True
-
-            lines = {}
-            for i in range(1, num_labels):
-                x, y, cw, ch, area = stats[i]
-                if 10 < area < 5000 and 8 < ch < 100:
-                    cy = y + ch // 2
-                    assigned = False
-                    for lk in lines:
-                        if abs(cy - lk) < 15:
-                            lines[lk].append((x, y, cw, ch, area, i))
-                            assigned = True
-                            break
-                    if not assigned:
-                        lines[cy] = [(x, y, cw, ch, area, i)]
-
-            candidate_lines = []
-            for cy in sorted(lines.keys()):
-                comps = lines[cy]
-                if len(comps) >= 15:
-                    candidate_lines.append((cy, comps))
-
-            if not candidate_lines:
-                for cy in sorted(lines.keys()):
-                    comps = lines[cy]
-                    if len(comps) >= 8:
-                        candidate_lines.append((cy, comps))
-
-            # Pada kover BPS dwibahasa, judul memuat minimal 3-4 baris (Kecamatan, Dalam Angka, District In Figures, Tahun)
-            # Jika baris yang ditemukan <= 2 (hanya judul Indonesia + tahun), maka judul Inggris tidak ada
-            if len(candidate_lines) <= 2:
-                return False, False
-
-            if candidate_lines:
-                target_line = candidate_lines[-2][1] if len(candidate_lines) >= 3 else candidate_lines[-1][1]
-                slants = []
-                for c in target_line:
-                    idx = c[5]
-                    mask = (labels == idx).astype(np.uint8)
-                    x, y, cw, ch = c[0], c[1], c[2], c[3]
-                    char_roi = mask[y:y+ch, x:x+cw]
-                    M = cv2.moments(char_roi)
-                    if M['mu02'] > 0 and M['m00'] > 20:
-                        shear = M['mu11'] / M['mu02']
-                        slants.append(np.degrees(np.arctan(shear)))
-
-                if slants:
-                    med_slant = np.median(slants)
-                    if med_slant <= -5.0:
-                        return True, True
-                    else:
-                        return True, False
-        except Exception as e:
-            print(f"[check_title_english] Error: {e}")
 
         return True, True
 
