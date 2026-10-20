@@ -6,6 +6,11 @@ import socket
 import shutil
 import re
 import zipfile
+import threading
+from concurrent.futures import ThreadPoolExecutor
+
+BATCH_TASKS = {}
+
 try:
     import rarfile
     if not shutil.which("unrar"):
@@ -562,117 +567,201 @@ def analyze_batch_upload(
             detail="Tidak ditemukan berkas PDF yang valid di dalam unggahan atau arsip ZIP. Pastikan berkas berformat .pdf dan tidak kosong."
         )
 
-    for item_idx, item in enumerate(pdf_items_to_process):
-        saved_path = item["path"]
-        saved_name = item["saved_name"]
-        display_name = item["display_name"]
+    BATCH_TASKS[task_id] = {
+        "status": "processing",
+        "total": len(pdf_items_to_process),
+        "processed": 0,
+        "current_district": "Mempersiapkan proses audit...",
+        "data": None,
+        "error": None
+    }
 
+    def _execute_batch_job(task_id_arg, items_arg, api_key_arg, zip_paths_arg):
         try:
-            meta = extract_pdf_metadata(saved_path)
-            defects = analyze_defects(meta, custom_api_key=custom_api_key)
-            tot_d = sum(len(items) for items in defects.values())
-            clean_sec = sum(1 for items in defects.values() if len(items) == 0)
-            
-            is_mismatch = meta.get("district_mismatch_info", {}).get("is_mismatch", False)
-            if is_mismatch:
-                total_mismatch_districts += 1
-            if tot_d == 0:
-                total_clean_districts += 1
-            total_aggregate_defects += tot_d
+            eval_results = []
+            zip_items = []
+            total_aggregate_defects = 0
+            total_clean_districts = 0
+            total_mismatch_districts = 0
 
-            item_kab = meta.get("kabupaten") or ""
-            item_code = get_kabupaten_code(item_kab)
-            item_prefix = f"{item_code}_" if item_code else ""
-            item_reg = sanitize_clean_name(meta.get("region", display_name))
-            item_year = str(meta.get("year", 2026))
+            def process_single_item(item):
+                saved_path = item["path"]
+                saved_name = item["saved_name"]
+                display_name = item["display_name"]
+                try:
+                    meta = extract_pdf_metadata(saved_path)
+                    defects = analyze_defects(meta, custom_api_key=api_key_arg)
+                    tot_d = sum(len(items) for items in defects.values())
+                    clean_sec = sum(1 for items in defects.values() if len(items) == 0)
+                    is_mismatch = meta.get("district_mismatch_info", {}).get("is_mismatch", False)
 
-            pdf_fn = f"{item_prefix}Laporan_Evaluasi_KcDA_Kecamatan_{item_reg}_{item_year}.pdf"
-            pdf_out_path = os.path.join(OUTPUT_DIR, pdf_fn)
-            generate_pdf_report(meta, defects, pdf_out_path)
-            zip_items.append((pdf_out_path, pdf_fn))
+                    item_kab = meta.get("kabupaten") or ""
+                    item_code = get_kabupaten_code(item_kab)
+                    item_prefix = f"{item_code}_" if item_code else ""
+                    item_reg = sanitize_clean_name(meta.get("region", display_name))
+                    item_year = str(meta.get("year", 2026))
 
-            excel_fn = f"{item_prefix}Evaluasi_Publikasi_KcDA_Kecamatan_{item_reg}_{item_year}.xlsx"
-            excel_out_path = os.path.join(OUTPUT_DIR, excel_fn)
-            generate_excel_report(meta, defects, excel_out_path, base_template_path=None)
+                    pdf_fn = f"{item_prefix}Laporan_Evaluasi_KcDA_Kecamatan_{item_reg}_{item_year}.pdf"
+                    pdf_out_path = os.path.join(OUTPUT_DIR, pdf_fn)
+                    generate_pdf_report(meta, defects, pdf_out_path)
 
-            eval_results.append({
-                "district_name": meta.get("region", display_name),
-                "region": meta.get("region", display_name),
-                "year": meta.get("year", 2026),
-                "title": meta.get("title", display_name),
-                "catalog": meta.get("catalog", "-"),
-                "issn": meta.get("issn", "-"),
-                "total_defects": tot_d,
-                "clean_sections": clean_sec,
-                "is_mismatch": is_mismatch,
-                "mismatch_details": meta.get("district_mismatch_info", {}),
-                "raw_template_info": meta.get("raw_template_info", {}),
-                "meta": meta,
-                "metadata": meta,
-                "defects": defects,
-                "pdf_filename": pdf_fn,
-                "pdf_download_url": f"/api/download/{pdf_fn}",
-                "excel_filename": excel_fn,
-                "excel_download_url": f"/api/download/{excel_fn}",
-                "download_url": f"/api/download/{excel_fn}",
-                "source_pdf_filename": saved_name,
-                "source_pdf_url": f"/api/view-pdf/{saved_name}"
-            })
-        except Exception as item_err:
-            print(f"[Batch Processing] Error on {display_name}: {item_err}")
+                    excel_fn = f"{item_prefix}Evaluasi_Publikasi_KcDA_Kecamatan_{item_reg}_{item_year}.xlsx"
+                    excel_out_path = os.path.join(OUTPUT_DIR, excel_fn)
+                    generate_excel_report(meta, defects, excel_out_path, base_template_path=None)
 
-    if not eval_results:
-        raise HTTPException(status_code=400, detail="Tidak ada berkas PDF yang valid untuk diproses.")
+                    if task_id_arg in BATCH_TASKS:
+                        BATCH_TASKS[task_id_arg]["processed"] += 1
+                        BATCH_TASKS[task_id_arg]["current_district"] = meta.get("region", display_name)
 
-    unique_kabs = [r["meta"].get("kabupaten") for r in eval_results if r["meta"].get("kabupaten")]
-    unique_kabs = list(dict.fromkeys(unique_kabs))
-    
-    years = [str(r["meta"].get("year", 2026)) for r in eval_results if r["meta"].get("year")]
-    dominant_year = Counter(years).most_common(1)[0][0] if years else "2026"
+                    return {
+                        "eval_result": {
+                            "district_name": meta.get("region", display_name),
+                            "region": meta.get("region", display_name),
+                            "year": meta.get("year", 2026),
+                            "title": meta.get("title", display_name),
+                            "catalog": meta.get("catalog", "-"),
+                            "issn": meta.get("issn", "-"),
+                            "total_defects": tot_d,
+                            "clean_sections": clean_sec,
+                            "is_mismatch": is_mismatch,
+                            "mismatch_details": meta.get("district_mismatch_info", {}),
+                            "raw_template_info": meta.get("raw_template_info", {}),
+                            "meta": meta,
+                            "metadata": meta,
+                            "defects": defects,
+                            "pdf_filename": pdf_fn,
+                            "pdf_download_url": f"/api/download/{pdf_fn}",
+                            "excel_filename": excel_fn,
+                            "excel_download_url": f"/api/download/{excel_fn}",
+                            "download_url": f"/api/download/{excel_fn}",
+                            "source_pdf_filename": saved_name,
+                            "source_pdf_url": f"/api/view-pdf/{saved_name}"
+                        },
+                        "zip_item": (pdf_out_path, pdf_fn),
+                        "is_mismatch": is_mismatch,
+                        "tot_d": tot_d
+                    }
+                except Exception as item_err:
+                    print(f"[Batch Processing] Error on {display_name}: {item_err}")
+                    if task_id_arg in BATCH_TASKS:
+                        BATCH_TASKS[task_id_arg]["processed"] += 1
+                    return None
 
-    if len(unique_kabs) == 1 and unique_kabs[0]:
-        kab_full = unique_kabs[0]
-        kab_code = get_kabupaten_code(kab_full)
-        kab_clean = sanitize_clean_name(kab_full.replace("Kabupaten ", "").replace("Kota ", ""))
-        prefix = f"{kab_code}_" if kab_code else ""
-        reg_title = kab_full
-        master_excel_fn = f"{prefix}Evaluasi_Publikasi_KcDA_{kab_clean}_{dominant_year}_MASTER.xlsx"
-        zip_fn = f"{prefix}Laporan_Evaluasi_PDF_KcDA_{kab_clean}_{dominant_year}.zip"
-    else:
-        reg_title = f"Kolektif ({len(eval_results)} Kecamatan)"
-        master_excel_fn = f"Master_Evaluasi_Publikasi_KcDA_{dominant_year}_Kolektif_{len(eval_results)}_Kecamatan.xlsx"
-        zip_fn = f"Kumpulan_Laporan_Evaluasi_PDF_KcDA_{dominant_year}_{len(eval_results)}_Kecamatan.zip"
+            max_workers = min(4, max(1, (os.cpu_count() or 4) // 2))
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                batch_outputs = list(executor.map(process_single_item, items_arg))
 
-    master_excel_path = os.path.join(OUTPUT_DIR, master_excel_fn)
-    generate_master_batch_excel(eval_results, master_excel_path, regency_title=reg_title)
+            for res in batch_outputs:
+                if res:
+                    eval_results.append(res["eval_result"])
+                    zip_items.append(res["zip_item"])
+                    if res["is_mismatch"]:
+                        total_mismatch_districts += 1
+                    if res["tot_d"] == 0:
+                        total_clean_districts += 1
+                    total_aggregate_defects += res["tot_d"]
 
-    zip_out_path = os.path.join(OUTPUT_DIR, zip_fn)
-    create_batch_zip(zip_items, zip_out_path)
+            if not eval_results:
+                if task_id_arg in BATCH_TASKS:
+                    BATCH_TASKS[task_id_arg]["status"] = "error"
+                    BATCH_TASKS[task_id_arg]["error"] = "Tidak ada berkas PDF yang valid untuk diproses."
+                return
 
-    for zp in temp_zip_paths:
-        try:
-            if os.path.exists(zp):
-                os.remove(zp)
-        except Exception:
-            pass
+            unique_kabs = [r["meta"].get("kabupaten") for r in eval_results if r["meta"].get("kabupaten")]
+            unique_kabs = list(dict.fromkeys(unique_kabs))
+            years = [str(r["meta"].get("year", 2026)) for r in eval_results if r["meta"].get("year")]
+            dominant_year = Counter(years).most_common(1)[0][0] if years else "2026"
+
+            if len(unique_kabs) == 1 and unique_kabs[0]:
+                kab_full = unique_kabs[0]
+                kab_code = get_kabupaten_code(kab_full)
+                kab_clean = sanitize_clean_name(kab_full.replace("Kabupaten ", "").replace("Kota ", ""))
+                prefix = f"{kab_code}_" if kab_code else ""
+                reg_title = kab_full
+                master_excel_fn = f"{prefix}Evaluasi_Publikasi_KcDA_{kab_clean}_{dominant_year}_MASTER.xlsx"
+                zip_fn = f"{prefix}Laporan_Evaluasi_PDF_KcDA_{kab_clean}_{dominant_year}.zip"
+            else:
+                reg_title = f"Kolektif ({len(eval_results)} Kecamatan)"
+                master_excel_fn = f"Master_Evaluasi_Publikasi_KcDA_{dominant_year}_Kolektif_{len(eval_results)}_Kecamatan.xlsx"
+                zip_fn = f"Kumpulan_Laporan_Evaluasi_PDF_KcDA_{dominant_year}_{len(eval_results)}_Kecamatan.zip"
+
+            master_excel_path = os.path.join(OUTPUT_DIR, master_excel_fn)
+            generate_master_batch_excel(eval_results, master_excel_path, regency_title=reg_title)
+
+            zip_out_path = os.path.join(OUTPUT_DIR, zip_fn)
+            create_batch_zip(zip_items, zip_out_path)
+
+            for zp in zip_paths_arg:
+                try:
+                    if os.path.exists(zp):
+                        os.remove(zp)
+                except Exception:
+                    pass
+
+            final_data = {
+                "success": True,
+                "task_id": task_id_arg,
+                "total_districts": len(eval_results),
+                "total_defects": total_aggregate_defects,
+                "total_aggregate_defects": total_aggregate_defects,
+                "clean_districts": total_clean_districts,
+                "total_clean_districts": total_clean_districts,
+                "mismatch_districts": total_mismatch_districts,
+                "total_mismatch_districts": total_mismatch_districts,
+                "master_excel_filename": master_excel_fn,
+                "zip_filename": zip_fn,
+                "master_excel_download_url": f"/api/download/{master_excel_fn}",
+                "zip_download_url": f"/api/download/{zip_fn}",
+                "zip_pdf_download_url": f"/api/download/{zip_fn}",
+                "districts": eval_results
+            }
+
+            if task_id_arg in BATCH_TASKS:
+                BATCH_TASKS[task_id_arg]["data"] = final_data
+                BATCH_TASKS[task_id_arg]["status"] = "completed"
+        except Exception as e_job:
+            print(f"[Batch Worker] Critical error: {e_job}")
+            if task_id_arg in BATCH_TASKS:
+                BATCH_TASKS[task_id_arg]["status"] = "error"
+                BATCH_TASKS[task_id_arg]["error"] = str(e_job)
+
+    # Jalankan pemrosesan di background thread secara paralel
+    worker_thread = threading.Thread(
+        target=_execute_batch_job,
+        args=(task_id, pdf_items_to_process, custom_api_key, temp_zip_paths),
+        daemon=True
+    )
+    worker_thread.start()
 
     return {
-        "success": True,
+        "status": "processing",
         "task_id": task_id,
-        "total_districts": len(eval_results),
-        "total_defects": total_aggregate_defects,
-        "total_aggregate_defects": total_aggregate_defects,
-        "clean_districts": total_clean_districts,
-        "total_clean_districts": total_clean_districts,
-        "mismatch_districts": total_mismatch_districts,
-        "total_mismatch_districts": total_mismatch_districts,
-        "master_excel_filename": master_excel_fn,
-        "zip_filename": zip_fn,
-        "master_excel_download_url": f"/api/download/{master_excel_fn}",
-        "zip_download_url": f"/api/download/{zip_fn}",
-        "zip_pdf_download_url": f"/api/download/{zip_fn}",
-        "districts": eval_results
+        "total": len(pdf_items_to_process),
+        "message": f"Audit kolektif {len(pdf_items_to_process)} publikasi sedang diproses secara paralel."
     }
+
+@app.get("/api/batch-status/{task_id}")
+def get_batch_status(task_id: str):
+    if task_id not in BATCH_TASKS:
+        raise HTTPException(status_code=404, detail="Tugas audit tidak ditemukan atau telah kedaluwarsa.")
+    task_info = BATCH_TASKS[task_id]
+    if task_info["status"] == "completed":
+        return {
+            "status": "completed",
+            "data": task_info["data"]
+        }
+    elif task_info["status"] == "error":
+        return {
+            "status": "error",
+            "error": task_info["error"]
+        }
+    return {
+        "status": "processing",
+        "processed": task_info["processed"],
+        "total": task_info["total"],
+        "current_district": task_info["current_district"]
+    }
+
 
 @app.get("/api/download/{filename}")
 def download_file(filename: str):

@@ -542,12 +542,55 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     return res.json();
                 })
-                .then(batchData => {
+                .then(async initialRes => {
+                    if (initialRes.status === 'processing' && initialRes.task_id) {
+                        const taskId = initialRes.task_id;
+                        const totalFiles = initialRes.total || selectedPdfFiles.length;
+                        
+                        const pollInterval = setInterval(async () => {
+                            try {
+                                const pollRes = await fetch(`/api/batch-status/${taskId}`);
+                                if (!pollRes.ok) return;
+                                const pollData = await pollRes.json();
+                                
+                                if (pollData.status === 'processing') {
+                                    const pCount = pollData.processed || 0;
+                                    const cDist = pollData.current_district || '';
+                                    const progressTitleEl = document.getElementById('progress-title');
+                                    const progressDescEl = document.getElementById('progress-desc');
+                                    if (progressTitleEl) {
+                                        progressTitleEl.textContent = `Sedang Memproses Audit Kolektif (${pCount}/${pollData.total || totalFiles})...`;
+                                    }
+                                    if (progressDescEl) {
+                                        progressDescEl.textContent = cDist ? `Memeriksa kepatuhan & visual: ${cDist}` : 'Memindai berkas publikasi paralel...';
+                                    }
+                                } else if (pollData.status === 'completed') {
+                                    clearInterval(pollInterval);
+                                    stopProgress();
+                                    const batchData = pollData.data;
+                                    currentBatchData = batchData;
+                                    renderBatchResults(batchData);
+                                    showToast(`Audit kolektif selesai! ${batchData.total_districts} kecamatan berhasil dievaluasi.`, 'success', 4000);
+                                } else if (pollData.status === 'error') {
+                                    clearInterval(pollInterval);
+                                    stopProgress();
+                                    alert(`Audit Kolektif Gagal:\n\n${pollData.error || 'Terjadi kesalahan pemrosesan'}`);
+                                    showToast('Gagal memproses berkas', 'error', 5000);
+                                }
+                            } catch (pollErr) {
+                                console.warn('Polling error:', pollErr);
+                            }
+                        }, 1200);
+                        return;
+                    }
+
+                    // Fallback jika respons langsung dikembalikan secara synchronous
                     stopProgress();
-                    currentBatchData = batchData;
-                    renderBatchResults(batchData);
-                    showToast(`Audit kolektif selesai! ${batchData.total_districts} kecamatan berhasil dievaluasi.`, 'success', 4000);
+                    currentBatchData = initialRes;
+                    renderBatchResults(initialRes);
+                    showToast(`Audit kolektif selesai! ${initialRes.total_districts} kecamatan berhasil dievaluasi.`, 'success', 4000);
                 })
+
                 .catch(err => {
                     stopProgress();
                     console.error(err);
