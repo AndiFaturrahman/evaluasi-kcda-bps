@@ -17,6 +17,15 @@ from .common import (
     DUPLICATE_KECAMATAN_MAP, WILAYAH_METADATA, detect_kabupaten_name,
     find_page_with_text, validate_issn_checksum, scan_cover_raster_header
 )
+from .visual_verifier import (
+    is_block_visually_visible,
+    has_visible_header_running_title,
+    has_visible_footer_page_number,
+    inspect_preliminary_running_title,
+    verify_template_placeholder_is_visible
+)
+from .heading_detector import find_true_section_page
+from .template_ghost_cleaner import filter_visible_template_markers
 
 if HAVE_CV2:
     import cv2
@@ -170,35 +179,19 @@ def extract_pdf_metadata(pdf_path):
     elif hju_idx == -1 and num_pages > 2:
         hju_idx = 2
 
-    team_idx = find_page_with_text(doc, "TIM PENYUSUN", end_page=12)
-    preface_idx = find_page_with_text(doc, "KATA PENGANTAR", end_page=15)
-    preface_en_idx = find_page_with_text(doc, "PREFACE", end_page=15)
-    toc_idx = find_page_with_text(doc, "DAFTAR ISI", end_page=18)
+    team_idx = find_true_section_page(doc, "TIM PENYUSUN", end_page=12)
+    preface_idx = find_true_section_page(doc, "KATA PENGANTAR", end_page=15)
+    preface_en_idx = find_true_section_page(doc, "PREFACE", end_page=15)
+    toc_idx = find_true_section_page(doc, "DAFTAR ISI", end_page=18)
     
     # Deteksi presisi halaman Daftar Tabel & Daftar Gambar (lewati lembar Daftar Isi agar tidak salah indeks)
-    toc_table_idx = -1
-    start_dt = (toc_idx + 1) if toc_idx >= 0 else 5
-    for p_cand in range(start_dt, min(start_dt + 15, num_pages)):
-        cand_txt = pages_text.get(p_cand, "").upper()
-        cand_lines = [l.strip().upper() for l in cand_txt.split('\n') if l.strip()]
-        if any("DAFTAR TABEL" in l or "LIST OF TABLES" in l for l in cand_lines[:4]):
-            toc_table_idx = p_cand
-            break
-        elif "DAFTAR TABEL" in cand_txt and "DAFTAR ISI" not in cand_txt:
-            toc_table_idx = p_cand
-            break
+    toc_table_idx = find_true_section_page(doc, "DAFTAR TABEL", start_page=(toc_idx + 1 if toc_idx >= 0 else 5), end_page=25)
+    if toc_table_idx < 0:
+        toc_table_idx = find_true_section_page(doc, "LIST OF TABLES", start_page=(toc_idx + 1 if toc_idx >= 0 else 5), end_page=25)
 
-    toc_figure_idx = -1
-    start_df = (toc_table_idx + 1) if toc_table_idx >= 0 else start_dt
-    for p_cand in range(start_df, min(start_df + 15, num_pages)):
-        cand_txt = pages_text.get(p_cand, "").upper()
-        cand_lines = [l.strip().upper() for l in cand_txt.split('\n') if l.strip()]
-        if any("DAFTAR GAMBAR" in l or "LIST OF FIGURES" in l for l in cand_lines[:4]):
-            toc_figure_idx = p_cand
-            break
-        elif "DAFTAR GAMBAR" in cand_txt and "DAFTAR ISI" not in cand_txt:
-            toc_figure_idx = p_cand
-            break
+    toc_figure_idx = find_true_section_page(doc, "DAFTAR GAMBAR", start_page=(toc_table_idx + 1 if toc_table_idx >= 0 else 5), end_page=25)
+    if toc_figure_idx < 0:
+        toc_figure_idx = find_true_section_page(doc, "LIST OF FIGURES", start_page=(toc_table_idx + 1 if toc_table_idx >= 0 else 5), end_page=25)
 
     # Cek tanda titik setelah nomor tabel pada Daftar Tabel (Instrumen Row 83)
     toc_table_has_trailing_dot = False
@@ -214,20 +207,18 @@ def extract_pdf_metadata(pdf_path):
         if re.search(r'(?:Gambar\s+)?\b[1-7](?:\.\d+)?\.\s+[A-Za-z]', tf_txt):
             toc_figure_has_trailing_dot = True
 
-    penjelasan_idx = find_page_with_text(doc, "PENJELASAN UMUM", end_page=25)
+    penjelasan_idx = find_true_section_page(doc, "PENJELASAN UMUM", start_page=5, end_page=35)
     penjelasan_has_rt = False
-    if penjelasan_idx >= 0:
-        p_lines = pages_lines.get(penjelasan_idx, [])
-        if any("DALAM ANGKA" in l.upper() or "IN FIGURES" in l.upper() for l in p_lines[:3]):
-            penjelasan_has_rt = True
+    if penjelasan_idx >= 0 and penjelasan_idx < num_pages:
+        penjelasan_has_rt, _ = inspect_preliminary_running_title(doc[penjelasan_idx])
 
-    singkatan_idx = find_page_with_text(doc, "DAFTAR SINGKATAN", end_page=25)
-    biblio_idx = find_page_with_text(doc, "DAFTAR PUSTAKA", start_page=max(0, num_pages - 15))
-    glosarium_idx = find_page_with_text(doc, "GLOSARIUM", start_page=max(0, num_pages - 20))
+    singkatan_idx = find_true_section_page(doc, "DAFTAR SINGKATAN", end_page=35)
+    biblio_idx = find_true_section_page(doc, "DAFTAR PUSTAKA", start_page=max(0, num_pages - 15))
+    glosarium_idx = find_true_section_page(doc, "GLOSARIUM", start_page=max(0, num_pages - 20))
     if glosarium_idx == -1:
-        glosarium_idx = find_page_with_text(doc, "DAFTAR ISTILAH", start_page=max(0, num_pages - 20))
-    indeks_idx = find_page_with_text(doc, "INDEKS", start_page=max(0, num_pages - 20))
-    lampiran_idx = find_page_with_text(doc, "LAMPIRAN", start_page=max(0, num_pages - 25))
+        glosarium_idx = find_true_section_page(doc, "DAFTAR ISTILAH", start_page=max(0, num_pages - 20))
+    indeks_idx = find_true_section_page(doc, "INDEKS", start_page=max(0, num_pages - 20))
+    lampiran_idx = find_true_section_page(doc, "LAMPIRAN", start_page=max(0, num_pages - 25))
 
     # ── ATURAN PENEMPATAN HALAMAN GANJIL/GENAP (ODD/EVEN SECTION PLACEMENT RULES) ──
     # Sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3 & Instrumen Pemeriksaan Publikasi
@@ -580,51 +571,12 @@ def extract_pdf_metadata(pdf_path):
             if p3_has_issn:
                 hju_katalog_issn_order_wrong = True
 
-    # Deteksi running title atau nomor halaman fisik pada HJU (hanya pada header y <= 8% atau footer y >= 93%)
+    # Deteksi running title atau nomor halaman fisik pada HJU (blind folio: dilarang mencantumkan running title maupun nomor fisik)
     p3_has_rt = False
     if actual_hju_p >= 0 and actual_hju_p < num_pages:
-        hju_page = doc[actual_hju_p]
-        pw_hju = hju_page.rect.width
-        ph_hju = hju_page.rect.height
-        for b in hju_page.get_text("blocks"):
-            x0, y0, x1, y1, text, block_no, block_type = b
-            txt_clean = text.strip()
-            if not txt_clean or "bps.go.id" in txt_clean.lower():
-                continue
-            # Abaikan klaster nomor katalog & ISSN di pojok kanan atas
-            if y0 < ph_hju * 0.25 and x0 > pw_hju * 0.40:
-                continue
-            is_rt_candidate = False
-            # Running title pada header atas di luar klaster katalog
-            if y1 <= ph_hju * 0.08:
-                is_rt_candidate = True
-            # Nomor halaman atau running title pada margin footer bawah
-            elif y0 >= ph_hju * 0.93:
-                lines_footer = [l.strip() for l in txt_clean.splitlines() if l.strip()]
-                for lf in lines_footer:
-                    if re.match(r'^(?:-?\s*\d+\s*-?|-?\s*[ivxlcdm]+\s*-?|halaman\s+\d+|hal\.?\s*\d+)$', lf, re.I):
-                        is_rt_candidate = True
-                        break
-                    if "DALAM ANGKA" in lf.upper() or "IN FIGURES" in lf.upper():
-                        is_rt_candidate = True
-                        break
-            if is_rt_candidate:
-                # Kaidah Baku BPS: "ABAIKAN YANG TAK KASAT MATA!"
-                # Verifikasi apakah teks kandidat benar-benar tampak kasat mata di rendered image (bukan ghost text tak kasat mata)
-                if HAVE_CV2:
-                    try:
-                        rect_cand = fitz.Rect(b[:4])
-                        pix_cand = hju_page.get_pixmap(clip=rect_cand, dpi=150)
-                        img_cand = cv2.imdecode(np.frombuffer(pix_cand.tobytes("png"), np.uint8), cv2.IMREAD_COLOR)
-                        if img_cand is not None:
-                            gray_cand = cv2.cvtColor(img_cand, cv2.COLOR_BGR2GRAY)
-                            if np.sum(gray_cand < 200) < 15:
-                                # Tak kasat mata (0 pixel teks gelap) -> abaikan!
-                                continue
-                    except Exception:
-                        pass
-                p3_has_rt = True
-                break
+        has_rt, _ = inspect_preliminary_running_title(doc[actual_hju_p], is_hju=True)
+        has_pn, _ = has_visible_footer_page_number(doc[actual_hju_p])
+        p3_has_rt = has_rt or has_pn
 
     # ── HALAMAN KATALOG ──
     catalog_raw = None
@@ -888,10 +840,9 @@ def extract_pdf_metadata(pdf_path):
     if team_idx >= 0 and team_idx < num_pages:
         if re.search(r'\bNIP[\.:]?\s*\d{8,}', pages_text.get(team_idx, ""), re.I):
             team_has_nip = True
-        t_lines = pages_lines.get(team_idx, [])
-        if any("DALAM ANGKA" in l.upper() or "IN FIGURES" in l.upper() for l in t_lines[:3]):
-            team_has_rt = True
-        if t_lines and (t_lines[0].isdigit() or t_lines[0].lower() in ['iii', 'iv', 'v']):
+        team_has_rt, _ = inspect_preliminary_running_title(doc[team_idx])
+        has_pn, pn_txt = has_visible_footer_page_number(doc[team_idx])
+        if has_pn and re.search(r'^(?:iii|iv|v|\d+)$', pn_txt.strip(), re.I):
             team_has_page_num = True
 
     # ── FORMAT DWIBAHASA DAFTAR ISI (Kata Pengantar/Preface dsb) ──
@@ -1355,19 +1306,20 @@ def extract_pdf_metadata(pdf_path):
         p_str = f" (terdeteksi di Hal. {', '.join(pages_lorem)})" if pages_lorem else ""
         template_markers_found.append(f'Ulasan statistik dan sambutan masih berupa teks dummy Latin "Lorem ipsum dolor sit amet..."{p_str}')
         marker_locations.append('batang_tubuh')
-    if re.search(r'1102001\.(?:xx|xxxx)\b', full_doc_text, re.I):
-        pages_kat = [str(i + 1) for i in range(num_pages) if re.search(r'1102001\.(?:xx|xxxx)\b', pages_text.get(i, ""), re.I)]
-        p_str = f" (terdeteksi di Hal. {', '.join(pages_kat)})" if pages_kat else ""
+    pages_kat_nums = filter_visible_template_markers(doc, r'1102001\.(?:xx|xxxx)\b')
+    if pages_kat_nums:
+        p_str = f" (terdeteksi di Hal. {', '.join(str(p) for p in pages_kat_nums)})"
         template_markers_found.append(f'Nomor katalog masih berupa placeholder template "1102001.xx" / "1102001.xxxx"{p_str}')
-        if re.search(r'1102001\.(?:xx|xxxx)\b', p3_txt, re.I) and not re.search(r'1102001\.(?:xx|xxxx)\b', full_doc_text.replace(p3_txt, ''), re.I):
+        if (actual_hju_p + 1) in pages_kat_nums and len(pages_kat_nums) == 1:
             marker_locations.append('hju')
         else:
             marker_locations.append('katalog')
-    if re.search(r'ISSN\s*XXXX\s*-\s*XXXX', full_doc_text, re.I):
-        pages_issn = [str(i + 1) for i in range(num_pages) if re.search(r'ISSN\s*XXXX\s*-\s*XXXX', pages_text.get(i, ""), re.I)]
-        p_str = f" (terdeteksi di Hal. {', '.join(pages_issn)})" if pages_issn else ""
+
+    pages_issn_nums = filter_visible_template_markers(doc, r'ISSN\s*XXXX\s*-\s*XXXX')
+    if pages_issn_nums:
+        p_str = f" (terdeteksi di Hal. {', '.join(str(p) for p in pages_issn_nums)})"
         template_markers_found.append(f'Nomor ISSN masih berupa template bawaan "ISSN XXXX -XXXX"{p_str}')
-        if re.search(r'ISSN\s*XXXX\s*-\s*XXXX', p3_txt, re.I) and not re.search(r'ISSN\s*XXXX\s*-\s*XXXX', full_doc_text.replace(p3_txt, ''), re.I):
+        if (actual_hju_p + 1) in pages_issn_nums and len(pages_issn_nums) == 1:
             marker_locations.append('hju')
         else:
             marker_locations.append('multi_section')
@@ -1579,9 +1531,8 @@ def extract_pdf_metadata(pdf_path):
     preface_year = preface_year_match.group(1) if preface_year_match else pub_year
     preface_full = pages_text.get(preface_idx, "") if preface_idx >= 0 else ""
     preface_has_running_title = False
-    if preface_idx >= 0:
-        pf_lines = pages_lines.get(preface_idx, [])
-        preface_has_running_title = any('KATA PENGANTAR' in l.upper() and len(l) > 16 for l in pf_lines[:3])
+    if preface_idx >= 0 and preface_idx < num_pages:
+        preface_has_running_title, _ = inspect_preliminary_running_title(doc[preface_idx])
 
     preface_year_mismatch = None
     if preface_idx >= 0:
@@ -1734,15 +1685,11 @@ def extract_pdf_metadata(pdf_path):
     toc_has_issn = bool(re.search(r'ISSN\s*[:/]?\s*\d{4}[-\u2013]\d{3}[\dX]', toc_text, re.IGNORECASE))
     toc_issn_placeholder = bool(re.search(r'ISSN\s*XXXX|XXXX\s*-\s*XXXX', toc_text, re.I))
     toc_issn_missing = not toc_has_issn or toc_issn_placeholder
-    toc_has_running_title = False
     toc_volume_empty = bool(re.search(r'Volume\s+(?:xx|XX|\.\.\.)', toc_text))
     toc_bookmark_error = "Error! Bookmark not defined" in (toc_text + " " + pages_text.get(toc_idx + 1, ""))
-    if toc_idx >= 0:
-        toc_lines = pages_lines.get(toc_idx, [])
-        for l in toc_lines[:3]:
-            if "DALAM ANGKA" in l.upper() or "IN FIGURES" in l.upper():
-                toc_has_running_title = True
-                break
+    toc_has_running_title = False
+    if toc_idx >= 0 and toc_idx < num_pages:
+        toc_has_running_title, _ = inspect_preliminary_running_title(doc[toc_idx])
 
     toc_chapters_point_to_dividers = []
     if toc_idx >= 0:
@@ -1787,12 +1734,8 @@ def extract_pdf_metadata(pdf_path):
 
     # ── DAFTAR TABEL & DAFTAR GAMBAR ──
     daftar_tabel_running_title = False
-    if toc_table_idx >= 0:
-        dt_lines = pages_lines.get(toc_table_idx, [])
-        for l in dt_lines[:4]:
-            if "DALAM ANGKA" in l.upper() or "IN FIGURES" in l.upper():
-                daftar_tabel_running_title = True
-                break
+    if toc_table_idx >= 0 and toc_table_idx < num_pages:
+        daftar_tabel_running_title, _ = inspect_preliminary_running_title(doc[toc_table_idx])
 
     daftar_gambar_placeholder = False
     daftar_gambar_has_xxx = False
@@ -1989,13 +1932,14 @@ def extract_pdf_metadata(pdf_path):
                 except Exception:
                     pass
             if p + 1 < num_pages:
-                next_lines = pages_lines.get(p + 1, [])
-                if any("DALAM ANGKA" in l.upper() or "IN FIGURES" in l.upper() for l in next_lines[:3]):
+                next_has_rt, _ = has_visible_header_running_title(doc[p + 1])
+                if next_has_rt:
                     ch_txt = pages_text.get(p + 1, "")
                     ch_m = re.search(r'BAB\s*(\d+)|(?:^|\n)([1-7])\.\d+', ch_txt, re.I)
                     ch_num = ch_m.group(1) or ch_m.group(2) if ch_m else ""
                     ch_label = f"Bab {ch_num}" if ch_num else "bab"
                     chapter_opening_has_rt.append((ch_label, p + 2))
+                next_lines = pages_lines.get(p + 1, [])
                 if next_lines and next_lines[0].isdigit():
                     next_prt = int(next_lines[0])
                     if next_prt % 2 == 0:
