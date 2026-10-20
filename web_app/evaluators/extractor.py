@@ -1989,29 +1989,54 @@ def extract_pdf_metadata(pdf_path):
                 f"{tbl_label}: Penjelasan di bawah tabel menggunakan kata 'Keterangan:'. Sesuai Pedoman BPS 2023 hal. 43 & Instrumen baris 158, penjelasan di bawah tabel wajib didahului dengan kata 'Catatan:' bukan 'Keterangan:'."
             )
 
-        # Judul terbalik di bawah data
+        # Judul terbalik di bawah data (Pedoman BPS 2023: Judul tabel wajib di atas tabel)
+        # Pemeriksaan wajib menggunakan koordinat spasial visual (Y-coordinate), bukan urutan stream teks PDF.
         has_tabel_word = any(l.upper() in ["TABEL", "TABLE"] for l in lines)
-        if has_tabel_word:
-            tabel_indices = [i for i, l in enumerate(lines) if l.upper() in ["TABEL", "TABLE"]]
-            if tabel_indices and tabel_indices[0] > len(lines) // 2:
-                table_findings.append(
-                    f"{tbl_label}: Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel."
-                )
+        if has_tabel_word and doc:
+            try:
+                page_obj = doc[p]
+                blocks = page_obj.get_text("blocks")
+                tbl_title_blocks = [
+                    b for b in blocks 
+                    if re.search(r'\b(?:Tabel|Table)\b', b[4], re.I) and (
+                        (current_tbl_num and current_tbl_num in b[4]) 
+                        or re.search(r'\b(?:Tabel|Table)\s*\d+\.\d+', b[4], re.I)
+                        or b[4].strip().upper() in ["TABEL", "TABLE"]
+                    )
+                ]
+                if tbl_title_blocks:
+                    title_y0 = min(b[1] for b in tbl_title_blocks)
+                    table_data_blocks = [
+                        b for b in blocks 
+                        if b not in tbl_title_blocks and not re.search(r'https?://|bps\.go\.id|\b\d{1,3}\b$', b[4].strip())
+                        and re.search(r'\(\d+\)|\b\d{1,4}\b', b[4])
+                    ]
+                    if table_data_blocks:
+                        max_data_y = max(b[3] for b in table_data_blocks)
+                        if title_y0 > max_data_y - 20 and title_y0 > page_obj.rect.height * 0.65:
+                            table_findings.append(
+                                f"{tbl_label}: Tata letak terbalik. Judul tabel dan label 'Tabel/Table' diletakkan di BAGIAN BAWAH data tabel alih-alih di atas tabel."
+                            )
+            except Exception:
+                pass
 
         # Sumber/Catatan di atas header kolom
         has_continuation = any("Lanjutan Tabel" in l or "Continued Table" in l for l in lines)
-        if has_continuation:
-            cat_idx = -1
-            col1_idx = -1
-            for i_l, l in enumerate(lines):
-                if "Catatan/Note" in l or "Sumber/Source" in l:
-                    cat_idx = i_l
-                if "(1)" in l:
-                    col1_idx = i_l
-            if cat_idx != -1 and col1_idx != -1 and cat_idx < col1_idx:
-                table_findings.append(
-                    f"{tbl_label}: Posisi Catatan dan Sumber diletakkan di ATAS tabel sebelum header kolom. Sesuai standar BPS, blok Catatan dan Sumber wajib diletakkan di bagian bawah tabel."
-                )
+        if has_continuation and doc:
+            try:
+                page_obj = doc[p]
+                blocks = page_obj.get_text("blocks")
+                cat_blocks = [b for b in blocks if any(k in b[4] for k in ["Catatan/Note", "Sumber/Source", "Catatan:", "Sumber:"])]
+                col_blocks = [b for b in blocks if "(1)" in b[4]]
+                if cat_blocks and col_blocks:
+                    cat_y = min(b[1] for b in cat_blocks)
+                    col_y = min(b[1] for b in col_blocks)
+                    if cat_y < col_y - 10:
+                        table_findings.append(
+                            f"{tbl_label}: Posisi Catatan dan Sumber diletakkan di ATAS tabel sebelum header kolom. Sesuai standar BPS, blok Catatan dan Sumber wajib diletakkan di bagian bawah tabel."
+                        )
+            except Exception:
+                pass
 
         # Deteksi data tabel KOSONG TOTAL (blank cells tanpa angka, tanpa tanda nol/dash, tanpa elipsis)
         data_nums = []
