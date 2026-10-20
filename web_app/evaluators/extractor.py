@@ -117,6 +117,25 @@ def extract_pdf_metadata(pdf_path):
     pages_lines = {}
     for i in range(num_pages):
         txt = doc[i].get_text("text")
+        # ── SMART OCR FALLBACK ──
+        # Jika halaman berupa gambar raster (kover depan, prelims, kover belakang, atau lembar grafis)
+        # di mana teks digitalnya minim (< 40 karakter) namun memiliki objek gambar, aktifkan RapidOCR
+        is_key_page = (i in (0, 1, 2, num_pages - 1) or i < 15 or i >= num_pages - 3)
+        if is_key_page and len(txt.strip()) < 40 and len(doc[i].get_images()) >= 1 and HAVE_CV2:
+            try:
+                from rapidocr_onnxruntime import RapidOCR
+                if not hasattr(extract_pdf_metadata, '_rapid_engine'):
+                    extract_pdf_metadata._rapid_engine = RapidOCR()
+                engine = extract_pdf_metadata._rapid_engine
+                
+                pix = doc[i].get_pixmap(dpi=150)
+                img = cv2.imdecode(np.frombuffer(pix.tobytes('png'), np.uint8), cv2.IMREAD_COLOR)
+                ocr_res, _ = engine(img)
+                if ocr_res:
+                    ocr_txt = "\n".join([item[1] for item in ocr_res])
+                    txt = (txt + "\n" + ocr_txt).strip()
+            except Exception:
+                pass
         pages_text[i] = txt
         pages_lines[i] = [l.strip() for l in txt.split("\n") if l.strip()]
 
