@@ -2152,17 +2152,57 @@ def extract_pdf_metadata(pdf_path):
             biblio_has_rt = True
 
     last_page_text = pages_text.get(num_pages - 1, "")
+    last_page_obj = doc[-1] if num_pages > 0 else None
     kover_belakang_errors = []
     if str(num_pages) in last_page_text or str(num_pages - 1) in last_page_text:
         kover_belakang_errors.append(f'Terdapat kebocoran nomor halaman "{num_pages}" pada kover belakang. Kover belakang dilarang memuat nomor halaman apapun.')
     if 'XXXXX' in last_page_text or 'xxxxx' in last_page_text:
         kover_belakang_errors.append('Terdapat teks placeholder template "XXXXX Dalam Angka 2024" yang belum dibersihkan pada kover belakang.')
-    has_slogan_kb = 'DATA MENCERDASKAN' in last_page_text.upper()
-    has_berakhlak_kb = ('BERAKHLAK' in last_page_text.upper() or 'BerAKHLAK' in last_page_text)
-    logo_cluster_pos_kb = None  # 'top_right', 'top_left', or None
+
+    # ── OCR FALLBACK UNTUK KOVER BELAKANG (Jika kover berupa gambar raster/flattened) ──
+    kb_ocr_items = []
+    kb_ocr_text = ""
+    if num_pages > 0 and HAVE_CV2:
+        kb_check = last_page_text.lower()
+        if len(last_page_text.strip()) < 120 or '@' not in kb_check or not any(k in kb_check for k in ['telp', 'telepon', 'phone', '(0']):
+            try:
+                from rapidocr_onnxruntime import RapidOCR
+                if not hasattr(extract_pdf_metadata, '_rapid_engine'):
+                    extract_pdf_metadata._rapid_engine = RapidOCR()
+                engine = extract_pdf_metadata._rapid_engine
+                
+                pix_kb = last_page_obj.get_pixmap(dpi=150)
+                img_kb = cv2.imdecode(np.frombuffer(pix_kb.tobytes('png'), np.uint8), cv2.IMREAD_COLOR)
+                h_kb, w_kb = img_kb.shape[:2]
+                
+                ocr_res, _ = engine(img_kb)
+                if ocr_res:
+                    for item in ocr_res:
+                        box, txt_ocr, conf = item
+                        kb_ocr_items.append((box, txt_ocr, conf))
+                    kb_ocr_text = " ".join([it[1] for it in kb_ocr_items])
+            except Exception as e_ocr:
+                print(f"[OCR Back Cover] Warning: {e_ocr}")
+
+    combined_kb_text = (last_page_text + " " + kb_ocr_text).strip()
+    has_slogan_kb = ('DATA MENCERDASKAN' in combined_kb_text.upper() or 'MENCERDASKAN BANGSA' in combined_kb_text.upper())
+    has_berakhlak_kb = ('BERAKHLAK' in combined_kb_text.upper() or 'BerAKHLAK' in combined_kb_text or 'BANGGA MELAYANI' in combined_kb_text.upper() or 'SENSUS EKONOMI' in combined_kb_text.upper())
+    logo_cluster_pos_kb = None  # 'top_right', 'top_left', 'bottom_right', 'bottom_left', or None
+
+    if logo_cluster_pos_kb is None and kb_ocr_items:
+        for box, txt_ocr, conf in kb_ocr_items:
+            if any(k in txt_ocr.upper() for k in ['BERAKHLAK', 'SENSUS', 'BANGGA']):
+                cx = sum([pt[0] for pt in box]) / (4.0 * w_kb)
+                cy = sum([pt[1] for pt in box]) / (4.0 * h_kb)
+                if cy < 0.35:
+                    logo_cluster_pos_kb = 'top_left' if cx < 0.48 else 'top_right'
+                else:
+                    logo_cluster_pos_kb = 'bottom_left' if cx < 0.48 else 'bottom_right'
+                has_berakhlak_kb = True
+                break
 
     # 1. Cek layer teks kover belakang jika tersedia
-    last_page_obj = doc[-1] if num_pages > 0 else None
+
     if last_page_obj:
         try:
             pw, ph = last_page_obj.rect.width, last_page_obj.rect.height
@@ -2312,6 +2352,12 @@ def extract_pdf_metadata(pdf_path):
             'terpasang di pojok kiri atas. Sesuai Pedoman Pembuatan Publikasi BPS 2023 (hal. 64) dan Template Baku KCDA 2026, '
             'klaster logo tersebut WAJIB diposisikan di pojok kanan atas kover belakang.'
         )
+    elif logo_cluster_pos_kb in ['bottom_right', 'bottom_left']:
+        kover_belakang_errors.append(
+            'Kesalahan tata letak klaster logo resmi pada kover belakang: Logo Sensus BPS, slogan BerAKHLAK, dan tagar #BanggaMelayaniBangsa '
+            f'terpasang di area {"bawah kanan" if logo_cluster_pos_kb == "bottom_right" else "bawah kiri"}. Sesuai Pedoman Pembuatan Publikasi BPS 2023 (hal. 64) dan Template Baku KCDA 2026, '
+            'klaster logo tersebut WAJIB diposisikan di pojok kanan atas kover belakang.'
+        )
     elif not has_berakhlak_kb or logo_cluster_pos_kb is None:
         kover_belakang_errors.append(
             'Logo Sensus BPS, slogan BerAKHLAK, dan tagar #BanggaMelayaniBangsa tidak ditemukan pada kover belakang. '
@@ -2397,10 +2443,10 @@ def extract_pdf_metadata(pdf_path):
     # 6. Cek kelengkapan identitas kontak BPS penerbit pada kover belakang (Instrumen Row 210 Poin 4)
     back_cover_missing_contact = []
     if num_pages > 0:
-        kb_txt = last_page_text.lower()
+        kb_txt = combined_kb_text.lower()
         if not re.search(r'\bbps\.go\.id\b', kb_txt):
             back_cover_missing_contact.append('alamat homepage/website resmi (bps.go.id)')
-        if not re.search(r'[\w\.-]+@bps\.go\.id', kb_txt) and '@' not in kb_txt:
+        if not (re.search(r'[\w\.-]+@bps\.go\.id', kb_txt) or '@' in kb_txt):
             back_cover_missing_contact.append('alamat e-mail resmi')
         if not any(k in kb_txt for k in ['telp', 'telepon', 'phone', '(0']):
             back_cover_missing_contact.append('nomor telepon resmi')
