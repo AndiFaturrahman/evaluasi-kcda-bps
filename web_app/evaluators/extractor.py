@@ -412,6 +412,28 @@ def extract_pdf_metadata(pdf_path):
     # Abaikan watermark web portal BPS (https://...bps.go.id), hanya deteksi kebocoran riil
     p2_content_lines = [l for l in p2_lines if "bps.go.id" not in l.lower()]
     p2_has_leak = any(l.isdigit() or "DALAM ANGKA" in l.upper() or "KATA PENGANTAR" in l.upper() for l in p2_content_lines)
+    if p2_has_leak and num_pages > 1:
+        # ATURAN BAKU: ABAIKAN YANG TAK KASAT MATA!
+        try:
+            page2_obj = doc[1]
+            drawings2 = page2_obj.get_drawings()
+            white_box2 = [
+                d for d in drawings2 
+                if (d.get('fill') in [(1.0, 1.0, 1.0), (1, 1, 1)] or not d.get('fill')) 
+                and d['rect'].width > page2_obj.rect.width * 0.7
+            ]
+            if white_box2 or len(page2_obj.get_images()) >= 1:
+                p2_has_leak = False
+            elif HAVE_CV2:
+                pix2 = page2_obj.get_pixmap(dpi=72)
+                samples2 = np.frombuffer(pix2.samples, dtype=np.uint8).reshape(pix2.height, pix2.width, pix2.n)
+                top_h = min(45, pix2.height // 8)
+                top_non_white = np.sum(np.any(samples2[:top_h, :, :3] < 240, axis=2))
+                bot_non_white = np.sum(np.any(samples2[-top_h:, :, :3] < 240, axis=2))
+                if top_non_white == 0 and bot_non_white == 0:
+                    p2_has_leak = False
+        except Exception:
+            pass
 
     # ── HALAMAN JUDUL UTAMA (HJU) ──
     actual_hju_p = hju_idx if hju_idx >= 0 else (2 if num_pages > 2 else -1)
@@ -1873,11 +1895,24 @@ def extract_pdf_metadata(pdf_path):
         if is_divider or bool(re.search(r'\bBAB\s*[1-7]\b', txt, re.I) and len(txt_no_web) < 120):
             divider_texts.append(txt)
         if is_divider:
-            if any("DALAM ANGKA" in l.upper() or "IN FIGURES" in l.upper() for l in pages_lines.get(p, [])):
-                divider_has_running_title = True
-            div_lines = pages_lines.get(p, [])
-            if div_lines and div_lines[0].isdigit():
-                divider_has_page_num = True
+            # ATURAN BAKU: ABAIKAN YANG TAK KASAT MATA!
+            # Jika lembar pembatas bab memuat gambar/shape pembatas yang menutupi halaman,
+            # teks running title atau nomor halaman di balik gambar/shape tak kasat mata bagi pembaca.
+            has_rt = any("DALAM ANGKA" in l.upper() or "IN FIGURES" in l.upper() for l in pages_lines.get(p, []))
+            has_pn = bool(pages_lines.get(p, []) and pages_lines.get(p, [])[0].isdigit())
+            if (has_rt or has_pn) and doc:
+                try:
+                    p_div = doc[p]
+                    has_large_img = any(p_div.get_image_rects(im[0]) and any(r.height > p_div.rect.height * 0.5 for r in p_div.get_image_rects(im[0])) for im in p_div.get_images())
+                    drawings_div = p_div.get_drawings()
+                    has_cover_shape = any(d['rect'].width > p_div.rect.width * 0.7 and d['rect'].height > p_div.rect.height * 0.5 for d in drawings_div)
+                    if not has_large_img and not has_cover_shape:
+                        if has_rt:
+                            divider_has_running_title = True
+                        if has_pn:
+                            divider_has_page_num = True
+                except Exception:
+                    pass
             if p + 1 < num_pages:
                 next_lines = pages_lines.get(p + 1, [])
                 if any("DALAM ANGKA" in l.upper() or "IN FIGURES" in l.upper() for l in next_lines[:3]):
