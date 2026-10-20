@@ -1075,17 +1075,44 @@ def extract_pdf_metadata(pdf_path):
     elif not cover_district_clean:
         cover_district_clean = region_name
 
-    p3_txt_norm = re.sub(r'\s+', ' ', pages_text.get(2, ""))
+    dummy_placeholders = {'yyy', 'yyyyy', 'xxx', 'xxxxx', 'wilayah', 'kecamatan', 'kabupaten', 'kota', ''}
+
+    def _sanitize_extracted_district(cand_raw):
+        if not cand_raw:
+            return None
+        cand_norm = re.sub(r'\s+', ' ', str(cand_raw)).strip()
+        cand_clean = re.sub(r'\bkecamatan\b', '', cand_norm, flags=re.I).strip()
+        cand_lower = cand_clean.lower()
+        if (
+            not cand_clean
+            or len(cand_clean) < 2
+            or cand_lower in dummy_placeholders
+            or "xxxx" in cand_lower
+            or "yyyy" in cand_lower
+        ):
+            return None
+        return cand_clean.title()
+
+    p3_txt_norm = re.sub(r'\s+', ' ', pages_text.get(actual_hju_p if actual_hju_p >= 0 else 2, ""))
     m_hju_dist = re.search(r'Kecamatan\s+([A-Za-z\s]+?)\s+Dalam\s+Angka', p3_txt_norm, re.I)
-    hju_district_clean = re.sub(r'\s+', ' ', m_hju_dist.group(1)).strip().title() if m_hju_dist else None
+    hju_district_clean = _sanitize_extracted_district(m_hju_dist.group(1)) if m_hju_dist else None
+
+    # Jika HJU memuat kata "Kecamatan" berulang karena shadow text/drop shadow,
+    # cari nama kecamatan sebenarnya pada halaman HJU:
+    if not hju_district_clean and cover_district_clean:
+        if re.search(r'\b' + re.escape(cover_district_clean) + r'\b', p3_txt_norm, re.I):
+            hju_district_clean = cover_district_clean
 
     kat_txt_norm = re.sub(r'\s+', ' ', catalog_text)
     m_kat_dist = re.search(r'KECAMATAN\s+([A-Z\s]+?)\s+DALAM\s+ANGKA', kat_txt_norm, re.I)
-    catalog_district_clean = re.sub(r'\s+', ' ', m_kat_dist.group(1)).strip().title() if m_kat_dist else None
+    catalog_district_clean = _sanitize_extracted_district(m_kat_dist.group(1)) if m_kat_dist else None
+    if not catalog_district_clean and cover_district_clean:
+        if re.search(r'\b' + re.escape(cover_district_clean) + r'\b', kat_txt_norm, re.I):
+            catalog_district_clean = cover_district_clean
 
     pref_txt_norm = re.sub(r'\s+', ' ', preface_text)
     m_pref_dist = re.search(r'Publikasi\s+Kecamatan\s+([A-Za-z\s]+?)\s+Dalam\s+Angka', pref_txt_norm, re.I)
-    preface_district_clean = re.sub(r'\s+', ' ', m_pref_dist.group(1)).strip().title() if m_pref_dist else None
+    preface_district_clean = _sanitize_extracted_district(m_pref_dist.group(1)) if m_pref_dist else None
 
     inner_stop_words = {
         'dalam', 'angka', 'ini', 'tersebut', 'yang', 'pada', 'dan', 'serta', 'sebagai',
@@ -1099,11 +1126,12 @@ def extract_pdf_metadata(pdf_path):
         p_txt = pages_text.get(p_idx, "")
         p_matches = re.findall(r'Kecamatan\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2})\b', p_txt)
         for pm in p_matches:
-            pm_clean = re.sub(r'\s+', ' ', pm).strip().title()
-            pm_words = set(pm_clean.lower().split())
-            if not (pm_words & inner_stop_words) and len(pm_clean) > 2 and "xxxx" not in pm_clean.lower():
-                inner_mentions_list.append(pm_clean)
-                inner_page_map.setdefault(pm_clean, set()).add(p_idx + 1)
+            pm_clean = _sanitize_extracted_district(pm)
+            if pm_clean:
+                pm_words = set(pm_clean.lower().split())
+                if not (pm_words & inner_stop_words) and len(pm_clean) > 2 and "xxxx" not in pm_clean.lower():
+                    inner_mentions_list.append(pm_clean)
+                    inner_page_map.setdefault(pm_clean, set()).add(p_idx + 1)
                 
     counts_inner = Counter(inner_mentions_list)
     dominant_inner_district, dom_inner_count = counts_inner.most_common(1)[0] if counts_inner else (None, 0)
@@ -1114,6 +1142,8 @@ def extract_pdf_metadata(pdf_path):
     if cover_district_clean:
         cov_lower = cover_district_clean.lower()
         cov_ns = re.sub(r'[^a-z0-9]', '', cov_lower)
+
+        # 1. Bandingkan kover dengan isi dominan batang tubuh
         if dominant_inner_district and dom_inner_count >= 5:
             dom_lower = dominant_inner_district.lower()
             dom_ns = re.sub(r'[^a-z0-9]', '', dom_lower)
@@ -1124,31 +1154,36 @@ def extract_pdf_metadata(pdf_path):
                     f'Batang tubuh dan ulasan buku didominasi oleh nama "Kecamatan {dominant_inner_district}" (ditemukan {dom_inner_count} kali pada hal {sample_pgs}), bertentangan dengan kover depan ("Kecamatan {cover_district_clean}").'
                 )
                 
-        # Placeholder master template (seperti Yyy/Xxxxx) bukan ketidaksesuaian wilayah riil antar-kecamatan
-        dummy_placeholders = {'yyy', 'yyyyy', 'xxx', 'xxxxx', 'wilayah'}
+        # 2. Bandingkan dengan HJU, Katalog, dan Pengantar
+        # CATATAN KRITIS: Jika kover dan batang tubuh SUDAH SINKRON (misal sama-sama Balaesang),
+        # artefak teks parsial pada HJU/Katalog tidak boleh memicu fatal salah ganti kover!
+        is_cover_body_synced = bool(dominant_inner_district and dom_inner_count >= 5 and (cov_ns == dom_ns or cov_ns in dom_ns or dom_ns in cov_ns))
         
-        if hju_district_clean:
+        if hju_district_clean and not is_cover_body_synced:
             hju_lower = hju_district_clean.lower()
-            if hju_lower not in dummy_placeholders:
-                if cov_lower != hju_lower and cov_lower not in hju_lower and hju_lower not in cov_lower:
+            hju_ns = re.sub(r'[^a-z0-9]', '', hju_lower)
+            if hju_lower not in dummy_placeholders and len(hju_ns) >= 2:
+                if cov_ns != hju_ns and cov_ns not in hju_ns and hju_ns not in cov_ns:
                     is_district_identity_mismatch = True
                     district_mismatch_reasons.append(
                         f'Halaman Judul Utama memuat "Kecamatan {hju_district_clean}", bertentangan dengan kover depan ("Kecamatan {cover_district_clean}").'
                     )
                 
-        if catalog_district_clean:
+        if catalog_district_clean and not is_cover_body_synced:
             kat_lower = catalog_district_clean.lower()
-            if kat_lower not in dummy_placeholders:
-                if cov_lower != kat_lower and cov_lower not in kat_lower and kat_lower not in cov_lower:
+            kat_ns = re.sub(r'[^a-z0-9]', '', kat_lower)
+            if kat_lower not in dummy_placeholders and len(kat_ns) >= 2:
+                if cov_ns != kat_ns and cov_ns not in kat_ns and kat_ns not in cov_ns:
                     is_district_identity_mismatch = True
                     district_mismatch_reasons.append(
                         f'Halaman Katalog memuat judul "Kecamatan {catalog_district_clean} Dalam Angka", bertentangan dengan kover depan ("Kecamatan {cover_district_clean}").'
                     )
                 
-        if preface_district_clean:
+        if preface_district_clean and not is_cover_body_synced:
             pref_lower = preface_district_clean.lower()
-            if pref_lower not in dummy_placeholders:
-                if cov_lower != pref_lower and cov_lower not in pref_lower and pref_lower not in cov_lower:
+            pref_ns = re.sub(r'[^a-z0-9]', '', pref_lower)
+            if pref_lower not in dummy_placeholders and len(pref_ns) >= 2:
+                if cov_ns != pref_ns and cov_ns not in pref_ns and pref_ns not in cov_ns:
                     is_district_identity_mismatch = True
                     district_mismatch_reasons.append(
                         f'Kata Pengantar memuat narasi "Publikasi Kecamatan {preface_district_clean} Dalam Angka", bertentangan dengan kover depan ("Kecamatan {cover_district_clean}").'

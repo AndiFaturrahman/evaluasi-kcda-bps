@@ -207,30 +207,39 @@ def apply_cross_page_checks(meta, defects_dict):
         inner_raw = str(d_info.get("dominant_inner_district") or d_info.get("catalog_district") or "Kecamatan Lain").strip()
         inner_clean = re.sub(r'^\s*kecamatan\s+', '', inner_raw, flags=re.I).strip()
         inner_d = f"Kecamatan {inner_clean}" if inner_clean else inner_raw
-        r_details = " | ".join(d_info.get("reasons", []))
         
-        kover_depan.insert(0,
-            f'[FATAL KETIDAKSESUAIAN WILAYAH] Indikasi kelalaian fatal hanya mengganti kover (Copy-Paste dari publikasi lain): '
-            f'Kover depan memuat "{cov_d}", namun isi dokumen merupakan publikasi "{inner_d}". '
-            f'Rincian: {r_details}. Wajib mengganti seluruh isi dokumen dengan data dan naskah asli {cov_d}.'
-        )
-        halaman_judul.insert(0,
-            f'[FATAL KETIDAKSESUAIAN WILAYAH] Judul pada Halaman Judul Utama tidak selaras dengan kover depan: '
-            f'Terdeteksi identitas publikasi "{inner_d}", berbeda dengan kover depan ("{cov_d}").'
-        )
-        halaman_katalog.insert(0,
-            f'[FATAL KETIDAKSESUAIAN WILAYAH] Identitas publikasi pada Halaman Katalog keliru: '
-            f'Dokumen katalog mencantumkan atau terhubung dengan "{inner_d}", bukan "{cov_d}".'
-        )
-        kata_pengantar.insert(0,
-            f'[FATAL KETIDAKSESUAIAN WILAYAH] Narasi Kata Pengantar menyebut wilayah yang salah: '
-            f'Paragraf teks pengantar menyebut "{inner_d}", padahal buku ini adalah publikasi "{cov_d}".'
-        )
-        layout_isi.insert(0,
-            f'[FATAL KETIDAKSESUAIAN WILAYAH] Batang Tubuh & Narasi Salah Wilayah: '
-            f'Ulasan geografi Bab 1, nama desa, running title, dan data tabel memuat identitas "{inner_d}". '
-            f'Publikasi dilarang dirilis dengan data kecamatan yang tertukar.'
-        )
+        cov_key = re.sub(r'[^a-z0-9]', '', cov_clean.lower())
+        inner_key = re.sub(r'[^a-z0-9]', '', inner_clean.lower())
+
+        # Perlindungan mutlak: Jangan pernah laporkan fatal ketidaksesuaian wilayah
+        # jika kover dan batang tubuh merujuk ke kecamatan yang sama!
+        if cov_key and inner_key and (cov_key == inner_key or cov_key in inner_key or inner_key in cov_key):
+            pass
+        else:
+            r_details = " | ".join(d_info.get("reasons", []))
+            
+            kover_depan.insert(0,
+                f'[FATAL KETIDAKSESUAIAN WILAYAH] Indikasi kelalaian fatal hanya mengganti kover (Copy-Paste dari publikasi lain): '
+                f'Kover depan memuat "{cov_d}", namun isi dokumen merupakan publikasi "{inner_d}". '
+                f'Rincian: {r_details}. Wajib mengganti seluruh isi dokumen dengan data dan naskah asli {cov_d}.'
+            )
+            halaman_judul.insert(0,
+                f'[FATAL KETIDAKSESUAIAN WILAYAH] Judul pada Halaman Judul Utama tidak selaras dengan kover depan: '
+                f'Terdeteksi identitas publikasi "{inner_d}", berbeda dengan kover depan ("{cov_d}").'
+            )
+            halaman_katalog.insert(0,
+                f'[FATAL KETIDAKSESUAIAN WILAYAH] Identitas publikasi pada Halaman Katalog keliru: '
+                f'Dokumen katalog mencantumkan atau terhubung dengan "{inner_d}", bukan "{cov_d}".'
+            )
+            kata_pengantar.insert(0,
+                f'[FATAL KETIDAKSESUAIAN WILAYAH] Narasi Kata Pengantar menyebut wilayah yang salah: '
+                f'Paragraf teks pengantar menyebut "{inner_d}", padahal buku ini adalah publikasi "{cov_d}".'
+            )
+            layout_isi.insert(0,
+                f'[FATAL KETIDAKSESUAIAN WILAYAH] Batang Tubuh & Narasi Salah Wilayah: '
+                f'Ulasan geografi Bab 1, nama desa, running title, dan data tabel memuat identitas "{inner_d}". '
+                f'Publikasi dilarang dirilis dengan data kecamatan yang tertukar.'
+            )
 
     # ── RAW TEMPLATE & UNWORKED DRAFT OVERLAY (Kasus Tidak Niat Mengerjakan) ──
     raw_tpl = meta.get("raw_template_info", {})
