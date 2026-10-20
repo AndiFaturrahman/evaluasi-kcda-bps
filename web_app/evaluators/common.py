@@ -481,6 +481,8 @@ def classify_cover_finding(it):
         return 'italic_title'
     if 'xxxxx' in it_l or 'residu teks placeholder' in it_l:
         return 'placeholder'
+    if 'logo' in it_l and ('warna' in it_l or 'berwarna' in it_l or 'monokrom' in it_l or 'outline' in it_l or 'stroke' in it_l or 'bayangan' in it_l or 'shadow' in it_l):
+        return 'cover_logo'
     return 'other'
 
 def classify_hju_finding(it):

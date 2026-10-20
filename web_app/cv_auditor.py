@@ -237,6 +237,9 @@ class CVPublicationAuditor:
         if num_pages > 3:
             results["back_cover_visual"] = self.audit_back_cover(doc[num_pages - 1], num_pages)
 
+        # 7. Modul Khusus Pemeriksaan Logo BPS di Semua Halaman (Document-wide Logo Audit)
+        results["document_logos"] = self.audit_all_bps_logos(doc)
+
         return results
 
     def _find_preface_index(self, doc):
@@ -246,61 +249,295 @@ class CVPublicationAuditor:
                 return p
         return -1
 
-    def find_logo_crop(self, img, default_zone="header"):
+    def find_logo_rect_on_page(self, page, default_zone="bottom"):
         """
-        Mendeteksi dan mengekstrak crop presisi dari lambang/logo BPS pada halaman:
-        1. Mencari kluster co-occurrence 3 warna resmi BPS (Biru, Hijau, Oranye) di seluruh halaman.
-        2. Jika tidak ditemukan (misal monokrom), mengekstrak dari area standar kover / HJU.
+        Mendeteksi koordinat presisi (fitz.Rect) lambang/logo BPS pada halaman:
+        1. Mencocokkan xref gambar di halaman yang memiliki ukuran logo (20-150 pt lebar, 20-120 pt tinggi, AR 0.7-2.8)
+           dan berada dekat dengan teks penerbit ('BADAN PUSAT STATISTIK' / 'BPS-STATISTICS' / 'BPS').
+        2. Jika tidak ada xref gambar terpisah (misal logo vector atau flatten),
+           menggunakan anchor teks penerbit ('BADAN PUSAT STATISTIK'):
+           - Posisi standar logo BPS adalah di sebelah KIRI teks penerbit (dx: -15 s.d. 60 pt)
+           - Atau tepat di ATAS teks penerbit (dy: -15 s.d. 60 pt)
+        3. Fallback zona default jika teks anchor tidak ditemukan.
         """
-        h, w, _ = img.shape
+        h, w = page.rect.height, page.rect.width
+        pub_rect = None
+        for b in page.get_text("blocks"):
+            txt = b[4].upper()
+            if "BADAN PUSAT STATISTIK" in txt or "BPS-STATISTICS" in txt:
+                pub_rect = fitz.Rect(b[:4])
+                break
+
+        best_rect = None
+        for img in page.get_image_info(xrefs=True):
+            r = fitz.Rect(img["bbox"])
+            if 20 <= r.width <= 150 and 20 <= r.height <= 120 and 0.7 <= (r.width / r.height) <= 2.8:
+                if pub_rect:
+                    dx_left = pub_rect.x0 - r.x1
+                    dy_align = abs(r.y0 - pub_rect.y0)
+                    is_left = (-15 <= dx_left <= 60) and (dy_align <= 35)
+
+                    dy_above = pub_rect.y0 - r.y1
+                    dx_align = abs(r.x0 - pub_rect.x0)
+                    is_above = (-15 <= dy_above <= 60) and (dx_align <= 50)
+
+                    if is_left or is_above:
+                        best_rect = r
+                        break
+                elif default_zone == "bottom" and r.y0 > h * 0.45:
+                    best_rect = r
+                    break
+                elif default_zone == "top" and r.y1 < h * 0.35:
+                    best_rect = r
+                    break
+
+        if best_rect is None and pub_rect:
+            best_rect = fitz.Rect(max(0, pub_rect.x0 - 65), pub_rect.y0 - 5, pub_rect.x0 + 5, min(h, pub_rect.y0 + 50))
+
+        if best_rect is None:
+            if default_zone == "bottom":
+                best_rect = fitz.Rect(w * 0.08, h * 0.75, w * 0.45, h * 0.98)
+            else:
+                best_rect = fitz.Rect(w * 0.05, h * 0.03, w * 0.35, h * 0.20)
+
+        return best_rect
+
+    def audit_bps_logo_on_page(self, page, location_name="kover depan"):
+        """
+        Modul Utama Pemeriksaan Keaslian & Warna Logo BPS pada Halaman:
+        1. Memotong area logo secara presisi via anchor penerbit atau image xref.
+        2. Memeriksa keberadaan 3 Spektrum Warna Baku BPS:
+           - Biru BPS (Pantone 294 C / #023F88)
+           - Hijau BPS (Pantone 368 C / #74B72E)
+           - Oranye BPS (Pantone 137 C / #FFA200)
+        3. Mendeteksi pelanggaran:
+           - Monokrom / Grayscale / Hitam-Putih (Solid Charcoal/Black).
+           - Monokrom Satu Warna (hanya biru / hanya hijau).
+           - Palet warna tidak lengkap / menyimpang.
+           - Stroke / outline tambahan.
+           - Efek bayangan (drop shadow) / efek 3D.
+        """
+        info = {
+            "is_inspected": False,
+            "logo_found": False,
+            "logo_is_ori": True,
+            "logo_is_monochrome": False,
+            "logo_type": "none",
+            "has_stroke_outline": False,
+            "has_drop_shadow": False,
+            "has_color_distortion": False,
+            "color_counts": {"blue": 0, "green": 0, "orange": 0, "black": 0},
+            "defects": []
+        }
+
+        h, w = page.rect.height, page.rect.width
+        best_rect = self.find_logo_rect_on_page(page, default_zone="bottom" if "kover" in location_name.lower() or "judul" in location_name.lower() else "top")
+        if best_rect is None:
+            return info
+
+        zoom = 150 / 72.0
+        padded_rect = fitz.Rect(max(0, best_rect.x0 - 2), max(0, best_rect.y0 - 2), min(w, best_rect.x1 + 2), min(h, best_rect.y1 + 2))
+        pix = page.get_pixmap(clip=padded_rect, matrix=fitz.Matrix(zoom, zoom))
+        img = cv2.imdecode(np.frombuffer(pix.tobytes("png"), np.uint8), cv2.IMREAD_COLOR)
+        if img is None or img.size == 0:
+            return info
+
+        info["is_inspected"] = True
+        info["logo_found"] = True
+
+        border_pixels = np.concatenate([img[0, :], img[-1, :], img[:, 0], img[:, -1]])
+        bg_bgr = np.median(border_pixels, axis=0)
+
+        diff = np.linalg.norm(img.astype(float) - bg_bgr.astype(float), axis=2)
+        emblem_mask = diff > 35
+        if np.sum(emblem_mask) < 60:
+            return info
+
+        emblem_bgr = img[emblem_mask]
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-        
-        blue = (hsv[:,:,0] >= 95) & (hsv[:,:,0] <= 135) & (hsv[:,:,1] > 70) & (hsv[:,:,2] > 40)
-        green = (hsv[:,:,0] >= 35) & (hsv[:,:,0] <= 85) & (hsv[:,:,1] > 70) & (hsv[:,:,2] > 40)
-        orange = (hsv[:,:,0] >= 5) & (hsv[:,:,0] <= 25) & (hsv[:,:,1] > 70) & (hsv[:,:,2] > 40)
-        
-        k = cv2.getStructuringElement(cv2.MORPH_RECT, (25, 25))
-        lz = cv2.dilate(blue.astype(np.uint8), k) & cv2.dilate(green.astype(np.uint8), k) & cv2.dilate(orange.astype(np.uint8), k)
-        
-        num_l, labels, stats, centroids = cv2.connectedComponentsWithStats(lz)
-        candidates = []
-        for i in range(1, num_l):
-            x, y, bw, bh, area = stats[i]
-            if 15 <= bw <= 350 and 15 <= bh <= 350:
-                candidates.append((x, y, bw, bh, area))
-                
-        if candidates:
-            candidates.sort(key=lambda c: c[4], reverse=True)
-            x, y, bw, bh, _ = candidates[0]
-            pad = 12
-            y1 = max(0, y - pad)
-            y2 = min(h, y + bh + pad)
-            x1 = max(0, x - pad)
-            x2 = min(w, x + bw + pad)
-            return img[y1:y2, x1:x2]
-            
-        # Fallback jika monokrom / grayscale
+        emblem_hsv = hsv[emblem_mask]
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        emblem_gray = gray[emblem_mask]
+
+        # 1. Official BPS Colors (in BGR & HSV verification):
+        # Biru BPS: Pantone 294 C / #023F88 (B > 90, B > R + 30, B > G + 15, S > 60)
+        blue_m = (emblem_bgr[:, 0] > 90) & (emblem_bgr[:, 0] > emblem_bgr[:, 2] + 30) & (emblem_bgr[:, 0] > emblem_bgr[:, 1] + 15) & (emblem_hsv[:, 1] > 60)
+        # Hijau BPS: Pantone 368 C / #74B72E (G > 90, G > B + 30, G > R + 15, S > 60)
+        green_m = (emblem_bgr[:, 1] > 90) & (emblem_bgr[:, 1] > emblem_bgr[:, 0] + 30) & (emblem_bgr[:, 1] > emblem_bgr[:, 2] + 15) & (emblem_hsv[:, 1] > 60)
+        # Oranye BPS: Pantone 137 C / #FFA200 (R > 140, G > 60, B < 80, R > B + 60, S > 80)
+        orange_m = (emblem_bgr[:, 2] > 140) & (emblem_bgr[:, 1] > 60) & (emblem_bgr[:, 0] < 80) & (emblem_bgr[:, 2] > emblem_bgr[:, 0] + 60) & (emblem_hsv[:, 1] > 80)
+
+        blue_count = int(np.sum(blue_m))
+        green_count = int(np.sum(green_m))
+        orange_count = int(np.sum(orange_m))
+
+        black_count = int(np.sum((emblem_gray < 65) | (emblem_hsv[:, 2] < 65)))
+        sat_colored = int(np.sum((emblem_hsv[:, 1] > 60) & (emblem_hsv[:, 2] > 60)))
+
+        info["color_counts"] = {"blue": blue_count, "green": green_count, "orange": orange_count, "black": black_count}
+        bps_3_colors = (blue_count > 50 and green_count > 50 and orange_count > 50)
+
+        if bps_3_colors:
+            info["logo_type"] = "valid_3_color"
+        elif (black_count > 150 and (green_count < 30 or orange_count < 30)) or sat_colored < 60:
+            info["logo_type"] = "monochrome_black"
+            info["logo_is_monochrome"] = True
+            info["logo_is_ori"] = False
+            info["defects"].append(
+                f'Kesalahan warna logo BPS pada {location_name}: Logo BPS ditampilkan monokrom/hitam-putih. '
+                f'Sesuai Pedoman Pembuatan Publikasi BPS 2023 hal. 35, Pedoman Identitas Visual BPS, dan Instrumen baris 21, '
+                f'logo BPS dan identitas penerbit wajib menggunakan aset resmi berwarna (Biru BPS #023F88, Hijau BPS #74B72E, dan Oranye BPS #FFA200).'
+            )
+        elif (blue_count > 150 and green_count < 25 and orange_count < 25) or (green_count > 150 and blue_count < 25 and orange_count < 25):
+            info["logo_type"] = "monochrome_single_color"
+            info["logo_is_monochrome"] = True
+            info["logo_is_ori"] = False
+            info["defects"].append(
+                f'Kesalahan warna logo BPS pada {location_name}: Logo BPS ditampilkan satu warna (monokrom). '
+                f'Sesuai Pedoman Pembuatan Publikasi BPS 2023 dan Pedoman Identitas Visual BPS, logo BPS dan identitas penerbit '
+                f'wajib menggunakan aset resmi berwarna lengkap (Biru BPS #023F88, Hijau BPS #74B72E, dan Oranye BPS #FFA200).'
+            )
+        elif not bps_3_colors:
+            info["logo_type"] = "incomplete_colors"
+            info["logo_is_ori"] = False
+            info["defects"].append(
+                f'Penyimpangan warna logo BPS pada {location_name}: Palet warna logo tidak memenuhi 3 warna resmi BPS secara lengkap. '
+                f'Wajib menggunakan file logo aset resmi (ORI) berwarna (Biru BPS, Hijau BPS, dan Oranye BPS).'
+            )
+
+        # 2. Deteksi Garis Tepi Tambahan (Stroke / Outline)
+        if np.sum(emblem_mask) > 100:
+            emblem_u8 = emblem_mask.astype(np.uint8)
+            k3 = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+            dil3 = cv2.dilate(emblem_u8, k3)
+            outer_boundary = (dil3 == 1) & (emblem_u8 == 0)
+
+            if np.sum(outer_boundary) > 50:
+                v_boundary = hsv[:, :, 2][outer_boundary]
+                s_boundary = hsv[:, :, 1][outer_boundary]
+                white_stroke_ratio = np.sum((v_boundary > 240) & (s_boundary < 25)) / len(v_boundary)
+                black_stroke_ratio = np.sum(v_boundary < 30) / len(v_boundary)
+
+                k11 = cv2.getStructuringElement(cv2.MORPH_RECT, (11, 11))
+                dil11 = cv2.dilate(emblem_u8, k11)
+                context_zone = (dil11 == 1) & (dil3 == 0)
+
+                is_on_white_bg = False
+                if np.sum(context_zone) > 50:
+                    v_ctx = hsv[:, :, 2][context_zone]
+                    s_ctx = hsv[:, :, 1][context_zone]
+                    white_ctx_ratio = np.sum((v_ctx > 240) & (s_ctx < 25)) / len(v_ctx)
+                    if white_ctx_ratio > 0.80:
+                        is_on_white_bg = True
+
+                has_white_stroke = (not is_on_white_bg) and (white_stroke_ratio > 0.60)
+                has_black_stroke = black_stroke_ratio > 0.60
+
+                if has_white_stroke or has_black_stroke:
+                    info["has_stroke_outline"] = True
+                    info["logo_is_ori"] = False
+                    info["defects"].append(
+                        f'Pelanggaran identitas visual logo BPS pada {location_name}: Terdeteksi penggunaan garis tepi (stroke / outline) pada logo BPS. '
+                        f'Berdasarkan Pedoman Identitas Visual BPS, logo BPS dilarang diberi outline/stroke tambahan. '
+                        f'Wajib menggunakan logo resmi ORI.'
+                    )
+
+            # 3. Deteksi Efek Bayangan (Drop Shadow)
+            M_shadow = np.float32([[1, 0, 5], [0, 1, 5]])
+            shifted_shadow = cv2.warpAffine(emblem_u8, M_shadow, (emblem_u8.shape[1], emblem_u8.shape[0]))
+            shadow_zone = (shifted_shadow == 1) & (emblem_u8 == 0)
+
+            M_opp = np.float32([[1, 0, -5], [0, 1, -5]])
+            shifted_opp = cv2.warpAffine(emblem_u8, M_opp, (emblem_u8.shape[1], emblem_u8.shape[0]))
+            opp_zone = (shifted_opp == 1) & (emblem_u8 == 0)
+
+            if np.sum(shadow_zone) > 50 and np.sum(opp_zone) > 50:
+                v_sh = np.mean(hsv[:, :, 2][shadow_zone])
+                v_op = np.mean(hsv[:, :, 2][opp_zone])
+                if (v_op - v_sh) > 35.0 and v_sh < 110.0:
+                    info["has_drop_shadow"] = True
+                    info["logo_is_ori"] = False
+                    info["defects"].append(
+                        f'Pelanggaran identitas visual logo BPS pada {location_name}: Terdeteksi penggunaan efek bayangan (drop shadow) pada logo BPS. '
+                        f'Berdasarkan Pedoman Identitas Visual BPS, logo BPS dilarang diberi efek bayangan, efek 3D, atau efek cahaya tambahan. '
+                        f'Wajib menggunakan logo resmi ORI berlatar bersih/transparan.'
+                    )
+
+        return info
+
+    def audit_all_bps_logos(self, doc):
+        """
+        MODUL KHUSUS PEMERIKSAAN LOGO BPS DI SEMUA HALAMAN:
+        Memeriksa setiap halaman dalam publikasi yang memuat lambang BPS atau nama instansi BPS
+        (Kover Depan, Halaman Judul Utama, Tim Penyusun, Kata Pengantar, dsb).
+        Memastikan seluruh logo konsisten menggunakan aset resmi berwarna baku BPS.
+        """
+        all_logo_results = {
+            "total_logos_found": 0,
+            "has_logo_violations": False,
+            "pages_inspected": [],
+            "violations": []
+        }
+
+        num_pages = len(doc)
+        for pno in range(num_pages):
+            page = doc[pno]
+            txt = page.get_text("text").upper()
+            has_pub_text = ("BADAN PUSAT STATISTIK" in txt) or ("BPS-STATISTICS" in txt)
+
+            has_logo_img = False
+            for img in page.get_image_info(xrefs=True):
+                r = fitz.Rect(img["bbox"])
+                if 20 <= r.width <= 150 and 20 <= r.height <= 120 and 0.7 <= (r.width / r.height) <= 2.8:
+                    has_logo_img = True
+                    break
+
+            if has_pub_text or has_logo_img or pno in [0, 2]:
+                if pno == 0:
+                    page_label = "kover depan"
+                elif pno == 2 or ("KECAMATAN" in txt and "DALAM ANGKA" in txt and pno <= 4):
+                    page_label = f"Halaman Judul Utama (hal {pno + 1})"
+                elif "KATA PENGANTAR" in txt or "PREFACE" in txt:
+                    page_label = f"Kata Pengantar (hal {pno + 1})"
+                elif "TIM PENYUSUN" in txt or "COMPILERS" in txt:
+                    page_label = f"Tim Penyusun (hal {pno + 1})"
+                elif pno == num_pages - 1:
+                    page_label = "kover belakang"
+                else:
+                    page_label = f"halaman fisik {pno + 1}"
+
+                page_audit = self.audit_bps_logo_on_page(page, page_label)
+                if page_audit.get("logo_found"):
+                    all_logo_results["total_logos_found"] += 1
+                    all_logo_results["pages_inspected"].append({
+                        "page_number": pno + 1,
+                        "page_label": page_label,
+                        "logo_type": page_audit.get("logo_type"),
+                        "is_ori": page_audit.get("logo_is_ori", True),
+                        "is_monochrome": page_audit.get("logo_is_monochrome", False),
+                        "color_counts": page_audit.get("color_counts", {}),
+                        "defects": page_audit.get("defects", [])
+                    })
+                    if page_audit.get("defects"):
+                        all_logo_results["has_logo_violations"] = True
+                        for d in page_audit.get("defects"):
+                            all_logo_results["violations"].append({
+                                "page_number": pno + 1,
+                                "page_label": page_label,
+                                "defect": d
+                            })
+
+        return all_logo_results
+
+    def find_logo_crop(self, img, default_zone="header"):
+        """Fallback method for backwards compatibility."""
+        h, w, _ = img.shape
         if default_zone == "header":
-            top_left = img[int(h * 0.03):int(h * 0.18), int(w * 0.04):int(w * 0.35)]
-            gray_tl = cv2.cvtColor(top_left, cv2.COLOR_BGR2GRAY)
-            if np.sum(gray_tl < 220) > 100:
-                return top_left
+            return img[int(h * 0.03):int(h * 0.18), int(w * 0.04):int(w * 0.35)]
         return img[int(h * 0.80):int(h * 0.98), int(w * 0.04):int(w * 0.60)]
 
     def audit_bps_logo_ori(self, logo_crop, location_name="kover depan"):
-        """
-        Inspeksi Mendalam Keaslian Logo BPS (Pixel-level Brand Identity & Contour Audit):
-        1. Spektrum Warna Baku BPS:
-           - Biru BPS (Pantone 294 C / #023F88, Hue HSV: 95-135)
-           - Hijau BPS (Pantone 368 C / #74B72E, Hue HSV: 35-85)
-           - Oranye BPS (Pantone 137 C / #FFA200, Hue HSV: 5-25)
-        2. Deteksi Garis Tepi Buatan (Stroke / Outline):
-           - Garis kontur tepi seragam berdensitas tinggi (>60%) di batas luar lambang.
-        3. Deteksi Bayangan (Drop Shadow):
-           - Asimetri gelap dan gradien blur pada arah bayangan (bawah-kanan).
-        4. Deteksi Monokrom / Desaturasi:
-           - Logo dicetak hitam-putih atau pudar.
-        """
+        """Backward-compatible wrapper around logo crop color inspection."""
         info = {
             "is_inspected": False,
             "logo_is_ori": True,
@@ -323,7 +560,6 @@ class CVPublicationAuditor:
         hsv = cv2.cvtColor(logo_crop, cv2.COLOR_BGR2HSV)
         gray = cv2.cvtColor(logo_crop, cv2.COLOR_BGR2GRAY)
 
-        # 1. Monokrom / Saturation Check
         color_mask = (hsv[:, :, 1] > 35) & (hsv[:, :, 2] > 35)
         color_ratio = float(np.sum(color_mask) / color_mask.size)
         mean_sat = float(np.mean(hsv[:, :, 1]))
@@ -337,94 +573,6 @@ class CVPublicationAuditor:
                 f'Sesuai Pedoman Identitas Visual BPS & Instrumen Publikasi baris 21, logo BPS dan identitas penerbit '
                 f'wajib menggunakan aset resmi (ORI) berwarna (Biru BPS #023F88, Hijau BPS #74B72E, dan Oranye BPS #FFA200).'
             )
-            return info
-
-        # 2. Spectrum Check (Kesesuaian Warna Baku BPS)
-        hues = hsv[:, :, 0][color_mask]
-        if len(hues) > 50:
-            # Gunakan rentang spektrum toleran agar kompatibel dengan konversi CMYK-RGB dan latar foto kover
-            blue_px = np.sum((hues >= 90) & (hues <= 140))
-            green_px = np.sum((hues >= 25) & (hues <= 90))
-            orange_px = np.sum((hues <= 30) | (hues >= 170))
-            bps_std_px = min(len(hues), int(blue_px + green_px + orange_px))
-            fidelity = float(bps_std_px / len(hues))
-            info["color_fidelity"] = round(fidelity, 4)
-            
-            # Hanya beri peringatan jika warna logo menyimpang ekstrem (misal diubah ke ungu/pink/magenta pekat)
-            if fidelity < 0.35:
-                info["has_color_distortion"] = True
-                info["logo_is_ori"] = False
-                info["defects"].append(
-                    f'Penyimpangan warna logo BPS pada {location_name}: Spektrum warna logo tidak memuat palet standar BPS '
-                    f'(Biru BPS, Hijau BPS, Oranye BPS). '
-                    f'Wajib menggunakan file logo aset resmi (ORI).'
-                )
-
-        # 3. Deteksi Garis Tepi Tambahan (Stroke / Outline)
-        blue_mask = (hsv[:, :, 0] >= 95) & (hsv[:, :, 0] <= 135) & (hsv[:, :, 1] > 60)
-        green_mask = (hsv[:, :, 0] >= 35) & (hsv[:, :, 0] <= 85) & (hsv[:, :, 1] > 60)
-        orange_mask = (hsv[:, :, 0] >= 5) & (hsv[:, :, 0] <= 25) & (hsv[:, :, 1] > 60)
-        emblem_mask = (blue_mask | green_mask | orange_mask).astype(np.uint8)
-
-        if np.sum(emblem_mask) > 100:
-            k3 = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-            dil3 = cv2.dilate(emblem_mask, k3)
-            outer_boundary = (dil3 == 1) & (emblem_mask == 0)
-            
-            if np.sum(outer_boundary) > 50:
-                v_boundary = hsv[:, :, 2][outer_boundary]
-                s_boundary = hsv[:, :, 1][outer_boundary]
-                white_stroke_ratio = np.sum((v_boundary > 240) & (s_boundary < 25)) / len(v_boundary)
-                black_stroke_ratio = np.sum(v_boundary < 30) / len(v_boundary)
-                
-                # Cek konteks luar (radius 5-11px) untuk membedakan kertas putih vs stroke putih di atas kover bergambar
-                k11 = cv2.getStructuringElement(cv2.MORPH_RECT, (11, 11))
-                dil11 = cv2.dilate(emblem_mask, k11)
-                context_zone = (dil11 == 1) & (dil3 == 0)
-                
-                is_on_white_bg = False
-                if np.sum(context_zone) > 50:
-                    v_ctx = hsv[:, :, 2][context_zone]
-                    s_ctx = hsv[:, :, 1][context_zone]
-                    white_ctx_ratio = np.sum((v_ctx > 240) & (s_ctx < 25)) / len(v_ctx)
-                    if white_ctx_ratio > 0.80:
-                        is_on_white_bg = True
-                
-                # Stroke putih hanya valid jika logo berada di latar bukan-putih (ada garis putih pembatas terhadap latar berwarna)
-                has_white_stroke = (not is_on_white_bg) and (white_stroke_ratio > 0.60)
-                # Stroke hitam/gelap valid di latar manapun
-                has_black_stroke = black_stroke_ratio > 0.60
-                
-                if has_white_stroke or has_black_stroke:
-                    info["has_stroke_outline"] = True
-                    info["logo_is_ori"] = False
-                    info["defects"].append(
-                        f'Pelanggaran identitas visual logo BPS pada {location_name}: Terdeteksi penggunaan garis tepi (stroke / outline) pada logo BPS. '
-                        f'Berdasarkan Pedoman Identitas Visual BPS, logo BPS dilarang diberi outline/stroke tambahan. '
-                        f'Wajib menggunakan logo resmi ORI.'
-                    )
-
-            # 4. Deteksi Efek Bayangan (Drop Shadow)
-            M_shadow = np.float32([[1, 0, 5], [0, 1, 5]])
-            shifted_shadow = cv2.warpAffine(emblem_mask, M_shadow, (emblem_mask.shape[1], emblem_mask.shape[0]))
-            shadow_zone = (shifted_shadow == 1) & (emblem_mask == 0)
-            
-            M_opp = np.float32([[1, 0, -5], [0, 1, -5]])
-            shifted_opp = cv2.warpAffine(emblem_mask, M_opp, (emblem_mask.shape[1], emblem_mask.shape[0]))
-            opp_zone = (shifted_opp == 1) & (emblem_mask == 0)
-
-            if np.sum(shadow_zone) > 50 and np.sum(opp_zone) > 50:
-                v_sh = np.mean(hsv[:, :, 2][shadow_zone])
-                v_op = np.mean(hsv[:, :, 2][opp_zone])
-                if (v_op - v_sh) > 35.0 and v_sh < 110.0:
-                    info["has_drop_shadow"] = True
-                    info["logo_is_ori"] = False
-                    info["defects"].append(
-                        f'Pelanggaran identitas visual logo BPS pada {location_name}: Terdeteksi penggunaan efek bayangan (drop shadow) pada logo BPS. '
-                        f'Berdasarkan Pedoman Identitas Visual BPS, logo BPS dilarang diberi efek bayangan, efek 3D, atau efek cahaya tambahan. '
-                        f'Wajib menggunakan logo resmi ORI berlatar bersih/transparan.'
-                    )
-
         return info
 
     # ─────────────────────────────────────────────────────────────────────────
@@ -520,16 +668,15 @@ class CVPublicationAuditor:
                 )
 
         # B. Inspeksi Logo BPS (RGB Fidelity, Stroke, Shadow & Saturation)
-        logo_crop = self.find_logo_crop(img, default_zone="cover")
-        if logo_crop is not None and logo_crop.size > 0:
-            logo_audit = self.audit_bps_logo_ori(logo_crop, "kover depan")
-            info["logo_ori_audit"] = logo_audit
-            info["logo_color_ratio"] = logo_audit.get("color_ratio", 0.0)
-            info["logo_is_monochrome"] = logo_audit.get("logo_is_monochrome", False)
-            info["logo_has_stroke"] = logo_audit.get("has_stroke_outline", False)
-            info["logo_has_shadow"] = logo_audit.get("has_drop_shadow", False)
-            info["logo_is_ori"] = logo_audit.get("logo_is_ori", True)
-            info["defects"].extend(logo_audit.get("defects", []))
+        logo_audit = self.audit_bps_logo_on_page(page, "kover depan")
+        info["logo_ori_audit"] = logo_audit
+        info["logo_color_ratio"] = 1.0 if logo_audit.get("logo_is_ori") else 0.0
+        info["logo_is_monochrome"] = logo_audit.get("logo_is_monochrome", False)
+        info["logo_has_stroke"] = logo_audit.get("has_stroke_outline", False)
+        info["logo_has_shadow"] = logo_audit.get("has_drop_shadow", False)
+        info["logo_is_ori"] = logo_audit.get("logo_is_ori", True)
+        info["logo_defects"] = logo_audit.get("defects", [])
+        info["defects"].extend(logo_audit.get("defects", []))
 
         # C. Inspeksi Tipografi Subtitle Bahasa Asing (Italic vs Reguler)
         # Sesuai pedoman dwibahasa, judul bahasa asing wajib dicetak miring
@@ -637,15 +784,15 @@ class CVPublicationAuditor:
             )
 
         # B. Inspeksi Warna & Keaslian Logo BPS pada HJU
-        logo_crop = self.find_logo_crop(img, default_zone="header")
-        if logo_crop is not None and logo_crop.size > 0:
-            logo_audit_hju = self.audit_bps_logo_ori(logo_crop, "Halaman Judul Utama")
-            info["logo_ori_audit"] = logo_audit_hju
-            info["logo_is_monochrome"] = logo_audit_hju.get("logo_is_monochrome", False)
-            info["logo_has_stroke"] = logo_audit_hju.get("has_stroke_outline", False)
-            info["logo_has_shadow"] = logo_audit_hju.get("has_drop_shadow", False)
-            info["logo_is_ori"] = logo_audit_hju.get("logo_is_ori", True)
-            info["defects"].extend(logo_audit_hju.get("defects", []))
+        logo_audit_hju = self.audit_bps_logo_on_page(page, "Halaman Judul Utama")
+        info["logo_ori_audit"] = logo_audit_hju
+        info["logo_color_ratio"] = 1.0 if logo_audit_hju.get("logo_is_ori") else 0.0
+        info["logo_is_monochrome"] = logo_audit_hju.get("logo_is_monochrome", False)
+        info["logo_has_stroke"] = logo_audit_hju.get("has_stroke_outline", False)
+        info["logo_has_shadow"] = logo_audit_hju.get("has_drop_shadow", False)
+        info["logo_is_ori"] = logo_audit_hju.get("logo_is_ori", True)
+        info["logo_defects"] = logo_audit_hju.get("defects", [])
+        info["defects"].extend(logo_audit_hju.get("defects", []))
 
         # C. Inspeksi Header Raster HJU (ISSN & Katalog)
         header_crop = img[0:int(h * 0.18), int(w * 0.40):w]

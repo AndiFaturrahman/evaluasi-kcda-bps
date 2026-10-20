@@ -2681,6 +2681,8 @@ def extract_pdf_metadata(pdf_path):
 
     # ── ADVANCED COMPUTER VISION AUDIT ──
     cv_audit = {}
+    cover_logo_monochrome = False
+    cover_logo_defects = []
     if cv_auditor:
         try:
             cv_audit = cv_auditor.audit_document(
@@ -2698,6 +2700,10 @@ def extract_pdf_metadata(pdf_path):
                     cover_has_english_title = cv_cov["has_english_title"]
                 if "title_english_is_italic" in cv_cov:
                     cover_title_is_italic = cv_cov["title_english_is_italic"]
+                if cv_cov.get("logo_is_monochrome"):
+                    cover_logo_monochrome = True
+                if cv_cov.get("logo_defects"):
+                    cover_logo_defects = cv_cov["logo_defects"]
             if cv_audit.get("hju_visual"):
                 cv_hju = cv_audit["hju_visual"]
                 if cv_hju.get("has_colon_on_issn"):
@@ -2853,6 +2859,8 @@ def extract_pdf_metadata(pdf_path):
         "catalog_bps_abbreviations": catalog_bps_abbreviations,
         "page_number_jumps": page_number_jumps,
         # ── NEW: Cross-page consistency fields ──
+        "cover_logo_monochrome": cover_logo_monochrome,
+        "cover_logo_defects": cover_logo_defects,
         "p3_has_bg_illustration": p3_has_image,
         "p3_logo_monochrome": p3_logo_monochrome,
         "space_before_colon_pages": space_before_colon_pages,

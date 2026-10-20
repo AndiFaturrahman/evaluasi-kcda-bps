@@ -21,6 +21,19 @@ def evaluate_kover_depan(meta, kabupaten_str, kab_upper, kab_raw, level_id, leve
     # Jika di balik gambar kover terdapat lapisan teks vektor sisa template yang tertutup gambar,
     # teks tersebut tidak kasat mata bagi pembaca dan diabaikan dari daftar catatan defect.
 
+    if meta.get("cover_logo_monochrome"):
+        kover_depan.append(
+            'Kesalahan warna logo BPS pada kover depan: Logo BPS ditampilkan monokrom/hitam-putih. '
+            'Sesuai Pedoman Pembuatan Publikasi BPS 2023 hal. 35, Pedoman Identitas Visual BPS, dan Instrumen baris 21, '
+            'logo BPS dan identitas penerbit wajib menggunakan aset resmi berwarna (Biru BPS #023F88, Hijau BPS #74B72E, dan Oranye BPS #FFA200).'
+        )
+    if meta.get("cover_logo_defects"):
+        for ld in meta["cover_logo_defects"]:
+            if "monokrom" in ld.lower() and meta.get("cover_logo_monochrome"):
+                continue
+            if ld not in kover_depan:
+                kover_depan.append(ld)
+
     if meta.get("cover_issn_placeholder"):
         kover_depan.append(
             'Nomor ISSN pada kover depan belum dicantumkan atau masih berupa placeholder template ("ISSN XXXX -XXXX"). '

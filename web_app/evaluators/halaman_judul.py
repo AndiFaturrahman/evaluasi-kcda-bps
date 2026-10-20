@@ -45,8 +45,14 @@ def evaluate_halaman_judul(meta, kabupaten_str, kab_upper, kab_raw, level_id, le
             halaman_judul.append(
                 'Kesalahan warna logo BPS: Logo BPS dan identitas BPS Penerbit pada Halaman Judul Utama ditampilkan monokrom/grayscale. '
                 'Sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.1 (hal. 36) & Instrumen Pemeriksaan baris 21, '
-                'logo dan nama BPS penerbit pada Halaman Judul Utama wajib ditampilkan berwarna (biru dan hijau BPS).'
+                'logo dan nama BPS penerbit pada Halaman Judul Utama wajib ditampilkan berwarna (Biru BPS #023F88, Hijau BPS #74B72E, dan Oranye BPS #FFA200).'
             )
+        hju_vis_defects = meta.get("cv_audit", {}).get("hju_visual", {}).get("logo_defects", [])
+        for ld in hju_vis_defects:
+            if "monokrom" in ld.lower() and meta.get("p3_logo_monochrome"):
+                continue
+            if ld not in halaman_judul:
+                halaman_judul.append(ld)
         is_serial_pub = meta.get("is_serial", False) or (issn and issn != "-") or meta.get("catalog", "").startswith("1102001")
         if is_serial_pub:
             target_disp_hju = meta.get("issn_correct_from_registry")
