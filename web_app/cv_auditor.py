@@ -282,17 +282,22 @@ class CVPublicationAuditor:
                     is_above = (-15 <= dy_above <= 60) and (dx_align <= 50)
 
                     if is_left or is_above:
-                        best_rect = r
+                        if is_left:
+                            # Logo BPS emblem is to the left of the publisher text.
+                            # Expand towards pub_rect so the orange square (top-right of emblem) is not clipped!
+                            best_rect = fitz.Rect(max(0, min(r.x0, pub_rect.x0 - 85)), min(r.y0, pub_rect.y0) - 8, max(r.x1 + 30, pub_rect.x0 + 10), max(r.y1, pub_rect.y1) + 8)
+                        else:
+                            best_rect = fitz.Rect(max(0, r.x0 - 5), max(0, r.y0 - 5), min(w, r.x1 + 5), min(h, r.y1 + 5))
                         break
                 elif default_zone == "bottom" and r.y0 > h * 0.45:
-                    best_rect = r
+                    best_rect = fitz.Rect(max(0, r.x0 - 5), max(0, r.y0 - 5), min(w, r.x1 + 15), min(h, r.y1 + 5))
                     break
                 elif default_zone == "top" and r.y1 < h * 0.35:
-                    best_rect = r
+                    best_rect = fitz.Rect(max(0, r.x0 - 5), max(0, r.y0 - 5), min(w, r.x1 + 5), min(h, r.y1 + 5))
                     break
 
         if best_rect is None and pub_rect:
-            best_rect = fitz.Rect(max(0, pub_rect.x0 - 65), pub_rect.y0 - 5, pub_rect.x0 + 5, min(h, pub_rect.y0 + 50))
+            best_rect = fitz.Rect(max(0, pub_rect.x0 - 85), pub_rect.y0 - 8, pub_rect.x0 + 10, min(h, pub_rect.y0 + 55))
 
         if best_rect is None:
             if default_zone == "bottom":
@@ -376,6 +381,29 @@ class CVPublicationAuditor:
 
         info["color_counts"] = {"blue": blue_count, "green": green_count, "orange": orange_count, "black": black_count}
         bps_3_colors = (blue_count > 50 and green_count > 50 and orange_count > 50)
+
+        # Fallback/Safeguard: Jika ada 1 atau 2 warna resmi (misal biru & hijau ada, tapi oranye kurang karena tepi crop),
+        # coba crop yang sedikit lebih longgar untuk memastikan kuadran logo tidak terpotong.
+        if not bps_3_colors and (blue_count > 30 or green_count > 30):
+            exp_rect = fitz.Rect(max(0, best_rect.x0 - 25), max(0, best_rect.y0 - 20), min(w, best_rect.x1 + 45), min(h, best_rect.y1 + 20))
+            pix_exp = page.get_pixmap(clip=exp_rect, matrix=fitz.Matrix(zoom, zoom))
+            img_exp = cv2.imdecode(np.frombuffer(pix_exp.tobytes("png"), np.uint8), cv2.IMREAD_COLOR)
+            if img_exp is not None and img_exp.size > 0:
+                border_px = np.concatenate([img_exp[0, :], img_exp[-1, :], img_exp[:, 0], img_exp[:, -1]])
+                bg_exp = np.median(border_px, axis=0)
+                diff_exp = np.linalg.norm(img_exp.astype(float) - bg_exp.astype(float), axis=2)
+                em_mask = diff_exp > 35
+                if np.sum(em_mask) >= 60:
+                    eb_bgr = img_exp[em_mask]
+                    eb_hsv = cv2.cvtColor(img_exp, cv2.COLOR_BGR2HSV)[em_mask]
+                    b_cnt = int(np.sum((eb_bgr[:, 0] > 90) & (eb_bgr[:, 0] > eb_bgr[:, 2] + 30) & (eb_bgr[:, 0] > eb_bgr[:, 1] + 15) & (eb_hsv[:, 1] > 60)))
+                    g_cnt = int(np.sum((eb_bgr[:, 1] > 90) & (eb_bgr[:, 1] > eb_bgr[:, 0] + 30) & (eb_bgr[:, 1] > eb_bgr[:, 2] + 15) & (eb_hsv[:, 1] > 60)))
+                    o_cnt = int(np.sum((eb_bgr[:, 2] > 140) & (eb_bgr[:, 1] > 60) & (eb_bgr[:, 0] < 80) & (eb_bgr[:, 2] > eb_bgr[:, 0] + 60) & (eb_hsv[:, 1] > 80)))
+                    if b_cnt > 50 and g_cnt > 50 and o_cnt > 50:
+                        blue_count, green_count, orange_count = b_cnt, g_cnt, o_cnt
+                        info["color_counts"] = {"blue": blue_count, "green": green_count, "orange": orange_count, "black": black_count}
+                        bps_3_colors = True
+                        img = img_exp
 
         if bps_3_colors:
             info["logo_type"] = "valid_3_color"
@@ -769,13 +797,21 @@ class CVPublicationAuditor:
             for img_info in page.get_images():
                 base_img = page.parent.extract_image(img_info[0])
                 if base_img and (base_img.get("width", 0) > 350 and base_img.get("height", 0) > 350):
-                    has_large_raster = True
-                    break
+                    raw_b = base_img.get("image")
+                    if raw_b:
+                        dec = cv2.imdecode(np.frombuffer(raw_b, np.uint8), cv2.IMREAD_COLOR)
+                        if dec is not None:
+                            hsv_dec = cv2.cvtColor(dec, cv2.COLOR_BGR2HSV)
+                            nw = ~((hsv_dec[:, :, 1] < 20) & (hsv_dec[:, :, 2] > 235))
+                            img_nw_ratio = float(np.sum(nw) / nw.size)
+                            if img_nw_ratio > 0.30:
+                                has_large_raster = True
+                                break
         except Exception:
             pass
 
-        # Foto alam duplikasi kover depan memiliki non_white_ratio > 45% atau menyertakan raster foto besar
-        if has_large_raster or non_white_ratio > 0.45:
+        # Foto alam duplikasi kover depan memiliki non_white_ratio > 40% atau menyertakan raster foto besar yang berwarna/pekat
+        if has_large_raster or non_white_ratio > 0.40:
             info["has_illustration_background"] = True
             info["defects"].append(
                 'Pelanggaran format latar belakang Halaman Judul Utama: Memuat gambar/foto pemandangan alam (duplikasi visual kover depan). '

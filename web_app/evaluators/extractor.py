@@ -122,9 +122,10 @@ def extract_pdf_metadata(pdf_path):
         # Jika halaman berupa kover (depan/belakang) atau memuat objek gambar grafis, prioritaskan pemindaian visual OCR
         # untuk membaca apa yang riil tercetak dan mencegah residu teks tersembunyi (ghost text) dari master template.
         is_cover_page = (i == 0 or i == num_pages - 1)
-        is_key_page = (is_cover_page or i in (1, 2) or i < 15 or i >= num_pages - 3)
+        is_hju_page = (i == 2)
+        is_key_page = (is_cover_page or is_hju_page or i in (1,) or i < 15 or i >= num_pages - 3)
         if len(doc[i].get_images()) >= 1 and HAVE_CV2:
-            if is_cover_page or (is_key_page and len(txt.strip()) < 80):
+            if is_cover_page or is_hju_page or (is_key_page and len(txt.strip()) < 80):
                 try:
                     from rapidocr_onnxruntime import RapidOCR
                     if not hasattr(extract_pdf_metadata, '_rapid_engine'):
@@ -137,7 +138,7 @@ def extract_pdf_metadata(pdf_path):
                     if ocr_res:
                         ocr_txt = "\n".join([item[1] for item in ocr_res if item[1].strip()])
                         if ocr_txt.strip():
-                            if is_cover_page:
+                            if is_cover_page or is_hju_page:
                                 txt = ocr_txt.strip()
                             else:
                                 txt = (txt + "\n" + ocr_txt).strip()
@@ -464,12 +465,22 @@ def extract_pdf_metadata(pdf_path):
             for img_info in doc[actual_hju_p].get_images():
                 base_img = doc.extract_image(img_info[0])
                 if base_img and (base_img.get("width", 0) > 350 and base_img.get("height", 0) > 350):
-                    has_large_raster = True
-                    break
+                    raw_b = base_img.get("image")
+                    if raw_b and HAVE_CV2:
+                        dec = cv2.imdecode(np.frombuffer(raw_b, np.uint8), cv2.IMREAD_COLOR)
+                        if dec is not None:
+                            hsv_dec = cv2.cvtColor(dec, cv2.COLOR_BGR2HSV)
+                            nw = ~((hsv_dec[:, :, 1] < 20) & (hsv_dec[:, :, 2] > 235))
+                            if float(np.sum(nw) / nw.size) > 0.30:
+                                has_large_raster = True
+                                break
+                    else:
+                        has_large_raster = True
+                        break
         except Exception:
             pass
 
-        # 2. Cek rasio keputihan latar belakang (foto pemandangan kover depan memiliki non_white_ratio > 45%)
+        # 2. Cek rasio keputihan latar belakang (foto pemandangan kover depan memiliki non_white_ratio > 40%)
         has_dense_bg = False
         try:
             pix = doc[actual_hju_p].get_pixmap(dpi=100)
@@ -480,20 +491,49 @@ def extract_pdf_metadata(pdf_path):
                 center_hsv = cv2.cvtColor(center, cv2.COLOR_BGR2HSV)
                 non_white_mask = ~((center_hsv[:, :, 1] < 20) & (center_hsv[:, :, 2] > 235))
                 non_white_ratio = float(np.sum(non_white_mask) / non_white_mask.size)
-                if non_white_ratio > 0.45:
+                if non_white_ratio > 0.40:
                     has_dense_bg = True
         except Exception:
             pass
 
         if has_large_raster or has_dense_bg:
             p3_has_image = True
+
+    hju_ocr_text = ""
+    hju_ocr_lines = []
+    if HAVE_CV2 and actual_hju_p >= 0 and actual_hju_p < num_pages and len(doc[actual_hju_p].get_images()) >= 1:
+        try:
+            from rapidocr_onnxruntime import RapidOCR
+            if not hasattr(extract_pdf_metadata, '_rapid_engine'):
+                extract_pdf_metadata._rapid_engine = RapidOCR()
+            engine = extract_pdf_metadata._rapid_engine
+            pix_hju = doc[actual_hju_p].get_pixmap(dpi=150)
+            img_hju = cv2.imdecode(np.frombuffer(pix_hju.tobytes('png'), np.uint8), cv2.IMREAD_COLOR)
+            if img_hju is not None:
+                ocr_res_hju, _ = engine(img_hju)
+                if ocr_res_hju:
+                    hju_ocr_lines = [item[1].strip() for item in ocr_res_hju if item[1].strip()]
+                    hju_ocr_text = "\n".join(hju_ocr_lines)
+        except Exception:
+            pass
+
     p3_text_full = pages_text.get(actual_hju_p, "") if (actual_hju_p >= 0 and actual_hju_p < num_pages) else ""
-    p3_has_issn = bool(re.search(r'ISSN', p3_text_full, re.IGNORECASE))
-    m_p3_col = re.search(r'ISSN\s*:\s*\d{4}[-\u2013]\d{3}[\dX]|ISSN\s*:\s*\d{4}', p3_text_full)
-    p3_issn_text = m_p3_col.group(0).strip() if m_p3_col else None
-    p3_issn_has_colon = bool(m_p3_col)
-    p3_is_template = bool(re.search(r'xxxx|XXXX|Volume\s+(?:XX|xx)|KABUPATEN/KOTA|REGENCY/MUNICIPALITY', p3_text_full))
-    p3_typo_kecamatan = bool(re.search(r'KECAMATA\s+N\b', p3_text_full))
+    if hju_ocr_text:
+        # Prioritas pemindaian visual: Nilai apa yang kasat mata bagi pembaca, abaikan ghost text tak kasat mata
+        p3_has_issn = bool(re.search(r'\bISSN\b', hju_ocr_text, re.IGNORECASE))
+        m_p3_col = re.search(r'ISSN\s*:\s*\d{4}[-\u2013]\d{3}[\dX]|ISSN\s*:\s*\d{4}', hju_ocr_text)
+        p3_issn_text = m_p3_col.group(0).strip() if m_p3_col else None
+        p3_issn_has_colon = bool(m_p3_col)
+        # Template placeholder hanya diperiksa dari teks kasat mata
+        p3_is_template = bool(re.search(r'xxxx|XXXX|Volume\s+(?:XX|xx)|KABUPATEN/KOTA|REGENCY/MUNICIPALITY', hju_ocr_text))
+        p3_typo_kecamatan = bool(re.search(r'KECAMATA\s+N\b', hju_ocr_text))
+    else:
+        p3_has_issn = bool(re.search(r'ISSN', p3_text_full, re.IGNORECASE))
+        m_p3_col = re.search(r'ISSN\s*:\s*\d{4}[-\u2013]\d{3}[\dX]|ISSN\s*:\s*\d{4}', p3_text_full)
+        p3_issn_text = m_p3_col.group(0).strip() if m_p3_col else None
+        p3_issn_has_colon = bool(m_p3_col)
+        p3_is_template = bool(re.search(r'xxxx|XXXX|Volume\s+(?:XX|xx)|KABUPATEN/KOTA|REGENCY/MUNICIPALITY', p3_text_full))
+        p3_typo_kecamatan = bool(re.search(r'KECAMATA\s+N\b', p3_text_full))
 
     # Pemindaian raster OpenCV untuk Halaman Judul Utama
     hju_raster_info = {"has_issn": False, "has_colon": False, "catalog_space_colon": False}
@@ -503,9 +543,11 @@ def extract_pdf_metadata(pdf_path):
             p3_issn_has_colon = True
         if hju_raster_info["has_issn"]:
             p3_has_issn = True
+        elif len(doc[actual_hju_p].get_images()) >= 1:
+            p3_has_issn = False
 
     hju_catalog_space_colon = hju_raster_info.get("catalog_space_colon", False)
-    hju_has_english_title = bool(re.search(r'IN\s+FIGURES', p3_text_full, re.I))
+    hju_has_english_title = bool(re.search(r'IN\s+FIGURES', hju_ocr_text if hju_ocr_text else p3_text_full, re.I))
     hju_title_is_italic = True
     if cv_auditor and actual_hju_p >= 0 and actual_hju_p < num_pages:
         try:
@@ -535,7 +577,8 @@ def extract_pdf_metadata(pdf_path):
                 if (b[1] + b[3]) / 2.0 < ph_hju * 0.30 and (b[0] + b[2]) / 2.0 < pw_hju * 0.40:
                     hju_catalog_pos_wrong = "kiri"
         if y_kat_h is not None and y_issn_h is not None and y_issn_h < y_kat_h and abs(y_kat_h - y_issn_h) > 5:
-            hju_katalog_issn_order_wrong = True
+            if p3_has_issn:
+                hju_katalog_issn_order_wrong = True
 
     # Deteksi running title atau nomor halaman fisik pada HJU (hanya pada header y <= 8% atau footer y >= 93%)
     p3_has_rt = False
@@ -551,22 +594,37 @@ def extract_pdf_metadata(pdf_path):
             # Abaikan klaster nomor katalog & ISSN di pojok kanan atas
             if y0 < ph_hju * 0.25 and x0 > pw_hju * 0.40:
                 continue
+            is_rt_candidate = False
             # Running title pada header atas di luar klaster katalog
             if y1 <= ph_hju * 0.08:
-                p3_has_rt = True
-                break
+                is_rt_candidate = True
             # Nomor halaman atau running title pada margin footer bawah
-            if y0 >= ph_hju * 0.93:
+            elif y0 >= ph_hju * 0.93:
                 lines_footer = [l.strip() for l in txt_clean.splitlines() if l.strip()]
                 for lf in lines_footer:
                     if re.match(r'^(?:-?\s*\d+\s*-?|-?\s*[ivxlcdm]+\s*-?|halaman\s+\d+|hal\.?\s*\d+)$', lf, re.I):
-                        p3_has_rt = True
+                        is_rt_candidate = True
                         break
                     if "DALAM ANGKA" in lf.upper() or "IN FIGURES" in lf.upper():
-                        p3_has_rt = True
+                        is_rt_candidate = True
                         break
-                if p3_has_rt:
-                    break
+            if is_rt_candidate:
+                # Kaidah Baku BPS: "ABAIKAN YANG TAK KASAT MATA!"
+                # Verifikasi apakah teks kandidat benar-benar tampak kasat mata di rendered image (bukan ghost text tak kasat mata)
+                if HAVE_CV2:
+                    try:
+                        rect_cand = fitz.Rect(b[:4])
+                        pix_cand = hju_page.get_pixmap(clip=rect_cand, dpi=150)
+                        img_cand = cv2.imdecode(np.frombuffer(pix_cand.tobytes("png"), np.uint8), cv2.IMREAD_COLOR)
+                        if img_cand is not None:
+                            gray_cand = cv2.cvtColor(img_cand, cv2.COLOR_BGR2GRAY)
+                            if np.sum(gray_cand < 200) < 15:
+                                # Tak kasat mata (0 pixel teks gelap) -> abaikan!
+                                continue
+                    except Exception:
+                        pass
+                p3_has_rt = True
+                break
 
     # ── HALAMAN KATALOG ──
     catalog_raw = None
