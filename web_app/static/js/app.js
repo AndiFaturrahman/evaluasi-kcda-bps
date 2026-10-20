@@ -547,11 +547,20 @@ document.addEventListener('DOMContentLoaded', () => {
                         const taskId = initialRes.task_id;
                         const totalFiles = initialRes.total || selectedPdfFiles.length;
                         
-                        const pollInterval = setInterval(async () => {
+                        let isBatchPollingActive = true;
+                        let pollTimeoutId = null;
+
+                        const pollStatus = async () => {
+                            if (!isBatchPollingActive) return;
                             try {
                                 const pollRes = await fetch(`/api/batch-status/${taskId}`);
-                                if (!pollRes.ok) return;
+                                if (!isBatchPollingActive) return;
+                                if (!pollRes.ok) {
+                                    pollTimeoutId = setTimeout(pollStatus, 1500);
+                                    return;
+                                }
                                 const pollData = await pollRes.json();
+                                if (!isBatchPollingActive) return;
                                 
                                 if (pollData.status === 'processing') {
                                     const pCount = pollData.processed || 0;
@@ -564,23 +573,30 @@ document.addEventListener('DOMContentLoaded', () => {
                                     if (progressDescEl) {
                                         progressDescEl.textContent = cDist ? `Memeriksa kepatuhan & visual: ${cDist}` : 'Memindai berkas publikasi paralel...';
                                     }
+                                    pollTimeoutId = setTimeout(pollStatus, 1200);
                                 } else if (pollData.status === 'completed') {
-                                    clearInterval(pollInterval);
+                                    isBatchPollingActive = false;
+                                    if (pollTimeoutId) clearTimeout(pollTimeoutId);
                                     stopProgress();
                                     const batchData = pollData.data;
                                     currentBatchData = batchData;
-                                    renderBatchResults(batchData);
+                                    renderBatchResults(batchData, true);
                                     showToast(`Audit kolektif selesai! ${batchData.total_districts} kecamatan berhasil dievaluasi.`, 'success', 4000);
                                 } else if (pollData.status === 'error') {
-                                    clearInterval(pollInterval);
+                                    isBatchPollingActive = false;
+                                    if (pollTimeoutId) clearTimeout(pollTimeoutId);
                                     stopProgress();
                                     alert(`Audit Kolektif Gagal:\n\n${pollData.error || 'Terjadi kesalahan pemrosesan'}`);
                                     showToast('Gagal memproses berkas', 'error', 5000);
                                 }
                             } catch (pollErr) {
                                 console.warn('Polling error:', pollErr);
+                                if (isBatchPollingActive) {
+                                    pollTimeoutId = setTimeout(pollStatus, 2000);
+                                }
                             }
-                        }, 1200);
+                        };
+                        pollTimeoutId = setTimeout(pollStatus, 800);
                         return;
                     }
 
@@ -772,7 +788,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (btnDetail) {
                 btnDetail.addEventListener('click', () => {
                     currentAnalysisData = dist;
-                    renderResults(dist);
+                    renderResults(dist, true);
                     showToast(`Membuka rincian evaluasi Kecamatan ${dist.district_name}`, 'info', 2000);
                 });
             }
@@ -788,12 +804,14 @@ document.addEventListener('DOMContentLoaded', () => {
             tbody.appendChild(tr);
         });
 
-        batchContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (shouldScroll) {
+            batchContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     }
 
 
     // ── 7. RENDER RESULTS ──
-    function renderResults(data) {
+    function renderResults(data, shouldScroll = false) {
         if (!resultsContainer) return;
         resultsContainer.style.display = 'block';
 
@@ -1064,8 +1082,10 @@ document.addEventListener('DOMContentLoaded', () => {
         renderSectionCards(defects, meta);
         applyFilters();
 
-        // Smooth scroll to results
-        resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Smooth scroll to results only if explicitly requested
+        if (shouldScroll) {
+            resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     }
 
     function renderSectionCards(defects, meta) {

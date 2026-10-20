@@ -17,26 +17,37 @@ def evaluate_kover_depan(meta, kabupaten_str, kab_upper, kab_raw, level_id, leve
     region_up = region.upper()
     
     kover_depan = []
-    if meta.get("cover_issn_placeholder"):
+    if meta.get("cover_has_ghost_text"):
+        ghost_d = meta.get("ghost_cover_district", "Wilayah Lain")
         kover_depan.append(
-            'Nomor ISSN pada kover depan belum dicantumkan atau masih berupa placeholder template ("ISSN XXXX -XXXX"). '
-            'Publikasi berkala resmi wajib mencantumkan nomor ISSN valid tanpa tanda titik dua di pojok kanan atas kover depan di atas nomor katalog (Pedoman hal. 35 & Instrumen baris 13).'
+            f'Residu Lapisan Teks Tersembunyi (Ghost Text) pada Kover Depan: Secara visual gambar kover menampilkan judul '
+            f'"Kecamatan {region} Dalam Angka {year}", namun di balik gambar kover terdapat lapisan teks tidak terlihat sisa master template '
+            f'bertuliskan "Kecamatan {ghost_d}". Hal ini menyebabkan metadata dokumen, sistem perpustakaan digital BPS, dan mesin pencari (SEO) '
+            f'berisiko salah mengindeks wilayah publikasi. Buka file desain sumber (InDesign/Word/Publisher) dan hapus frame teks sisa template '
+            f'di balik gambar kover sebelum diekspor ke PDF.'
         )
-    if meta.get("cover_catalog_placeholder"):
-        kover_depan.append(
-            'Nomor Katalog pada kover depan masih berupa draf/template ("1102001.xxxx"). '
-            'Wajib diganti dengan nomor katalog resmi publikasi bersangkutan.'
-        )
-    if meta.get("cover_volume_placeholder"):
-        kover_depan.append(
-            'Volume terbitan pada kover depan belum diisi (masih berupa template "Volume XX"). '
-            'Wajib diisi dengan angka volume terbitan riil sesuai tahun publikasi.'
-        )
-    if meta.get("cover_agency_dual_option"):
-        kover_depan.append(
-            'Penulisan nama wilayah/instansi pada kover depan masih memuat opsi ganda template ("KABUPATEN/KOTA" / "REGENCY/MUNICIPALITY"). '
-            f'Wajib dipilih salah satu sesuai status wilayah administratif (misalnya "{kab_upper}" / "{kab_raw} REGENCY").'
-        )
+
+    if not meta.get("cover_has_ghost_text"):
+        if meta.get("cover_issn_placeholder"):
+            kover_depan.append(
+                'Nomor ISSN pada kover depan belum dicantumkan atau masih berupa placeholder template ("ISSN XXXX -XXXX"). '
+                'Publikasi berkala resmi wajib mencantumkan nomor ISSN valid tanpa tanda titik dua di pojok kanan atas kover depan di atas nomor katalog (Pedoman hal. 35 & Instrumen baris 13).'
+            )
+        if meta.get("cover_catalog_placeholder"):
+            kover_depan.append(
+                'Nomor Katalog pada kover depan masih berupa draf/template ("1102001.xxxx"). '
+                'Wajib diganti dengan nomor katalog resmi publikasi bersangkutan.'
+            )
+        if meta.get("cover_volume_placeholder"):
+            kover_depan.append(
+                'Volume terbitan pada kover depan belum diisi (masih berupa template "Volume XX"). '
+                'Wajib diisi dengan angka volume terbitan riil sesuai tahun publikasi.'
+            )
+        if meta.get("cover_agency_dual_option"):
+            kover_depan.append(
+                'Penulisan nama wilayah/instansi pada kover depan masih memuat opsi ganda template ("KABUPATEN/KOTA" / "REGENCY/MUNICIPALITY"). '
+                f'Wajib dipilih salah satu sesuai status wilayah administratif (misalnya "{kab_upper}" / "{kab_raw} REGENCY").'
+            )
     if meta.get("cover_catalog_space_colon"):
         kover_depan.append(
             f'Kesalahan spasi pada nomor katalog: Tertulis "Katalog/Catalogue : {catalog_no}" '

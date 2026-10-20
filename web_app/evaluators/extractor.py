@@ -251,6 +251,57 @@ def extract_pdf_metadata(pdf_path):
                 b_lbl = f"Bab {b_num}" if b_num else "bab"
                 divider_even_pages.append((b_lbl, p_div + 1))
 
+    # ── DETEKSI & NETRALISASI RESIDU TEKS GHOST PADA KOVER DEPAN ──
+    # Jika kover depan memiliki objek gambar besar dan teks digitalnya memuat nama kecamatan
+    # yang bertentangan dengan HJU, Halaman Katalog, dan Nama File (contoh: teks master Kei Besar di naskah Poso):
+    cov_text_raw = pages_text.get(0, "")
+    m_cov_dist_cand = re.search(r'(?:Kecamatan|Kabupaten|Kota)\s+([A-Za-z\s]+?)\s+Dalam\s+Angka', cov_text_raw, re.I)
+    cov_cand = m_cov_dist_cand.group(1).strip().title() if m_cov_dist_cand else ""
+
+    m_fn_cand = re.search(r'(?:kecamatan|kabupaten|kota)-([a-z\-]+)-dalam-angka', os.path.basename(pdf_path), re.I)
+    fn_district_cand = m_fn_cand.group(1).replace('-', ' ').title() if m_fn_cand else ""
+
+    hju_prelim_text = (pages_text.get(hju_idx, "") + " " + pages_text.get(2, "") + " " + pages_text.get(1, ""))
+    m_hju_cand = re.search(r'(?:Kecamatan|Kabupaten|Kota)\s+([A-Za-z\s]+?)\s+Dalam\s+Angka', hju_prelim_text, re.I)
+    hju_district_cand = m_hju_cand.group(1).strip().title() if m_hju_cand else ""
+
+    catalog_prelim_text = pages_text.get(catalog_idx, "") if catalog_idx >= 0 else ""
+    m_kat_cand = re.search(r'(?:Kecamatan|Kabupaten|Kota)\s+([A-Za-z\s]+?)\s+Dalam\s+Angka', catalog_prelim_text, re.I)
+    kat_district_cand = m_kat_cand.group(1).strip().title() if m_kat_cand else ""
+
+    expected_district = fn_district_cand or hju_district_cand or kat_district_cand
+    cover_has_ghost_text = False
+    ghost_cover_district = ""
+    visual_cover_district = ""
+    visual_cover_catalog = ""
+
+    if cov_cand and expected_district and cov_cand.lower() != expected_district.lower() and "xxxx" not in expected_district.lower():
+        if len(doc) > 0 and len(doc[0].get_images()) >= 1 and HAVE_CV2:
+            try:
+                from rapidocr_onnxruntime import RapidOCR
+                if not hasattr(extract_pdf_metadata, '_rapid_engine'):
+                    extract_pdf_metadata._rapid_engine = RapidOCR()
+                engine = extract_pdf_metadata._rapid_engine
+                pix_cov = doc[0].get_pixmap(dpi=150)
+                img_cov = cv2.imdecode(np.frombuffer(pix_cov.tobytes('png'), np.uint8), cv2.IMREAD_COLOR)
+                ocr_cov_res, _ = engine(img_cov)
+                if ocr_cov_res:
+                    ocr_lines = [item[1] for item in ocr_cov_res]
+                    ocr_cov_text = "\n".join(ocr_lines)
+                    clean_exp = expected_district.lower().replace(" ", "")
+                    clean_cov_ocr = ocr_cov_text.lower().replace(" ", "")
+                    if clean_exp in clean_cov_ocr:
+                        cover_has_ghost_text = True
+                        ghost_cover_district = cov_cand
+                        visual_cover_district = expected_district
+                        m_vcat = re.search(r'1102001\.\d+', ocr_cov_text)
+                        if m_vcat:
+                            visual_cover_catalog = m_vcat.group(0)
+                        pages_text[0] = ocr_cov_text
+                        pages_lines[0] = ocr_lines
+            except Exception:
+                pass
+
     all_prelim = " ".join([pages_text.get(i, "") for i in range(min(8, num_pages))])
     catalog_text = pages_text.get(catalog_idx, "") if catalog_idx >= 0 else ""
     team_text = pages_text.get(team_idx, "") if team_idx >= 0 else ""
@@ -263,6 +314,9 @@ def extract_pdf_metadata(pdf_path):
                             all_prelim + pages_text.get(0, ""), re.IGNORECASE)
     pub_title = title_match.group(0).strip().title() if title_match else os.path.splitext(os.path.basename(pdf_path))[0].replace("-", " ").title()
     pub_year = title_match.group(2) if title_match else "2026"
+
+    if cover_has_ghost_text and visual_cover_district:
+        pub_title = f"Kecamatan {visual_cover_district} Dalam Angka {pub_year}"
 
     # Tentukan pub_level: 'kota', 'kabupaten', atau 'kecamatan'
     pub_level = "kecamatan"
@@ -487,10 +541,12 @@ def extract_pdf_metadata(pdf_path):
     if not cat_match:
         cat_match = re.search(r'Katalog[^\d]*(\d{7,10}\.\d+|\d{4,10}(?:\.\d+)+)', catalog_text + " " + all_prelim, re.IGNORECASE)
     catalog_no = cat_match.group(1).strip() if cat_match else "-"
-    if catalog_no != "-":
+    if visual_cover_catalog and (catalog_no in ["-", "", "...."] or "xxxx" in catalog_no.lower()):
+        catalog_no = visual_cover_catalog
+    elif catalog_no != "-":
         digits_count = sum(c.isdigit() for c in catalog_no)
         if digits_count < 5:
-            catalog_no = "-"
+            catalog_no = visual_cover_catalog if visual_cover_catalog else "-"
     catalog_slash = False
     if re.search(r'Katalog\s+/Catalogue', catalog_text + all_prelim):
         sb, _ = verify_label_slash_space(catalog_raw, "Katalog", "Catalogue")
@@ -1014,7 +1070,9 @@ def extract_pdf_metadata(pdf_path):
             if cand_fn_clean and cand_fn_clean.lower() not in dummy_placeholders:
                 cover_district_clean = cand_fn_clean.title()
                 
-    if not cover_district_clean:
+    if cover_has_ghost_text and visual_cover_district:
+        cover_district_clean = visual_cover_district
+    elif not cover_district_clean:
         cover_district_clean = region_name
 
     p3_txt_norm = re.sub(r'\s+', ' ', pages_text.get(2, ""))
@@ -1039,7 +1097,7 @@ def extract_pdf_metadata(pdf_path):
     inner_page_map = {}
     for p_idx in range(1, num_pages):
         p_txt = pages_text.get(p_idx, "")
-        p_matches = re.findall(r'Kecamatan\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\b', p_txt)
+        p_matches = re.findall(r'Kecamatan\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2})\b', p_txt)
         for pm in p_matches:
             pm_clean = re.sub(r'\s+', ' ', pm).strip().title()
             pm_words = set(pm_clean.lower().split())
@@ -1055,9 +1113,11 @@ def extract_pdf_metadata(pdf_path):
     
     if cover_district_clean:
         cov_lower = cover_district_clean.lower()
+        cov_ns = re.sub(r'[^a-z0-9]', '', cov_lower)
         if dominant_inner_district and dom_inner_count >= 5:
             dom_lower = dominant_inner_district.lower()
-            if cov_lower != dom_lower and cov_lower not in dom_lower and dom_lower not in cov_lower:
+            dom_ns = re.sub(r'[^a-z0-9]', '', dom_lower)
+            if cov_ns != dom_ns and cov_ns not in dom_ns and dom_ns not in cov_ns:
                 is_district_identity_mismatch = True
                 sample_pgs = sorted(list(inner_page_map.get(dominant_inner_district, [])))[:6]
                 district_mismatch_reasons.append(
@@ -2672,6 +2732,10 @@ def extract_pdf_metadata(pdf_path):
         "global_typos": global_typos,
         "roman_page_mismatch": roman_page_mismatch,
         "district_mismatch_info": district_mismatch_info,
+        "cover_has_ghost_text": cover_has_ghost_text,
+        "ghost_cover_district": ghost_cover_district,
+        "visual_cover_district": visual_cover_district,
+        "visual_cover_catalog": visual_cover_catalog,
         "cv_audit": cv_audit,
         # ── Deteksi Template, Placeholder & Crosscheck Khusus ──
         "pub_level": pub_level,
