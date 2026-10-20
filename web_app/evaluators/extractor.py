@@ -2568,16 +2568,37 @@ def extract_pdf_metadata(pdf_path):
 
     # 5. Cek halaman kosong sebelum kover belakang (Instrumen Row 205)
     pre_back_cover_has_leak = False
+    pre_back_cover_ghost = False
+    pre_leak_snippet = ""
     if num_pages >= 3:
         p_pre = pages_text.get(num_pages - 2, "").strip()
         p_pre_no_web = re.sub(r'https?://\S+', '', p_pre).strip()
-        if any(k in p_pre.upper() for k in ["DALAM ANGKA", "IN FIGURES", "BAB "]) and len(p_pre_no_web) < 100:
+        if any(k in p_pre.upper() for k in ["DALAM ANGKA", "IN FIGURES", "BAB ", "BIBLIOGRAPHY"]) and len(p_pre_no_web) < 150:
             pre_back_cover_has_leak = True
+            pre_leak_snippet = re.sub(r'\s+', ' ', p_pre_no_web).strip()
+            # Cek apakah tertutup bidang/kotak putih (white box cover)
+            try:
+                page_pre_obj = doc[num_pages - 2]
+                drawings = page_pre_obj.get_drawings()
+                white_box = [d for d in drawings if d.get('fill') == (1.0, 1.0, 1.0) and d['rect'].width > page_pre_obj.rect.width * 0.7]
+                if white_box:
+                    pre_back_cover_ghost = True
+            except Exception:
+                pass
+
     if pre_back_cover_has_leak:
-        kover_belakang_errors.append(
-            f'Running title atau teks tercetak pada lembar kosong sebelum kover belakang (halaman fisik {num_pages-1}). '
-            f'Sesuai Pedoman BPS 2023 hal. 64 & Instrumen baris 205, halaman kosong sebelum kover belakang wajib bersih tanpa running title dan nomor halaman.'
-        )
+        if pre_back_cover_ghost:
+            kover_belakang_errors.append(
+                f'Residu Teks Tersembunyi (Ghost Text) pada lembar kosong sebelum kover belakang (halaman fisik {num_pages-1}): '
+                f'Ditemukan teks running title/nomor halaman (terbaca: "{pre_leak_snippet}") yang ditutupi oleh kotak/bidang putih. '
+                f'Secara kasat mata teks tertutup kotak putih, namun lapisan teks digitalnya MASIH TERSIMPAN di dalam file PDF (dapat ter-copy saat Ctrl+A atau terbaca mesin pencari BPS). '
+                f'Sesuai Pedoman BPS 2023 hal. 64 & Instrumen baris 205, gunakan Master Page [None] / Tanpa Master pada lembar ini di InDesign/Word alih-alih menimpanya dengan bidang putih.'
+            )
+        else:
+            kover_belakang_errors.append(
+                f'Running title atau teks tercetak pada lembar kosong sebelum kover belakang (halaman fisik {num_pages-1}): Terbaca "{pre_leak_snippet}". '
+                f'Sesuai Pedoman BPS 2023 hal. 64 & Instrumen baris 205, halaman kosong sebelum kover belakang wajib bersih tanpa running title dan nomor halaman.'
+            )
 
     # 6. Cek kelengkapan identitas kontak BPS penerbit pada kover belakang (Instrumen Row 210 Poin 4)
     back_cover_missing_contact = []
