@@ -529,6 +529,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             errMsg = 'Batas Waktu Eksekusi Terlampaui (HTTP 504 Gateway Timeout): Analisis dokumen melebihi batas waktu Vercel Serverless. Silakan gunakan Cloudflare Tunnel atau server lokal.';
                         } else if (res.status === 524) {
                             errMsg = `Batas Waktu Jaringan Internet Terlampaui (Cloudflare HTTP 524 Timeout):\n\nUnggahan berkas berukuran besar terhambat kecepatan internet publik sehingga melewati batas waktu Cloudflare (100 detik).\n\n💡 Rekomendasi Solusi:\nBuka sistem melalui Jaringan Lokal Kantor (LAN/Wi-Fi BPS) di:\n👉 ${currentLanUrl}\n(Proses instan hanya ~4 detik tanpa batasan kuota/waktu).`;
+                        } else if (res.status === 530) {
+                            errMsg = `Tautan Tunnel Cloudflare Ini Sudah Kedaluwarsa / Terputus (HTTP 530):\n\nSesi tunnel "${window.location.hostname}" ini sudah terputus karena server sempat dimulai ulang.\n\n💡 Solusi Cepat:\n1. Buka tautan Cloudflare Tunnel aktif yang terbaru yang diberikan asisten, ATAU\n2. Jika Anda berada di komputer server / LAN, buka langsung melalui:\n👉 http://localhost:8000\n(Bebas batas waktu dan koneksi langsung tanpa lewat Cloudflare).`;
                         } else {
                             try {
                                 const text = await res.text();
@@ -657,6 +659,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             errMsg = 'Batas Waktu Eksekusi Terlampaui (HTTP 504 Gateway Timeout): Analisis dokumen melebihi batas waktu Vercel Serverless. Silakan gunakan Cloudflare Tunnel atau server lokal.';
                         } else if (res.status === 524) {
                             errMsg = `Batas Waktu Jaringan Internet Terlampaui (Cloudflare HTTP 524 Timeout):\n\nUnggahan berkas "${selectedPdfFile.name}" (${singleMB} MB) terhambat kecepatan internet publik sehingga melewati batas waktu Cloudflare (100 detik).\n\n💡 Rekomendasi Solusi:\nBuka sistem melalui Jaringan Lokal Kantor (LAN/Wi-Fi BPS) di:\n👉 ${currentLanUrl}\n(Proses instan hanya ~4 detik tanpa batasan kuota/waktu).`;
+                        } else if (res.status === 530) {
+                            errMsg = `Tautan Tunnel Cloudflare Ini Sudah Kedaluwarsa / Terputus (HTTP 530):\n\nSesi tunnel "${window.location.hostname}" ini sudah terputus karena server sempat dimulai ulang.\n\n💡 Solusi Cepat:\n1. Buka tautan Cloudflare Tunnel aktif yang terbaru yang diberikan asisten, ATAU\n2. Jika Anda berada di komputer server / LAN, buka langsung melalui:\n👉 http://localhost:8000\n(Bebas batas waktu dan koneksi langsung tanpa lewat Cloudflare).`;
                         } else {
                             try {
                                 const text = await res.text();
