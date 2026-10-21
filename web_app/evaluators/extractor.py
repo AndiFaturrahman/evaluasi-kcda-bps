@@ -2166,10 +2166,40 @@ def extract_pdf_metadata(pdf_path):
                     break
 
         # Superscript tanpa catatan kaki
-        if re.search(r'\b(Desa|Villages?)\s*1/', txt) and not re.search(r'1/\s*\S+', txt[-300:]):
-            table_findings.append(
-                f"{tbl_label}: Tanda superscript '1/' ditemukan pada header tabel tanpa penjelasan catatan kaki yang sesuai di bagian bawah tabel."
+        has_table_superscript = bool(
+            re.search(r'\b(?:Desa|Villages?)\s*(?:1/|¹/|¹)\b', txt, re.I)
+            or re.search(r'(?:Desa|Villages?)\s*\n\s*(?:1/|¹/|¹)', txt, re.I)
+            or re.search(r'1/\s*(?:Kelurahan|Subdistric)', txt, re.I)
+            or re.search(r'\b[A-Za-z]{3,}\s*(?:1/|¹/)\b', txt)
+        )
+        if has_table_superscript:
+            footnote_text = ''
+            m_note = re.search(r'Catatan/Note\s*:?\s*(.*?)(?:Sumber/Source\s*:|$)', txt, re.DOTALL | re.I)
+            if m_note:
+                footnote_text = m_note.group(1).strip()
+            else:
+                m_src = re.search(r'Sumber/Source', txt, re.I)
+                if m_src:
+                    pre_src = txt[:m_src.start()].rstrip().splitlines()
+                    candidate_lines = [l.strip() for l in pre_src[-4:] if l.strip()]
+                    for cl in candidate_lines:
+                        if re.match(r'^\(\s*\d+\s*\)$', cl) or cl.isdigit():
+                            continue
+                        if re.search(r'(?:^|\b)(?:1/|1\)|1\.|¹|[¹1]\s*(?:Desa|Satuan|Data|Unit|UPT))\b', cl, re.I):
+                            footnote_text = cl
+                            break
+
+            clean_fn = re.sub(r'[\.\s,–-]+', '', footnote_text)
+            has_valid_explanation = bool(
+                clean_fn and (
+                    re.search(r'(?:^|\n|\b)(?:1\s*[/.)\-]|\b1\s+[A-Za-z]|1[A-Za-z]|¹)', footnote_text)
+                    or re.search(r'\b(?:UPT|Unit Permukiman Transmigrasi|Transmigration|termasuk|include)\b', footnote_text, re.I)
+                )
             )
+            if not has_valid_explanation:
+                table_findings.append(
+                    f"{tbl_label}: Tanda superscript '1/' ditemukan pada header tabel tanpa penjelasan catatan kaki yang sesuai di bagian bawah tabel."
+                )
 
         # Satuan km2 / m2 bukan superskrip
         if re.search(r'\(km2\b|\(km2/', txt):
