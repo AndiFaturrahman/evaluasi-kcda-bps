@@ -290,3 +290,58 @@ def create_batch_zip(file_items, output_zip_path):
             if os.path.exists(f_path):
                 zf.write(f_path, arc_name)
     return output_zip_path
+
+
+if __name__ == "__main__":
+    import sys
+    import argparse
+    from pathlib import Path
+
+    # Direktori default
+    base_dir = Path(__file__).resolve().parent
+    uploads_dir = base_dir / "uploads"
+    outputs_dir = base_dir / "outputs"
+    outputs_dir.mkdir(parents=True, exist_ok=True)
+
+    parser = argparse.ArgumentParser(description="Proses Audit Batch Publikasi BPS")
+    parser.add_argument("--dir", default=str(uploads_dir), help="Folder berisi file PDF publikasi")
+    parser.add_argument("--pattern", default="*.pdf", help="Pola file PDF (misal: *.pdf)")
+    parser.add_argument("--limit", type=int, default=0, help="Batasi jumlah file (0 untuk semua)")
+    parser.add_argument("--output", default=str(outputs_dir / "Rekapitulasi_Audit_Batch.xlsx"), help="Path file output Excel")
+    args = parser.parse_args()
+
+    pdf_files = sorted(glob.glob(os.path.join(args.dir, args.pattern)))
+    if not pdf_files:
+        print(f"[Batch Processor] Tidak ada file PDF ditemukan di {args.dir} dengan pola {args.pattern}")
+        sys.exit(0)
+
+    if args.limit > 0:
+        pdf_files = pdf_files[:args.limit]
+
+    print(f"\n================ BATCH AUDIT BPS ================ ")
+    print(f"Menemukan {len(pdf_files)} file publikasi untuk diaudit di: {args.dir}")
+    print(f"Hasil akan disimpan ke: {args.output}\n")
+
+    eval_results = []
+    for idx, pdf_path in enumerate(pdf_files, 1):
+        fn = os.path.basename(pdf_path)
+        print(f"[{idx}/{len(pdf_files)}] Memproses: {fn} ...", end=" ", flush=True)
+        try:
+            meta = extract_pdf_metadata(pdf_path)
+            defects = analyze_defects(meta)
+            tot_defects = sum(len(v) for v in defects.values())
+            eval_results.append({
+                "pdf_path": pdf_path,
+                "filename": fn,
+                "meta": meta,
+                "defects": defects,
+                "total_defects": tot_defects
+            })
+            print(f"SELESAI ({tot_defects} temuan)")
+        except Exception as e:
+            print(f"GAGAL: {e}")
+
+    if eval_results:
+        out_excel = generate_master_batch_excel(eval_results, args.output)
+        print(f"\n[OK] Rekapitulasi Master Excel berhasil dibuat:")
+        print(f"-> {out_excel}")
