@@ -27,6 +27,7 @@ from .visual_verifier import (
 )
 from .heading_detector import find_true_section_page
 from .template_ghost_cleaner import filter_visible_template_markers
+from .pdf_reader_engine import VisualPDFReader
 
 if HAVE_CV2:
     import cv2
@@ -120,43 +121,14 @@ def verify_label_slash_space(catalog_raw, label_id, label_en):
     return has_space_before, has_space_after
 
 def extract_pdf_metadata(pdf_path):
-    doc = fitz.open(pdf_path)
-    num_pages = len(doc)
+    # ── MESIN PEMBACA PDF MUTAKHIR (VISUAL-AWARE PDF ENGINE) ──
+    # Mengintegrasikan ekstraksi hybrid PyMuPDF + RapidOCR + OpenCV
+    # Menjamin prinsip: "Nilai apa yang kasat mata, abaikan yang tak kasat mata!"
+    reader = VisualPDFReader(pdf_path)
+    doc = reader.doc
+    num_pages = reader.num_pages
     
-    pages_text = {}
-    pages_lines = {}
-    for i in range(num_pages):
-        txt = sanitize_invisible_unicode(doc[i].get_text("text"))
-        # ── PRIORITAS PEMINDAIAN VISUAL (RAPIDOCR) ──
-        # Sesuai kaidah: "Nilai apa yang kasat mata bagi pembaca, abaikan apa yang tak kasat mata".
-        # Jika halaman berupa kover (depan/belakang) atau memuat objek gambar grafis, prioritaskan pemindaian visual OCR
-        # untuk membaca apa yang riil tercetak dan mencegah residu teks tersembunyi (ghost text) dari master template.
-        is_cover_page = (i == 0 or i == num_pages - 1)
-        is_hju_page = (i == 2)
-        is_key_page = (is_cover_page or is_hju_page or i in (1,) or i < 15 or i >= num_pages - 3)
-        if len(doc[i].get_images()) >= 1 and HAVE_CV2:
-            if is_cover_page or is_hju_page or (is_key_page and len(txt.strip()) < 80):
-                try:
-                    from rapidocr_onnxruntime import RapidOCR
-                    if not hasattr(extract_pdf_metadata, '_rapid_engine'):
-                        extract_pdf_metadata._rapid_engine = RapidOCR()
-                    engine = extract_pdf_metadata._rapid_engine
-                    
-                    pix = doc[i].get_pixmap(dpi=150)
-                    img = cv2.imdecode(np.frombuffer(pix.tobytes('png'), np.uint8), cv2.IMREAD_COLOR)
-                    ocr_res, _ = engine(img)
-                    if ocr_res:
-                        ocr_txt = "\n".join([item[1] for item in ocr_res if item[1].strip()])
-                        if ocr_txt.strip():
-                            if is_cover_page or is_hju_page:
-                                txt = ocr_txt.strip()
-                            else:
-                                txt = (txt + "\n" + ocr_txt).strip()
-                except Exception:
-                    pass
-        txt = sanitize_invisible_unicode(txt)
-        pages_text[i] = txt
-        pages_lines[i] = [l.strip() for l in txt.split("\n") if l.strip()]
+    pages_text, pages_lines = reader.read_all_pages_cached()
 
     # 1. Locate key sections
     catalog_idx = find_page_with_text(doc, "Jumlah Halaman", "Ukuran Buku", start_page=2, end_page=15)

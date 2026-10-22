@@ -32,6 +32,7 @@ from .extractor import extract_pdf_metadata
 from .orchestrator import analyze_defects
 from .excel_reporter import generate_excel_report
 from .ai_advisor import call_gemini_defect_variation
+from .pdf_reader_engine import VisualPDFReader, VisualPage, TableStructure
 
 __all__ = [
     "extract_pdf_metadata",
@@ -43,6 +44,9 @@ __all__ = [
     "scan_cover_raster_header",
     "load_variation_cache",
     "call_gemini_defect_variation",
+    "VisualPDFReader",
+    "VisualPage",
+    "TableStructure",
     "DEFAULT_API_KEY",
     "WILAYAH_METADATA",
     "KECAMATAN_TO_KABUPATEN",

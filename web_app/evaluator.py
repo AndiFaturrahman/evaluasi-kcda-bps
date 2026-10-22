@@ -50,6 +50,7 @@ try:
     from .evaluators.orchestrator import analyze_defects
     from .evaluators.excel_reporter import generate_excel_report
     from .evaluators.ai_advisor import call_gemini_defect_variation
+    from .evaluators.pdf_reader_engine import VisualPDFReader, VisualPage, TableStructure
 except (ImportError, ValueError):
     from evaluators.common import (
         validate_issn_checksum,
@@ -78,6 +79,7 @@ except (ImportError, ValueError):
     from evaluators.orchestrator import analyze_defects
     from evaluators.excel_reporter import generate_excel_report
     from evaluators.ai_advisor import call_gemini_defect_variation
+    from evaluators.pdf_reader_engine import VisualPDFReader, VisualPage, TableStructure
 
 __all__ = [
     "extract_pdf_metadata",
@@ -89,6 +91,9 @@ __all__ = [
     "scan_cover_raster_header",
     "load_variation_cache",
     "call_gemini_defect_variation",
+    "VisualPDFReader",
+    "VisualPage",
+    "TableStructure",
     "DEFAULT_API_KEY",
     "GEMINI_API_URL",
     "WILAYAH_METADATA",
