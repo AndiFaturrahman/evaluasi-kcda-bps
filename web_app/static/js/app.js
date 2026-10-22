@@ -431,8 +431,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ── 5. PROGRESS ANIMATION ──
     let progressInterval = null;
-    // ── 5. PROGRESS ANIMATION ──
-    let progressInterval = null;
     function startProgress(title, desc, isBatch = false, totalCount = 0) {
         if (resultsContainer) resultsContainer.style.display = 'none';
         const batchResultsContainer = document.getElementById('batch-results-container');
