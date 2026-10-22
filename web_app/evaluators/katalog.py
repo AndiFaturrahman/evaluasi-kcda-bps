@@ -41,8 +41,9 @@ def evaluate_katalog(meta, kabupaten_str, kab_upper, kab_raw, level_id, level_en
                 f'Nama individu hanya dicantumkan pada Halaman Tim Penyusun.'
             )
         if meta.get("catalog_volume_empty"):
+            vol_txt = meta.get("catalog_volume_text") or "Volume xx"
             halaman_katalog.append(
-                'Volume publikasi pada Halaman Katalog masih kosong / berupa template: Tertulis "Volume xx". '
+                f'Volume publikasi pada Halaman Katalog masih kosong / berupa template: Tertulis "{vol_txt}". '
                 'Wajib diisi dengan angka volume publikasi yang benar.'
             )
         if meta.get("catalog_no_empty"):

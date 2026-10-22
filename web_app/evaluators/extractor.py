@@ -483,6 +483,22 @@ def extract_pdf_metadata(pdf_path):
             pass
 
     p3_text_full = pages_text.get(actual_hju_p, "") if (actual_hju_p >= 0 and actual_hju_p < num_pages) else ""
+    
+    # Deteksi teks template Volume XX pada Halaman Judul Utama (HJU)
+    hju_volume_placeholder = False
+    if actual_hju_p >= 0 and actual_hju_p < num_pages:
+        hju_p_obj = doc[actual_hju_p]
+        for b in hju_p_obj.get_text('blocks'):
+            btxt = b[4].strip()
+            if re.search(r'\bVolume\s+(?:XX|xx|\.\.\.)', btxt, re.I):
+                if is_block_visually_visible(hju_p_obj, b[:4], min_dark_pixels=10):
+                    hju_volume_placeholder = True
+                    break
+        if not hju_volume_placeholder:
+            combined_hju = f"{p3_text_full}\n{hju_ocr_text}"
+            if re.search(r'\bVolume\s+(?:XX|xx|\.\.\.)', combined_hju, re.I):
+                hju_volume_placeholder = True
+
     if hju_ocr_text:
         # Prioritas pemindaian visual: Nilai apa yang kasat mata bagi pembaca, abaikan ghost text tak kasat mata
         p3_has_issn = bool(re.search(r'\bISSN\b', hju_ocr_text, re.IGNORECASE))
@@ -490,14 +506,14 @@ def extract_pdf_metadata(pdf_path):
         p3_issn_text = m_p3_col.group(0).strip() if m_p3_col else None
         p3_issn_has_colon = bool(m_p3_col)
         # Template placeholder hanya diperiksa dari teks kasat mata
-        p3_is_template = bool(re.search(r'xxxx|XXXX|Volume\s+(?:XX|xx)|KABUPATEN/KOTA|REGENCY/MUNICIPALITY', hju_ocr_text))
+        p3_is_template = bool(hju_volume_placeholder or re.search(r'xxxx|XXXX|KABUPATEN/KOTA|REGENCY/MUNICIPALITY', hju_ocr_text))
         p3_typo_kecamatan = bool(re.search(r'KECAMATA\s+N\b', hju_ocr_text))
     else:
         p3_has_issn = bool(re.search(r'ISSN', p3_text_full, re.IGNORECASE))
         m_p3_col = re.search(r'ISSN\s*:\s*\d{4}[-\u2013]\d{3}[\dX]|ISSN\s*:\s*\d{4}', p3_text_full)
         p3_issn_text = m_p3_col.group(0).strip() if m_p3_col else None
         p3_issn_has_colon = bool(m_p3_col)
-        p3_is_template = bool(re.search(r'xxxx|XXXX|Volume\s+(?:XX|xx)|KABUPATEN/KOTA|REGENCY/MUNICIPALITY', p3_text_full))
+        p3_is_template = bool(hju_volume_placeholder or re.search(r'xxxx|XXXX|KABUPATEN/KOTA|REGENCY/MUNICIPALITY', p3_text_full))
         p3_typo_kecamatan = bool(re.search(r'KECAMATA\s+N\b', p3_text_full))
 
     # Pemindaian raster OpenCV untuk Halaman Judul Utama
@@ -576,6 +592,8 @@ def extract_pdf_metadata(pdf_path):
         catalog_slash = sb
 
     catalog_volume_empty = bool(re.search(r'Volume\s+(?:xx|XX|\.\.\.)', catalog_text))
+    m_cat_vol = re.search(r'Volume\s+([0-9IVXLCDM]+(?:\s*,\s*\d{4})?)', catalog_text, re.I)
+    catalog_volume_text = m_cat_vol.group(0).strip() if m_cat_vol else ""
     catalog_no_empty = bool(re.search(r'Katalog[^\n:]*:\s*(?:\.{2,}|-|—|\s*$)', catalog_text)) or (catalog_no in ["-", "", "...."])
     catalog_issn_empty = bool(re.search(r'ISSN[^\n:]*:\s*(?:\.{2,}|XXXX|-)', catalog_text)) or bool(re.search(r'ISSN:\s*\.\.\.', catalog_text))
     catalog_pages_placeholder = bool(re.search(r'\.{2,}\s*[\+\-]\s*\.{2,}', catalog_text))
@@ -3025,6 +3043,7 @@ def extract_pdf_metadata(pdf_path):
         "p3_is_template": p3_is_template,
         "p3_typo_kecamatan": p3_typo_kecamatan,
         "catalog_volume_empty": catalog_volume_empty,
+        "catalog_volume_text": catalog_volume_text,
         "catalog_no_empty": catalog_no_empty,
         "catalog_issn_empty": catalog_issn_empty,
         "catalog_pages_placeholder": catalog_pages_placeholder,

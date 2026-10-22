@@ -386,12 +386,20 @@ class VisualPDFReader:
                     visible_lines.append(line_str)
 
         # Jika halaman kover depan/belakang dan OCR menghasilkan teks lebih lengkap, gunakan teks OCR
-        if (is_cover_page or is_hju_page) and ocr_text:
+        if is_cover_page and ocr_text:
             vpage.visible_text = ocr_text
             vpage.lines = [l.strip() for l in ocr_text.splitlines() if l.strip()]
         else:
             vpage.visible_text = "\n".join(visible_lines)
             vpage.lines = visible_lines
+            if is_hju_page and ocr_text:
+                # Untuk HJU: gabungkan baris teks kasat mata dari blok PDF dan OCR tanpa saling menghapus
+                v_lower = vpage.visible_text.lower()
+                for o_line in ocr_text.splitlines():
+                    o_clean = o_line.strip()
+                    if o_clean and o_clean.lower() not in v_lower:
+                        vpage.visible_text += f"\n{o_clean}"
+                        vpage.lines.append(o_clean)
 
         # 5. Partisi Zona Semantik
         header_lines = []
