@@ -23,4 +23,5 @@ dokumen_pedoman_dan_rujukan/
 .env*
 IPDS/
 *.bak
+*.zip
 test_bot_buko.png
