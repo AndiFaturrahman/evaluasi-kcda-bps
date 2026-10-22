@@ -149,6 +149,21 @@
             <p id="progress-desc">
                 Sistem sedang memindai struktur teks, tipografi dwibahasa, visual gambar dummy template, tabel kosong, perataan angka, dan menyusun lembar evaluasi resmi.
             </p>
+
+            <!-- Dynamic Batch & Live Progress Bar (P4) -->
+            <div class="batch-progress-box" id="batch-progress-box" style="display: none;">
+                <div class="progress-bar-header">
+                    <span class="progress-status-text" id="progress-status-text"><i class="fas fa-microchip"></i> Memproses berkas 0 dari 0...</span>
+                    <span class="progress-pct-badge" id="progress-pct-badge">0%</span>
+                </div>
+                <div class="progress-track-outer">
+                    <div class="progress-track-fill" id="progress-track-fill" style="width: 0%;">
+                        <div class="progress-track-shimmer"></div>
+                    </div>
+                </div>
+                <div class="progress-sub-detail" id="progress-sub-detail">Menyiapkan antrean dokumen...</div>
+            </div>
+
             <div class="progress-steps">
                 <div class="step-pill active" id="step-1">1. Ekstraksi PDF & Metadata</div>
                 <div class="step-pill" id="step-2">2. Pindai Visual & Tabel</div>

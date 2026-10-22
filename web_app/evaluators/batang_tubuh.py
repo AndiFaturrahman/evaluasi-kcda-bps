@@ -151,5 +151,33 @@ def evaluate_layout_isi(meta, kabupaten_str, kab_upper, kab_raw, level_id, level
             f'Sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4.4 hal. 55 & Instrumen baris 130, nomor subbab tidak boleh diakhiri '
             f'tanda titik (contoh yang benar: \'{corr_sub}\').'
         )
+    for p_num, p_lbl, f_num in meta.get("fig_title_above_image", []):
+        layout_isi.append(
+            f'Gambar {f_num} pada halaman {p_lbl} (hal fisik {p_num}): Posisi judul gambar diletakkan di BAGIAN ATAS visual gambar/grafik. '
+            f'Sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4.4 hal. 44 & Instrumen baris 171, judul gambar/grafik WAJIB diletakkan '
+            f'di BAGIAN BAWAH grafik/gambar (kebalikan dari judul tabel statistik yang diletakkan di atas tabel).'
+        )
+    for p_num, p_lbl, f_num in meta.get("fig_source_ellipsis", []):
+        layout_isi.append(
+            f'Gambar {f_num} pada halaman {p_lbl} (hal fisik {p_num}): Baris Sumber/Source gambar belum diisi (hanya memuat tanda elipsis \'...\'). '
+            f'Sesuai Pedoman Pembuatan Publikasi BPS 2023 & Instrumen baris 173, sumber data gambar wajib mencantumkan nama instansi resmi asal data/grafik.'
+        )
+    if meta.get("preliminary_odd_without_blank"):
+        p_phys, r_str, r_val, b1_phys = meta["preliminary_odd_without_blank"]
+        layout_isi.append(
+            f'Pelanggaran aturan penyelarasan halaman Romawi dan awal Bab 1 (Recto): '
+            f'Bagian pendahuluan (angka Romawi) berakhir di halaman ganjil {r_str} ({r_val}) pada halaman fisik {p_phys}, '
+            f'dan langsung disusul halaman isi berikutnya pada halaman fisik {b1_phys} (GENAP). '
+            f'Sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4.3.2 hal. 37, hal. 42 & Instrumen baris 28 poin 4 & baris 119, '
+            f'jumlah halaman Romawi HARUS GENAP. Sisipkan 1 halaman kosong (blank page) tanpa nomor halaman dan tanpa running title '
+            f'setelah halaman {r_str} agar Bab 1 selalu dimulai pada halaman GANJIL (recto / sebelah kanan buku saat dibuka).'
+        )
+    if meta.get("bab1_even_start"):
+        b1_phys = meta["bab1_even_start"]
+        layout_isi.append(
+            f'Pelanggaran penempatan Bab 1 pada halaman genap (Verso): Bab 1 (atau pembatas Bab 1) dimulai pada halaman fisik {b1_phys} (GENAP). '
+            f'Sesuai Pedoman Pembuatan Publikasi BPS 2023 Bab 4.4 hal. 53 & Instrumen baris 119, '
+            f'lembar pembatas bab dan awal bab WAJIB selalu diletakkan pada halaman GANJIL (recto / halaman sebelah kanan).'
+        )
 
     return layout_isi

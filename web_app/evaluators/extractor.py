@@ -1833,7 +1833,7 @@ def extract_pdf_metadata(pdf_path):
             if not has_div:
                 missing_chapter_dividers.append(ch)
 
-    # ── SCANNER JUDUL GAMBAR XXX & GRAFIK KOSONG ──
+    # ── SCANNER JUDUL GAMBAR XXX & GRAFIK KOSONG (P1 - INSTRUMEN BARIS 164-178) ──
     xxx_figures = []
     empty_peta_wilayah = False
     empty_grafik_jarak = False
@@ -1841,6 +1841,8 @@ def extract_pdf_metadata(pdf_path):
     fig_has_tahun = []
     fig_has_trailing_dot = []
     fig_note_has_keterangan = []
+    fig_title_above_image = []
+    fig_source_ellipsis = []
     for p in range(min(20, num_pages), num_pages - 1):
         p_txt = pages_text.get(p, "")
         lines = pages_lines.get(p, [])
@@ -1860,6 +1862,7 @@ def extract_pdf_metadata(pdf_path):
 
             # Cek titik di akhir nomor gambar atau judul gambar (Instrumen Baris 164)
             m_fig_all = re.search(r'(?:Gambar|Figure)\s*([1-7](?:\.\d+)?|\d+)(\.)?\s+([^\n]+)', p_txt)
+            f_num = fig_idx_str
             if m_fig_all:
                 f_num = m_fig_all.group(1)
                 has_dot_num = (m_fig_all.group(2) == '.')
@@ -1869,9 +1872,43 @@ def extract_pdf_metadata(pdf_path):
                 elif f_title.endswith('.'):
                     fig_has_trailing_dot.append((p + 1, p_lbl, f_title, f_title.rstrip('.'), "judul"))
 
+            # Cek posisi judul gambar apakah diletakkan di BAGIAN ATAS gambar (Instrumen Baris 171)
+            # Kaidah BPS 2023 Bab 4 hal. 44: Judul gambar WAJIB di bawah gambar (kebalikan dari judul tabel)
+            if doc and not is_xxx:
+                try:
+                    p_obj = doc[p]
+                    blocks = p_obj.get_text("blocks")
+                    fig_title_blocks = [
+                        b for b in blocks 
+                        if re.search(r'\b(?:Gambar|Figure)\s*([1-7](?:\.\d+)?|\d+)', b[4], re.I)
+                    ]
+                    if fig_title_blocks:
+                        title_y0 = min(b[1] for b in fig_title_blocks)
+                        vis_rects = []
+                        for im in p_obj.get_images():
+                            for r in p_obj.get_image_rects(im[0]):
+                                if r.width > 120 and r.height > 60:
+                                    vis_rects.append(r)
+                        for d in p_obj.get_drawings():
+                            dr = d.get('rect')
+                            if dr and dr.width > 120 and dr.height > 60 and dr.y1 < p_obj.rect.height * 0.9:
+                                vis_rects.append(dr)
+                        if vis_rects:
+                            min_vis_y = min(r.y0 for r in vis_rects)
+                            max_vis_y = max(r.y1 for r in vis_rects)
+                            if title_y0 < min_vis_y - 12 and max_vis_y > title_y0:
+                                fig_title_above_image.append((p + 1, p_lbl, f_num))
+                except Exception:
+                    pass
+
             # Cek Keterangan: alih-alih Catatan: di bawah gambar (Instrumen Baris 172)
             if re.search(r'^\s*Keterangan\s*[:/]', p_txt, re.MULTILINE | re.IGNORECASE) and ('Gambar' in p_txt or 'Figure' in p_txt) and 'Tabel' not in p_txt:
                 fig_note_has_keterangan.append((p + 1, p_lbl))
+
+            # Cek Sumber gambar elipsis / belum diisi (Instrumen Baris 173)
+            if ('Gambar' in p_txt or 'Figure' in p_txt) and 'Tabel' not in p_txt:
+                if re.search(r'Sumber/Source\s*:\s*\.{2,}', p_txt) or re.search(r'Sumber\s*:\s*\.{2,}', p_txt):
+                    fig_source_ellipsis.append((p + 1, p_lbl, f_num))
 
             if fig_idx_str == "1" and ("Peta Wilayah" in p_txt or "Map of" in p_txt):
                 imgs = [im for im in doc[p].get_image_info() if im.get('width', 0) > 150 and im.get('height', 0) > 150]
@@ -1882,6 +1919,57 @@ def extract_pdf_metadata(pdf_path):
                     empty_grafik_jarak = True
     
     daftar_gambar_unnecessary = (real_figures_found < 3 and toc_figure_idx >= 0)
+
+    # ── VERIFIKASI TRANSISI HALAMAN ROMAWI DAN AWAL BAB 1 (P2 - INSTRUMEN BARIS 28 & 119) ──
+    roman_pages_info = []
+    for p_rom in range(min(35, num_pages)):
+        lines_r = pages_lines.get(p_rom, [])
+        for l in lines_r[:3] + lines_r[-3:]:
+            l_clean = l.lower().strip('.')
+            if re.match(r'^[ivxlcdm]+$', l_clean):
+                val = _roman_to_int_val(l_clean)
+                if 1 <= val <= 50:
+                    roman_pages_info.append((p_rom + 1, l_clean, val))
+                    break
+
+    last_roman_info = roman_pages_info[-1] if roman_pages_info else None
+    preliminary_odd_without_blank = None
+    bab1_even_start = None
+
+    # Cari awal Bab 1 (konten atau pembatas)
+    start_search_bab1 = (last_roman_info[0] - 1) if last_roman_info else 10
+    bab1_phys_found = None
+    for p_b1 in range(start_search_bab1, min(start_search_bab1 + 10, num_pages)):
+        txt_b1 = pages_text.get(p_b1, "")
+        lines_b1 = pages_lines.get(p_b1, [])
+        first_l = lines_b1[0] if lines_b1 else ""
+        
+        # Lewati halaman romawi
+        if any(re.match(r'^[ivxlcdm]+$', l.lower().strip('.')) for l in lines_b1[:2] + lines_b1[-2:]):
+            continue
+            
+        is_bab1_start = bool(
+            (len(doc[p_b1].get_images()) >= 1 and (re.search(r'\bBAB\s*1\b', txt_b1, re.I) or len(txt_b1.strip()) < 80)) or
+            re.search(r'\b(?:1\.\s+GEOGRAFI|1\s+GEOGRAFI|BAB\s*1\s+GEOGRAFI)\b', txt_b1, re.I) or
+            (first_l in ['1', '1.', '3', '3.'] and any('GEOGRAFI' in l.upper() for l in lines_b1))
+        )
+        if is_bab1_start:
+            bab1_phys_found = p_b1 + 1
+            break
+
+    if last_roman_info:
+        last_phys, last_str, last_val = last_roman_info
+        if last_val % 2 != 0:
+            has_blank_sep = False
+            if last_phys < num_pages:
+                next_txt = re.sub(r'https?://\S+', '', pages_text.get(last_phys, "")).strip()
+                if len(next_txt) < 30 and len(doc[last_phys].get_images()) == 0:
+                    has_blank_sep = True
+            if not has_blank_sep:
+                preliminary_odd_without_blank = (last_phys, last_str, last_val, bab1_phys_found or (last_phys + 1))
+
+    if bab1_phys_found and bab1_phys_found % 2 == 0:
+        bab1_even_start = bab1_phys_found
 
     # ── PEMBATAS BAB & AWAL BAB GANJIL ──
     even_start_chapters = []
@@ -3010,6 +3098,10 @@ def extract_pdf_metadata(pdf_path):
         "body_subchapter_has_trailing_dot": body_subchapter_has_trailing_dot,
         "fig_has_trailing_dot": fig_has_trailing_dot,
         "fig_note_has_keterangan": fig_note_has_keterangan,
+        "fig_title_above_image": fig_title_above_image,
+        "fig_source_ellipsis": fig_source_ellipsis,
+        "preliminary_odd_without_blank": preliminary_odd_without_blank,
+        "bab1_even_start": bab1_even_start,
         "biblio_has_rt": biblio_has_rt,
         "biblio_has_arabic_page": biblio_has_arabic_page,
         "toc_table_has_trailing_dot": toc_table_has_trailing_dot,

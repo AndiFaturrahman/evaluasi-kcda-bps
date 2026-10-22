@@ -431,7 +431,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ── 5. PROGRESS ANIMATION ──
     let progressInterval = null;
-    function startProgress(title, desc) {
+    // ── 5. PROGRESS ANIMATION ──
+    let progressInterval = null;
+    function startProgress(title, desc, isBatch = false, totalCount = 0) {
         if (resultsContainer) resultsContainer.style.display = 'none';
         const batchResultsContainer = document.getElementById('batch-results-container');
         if (batchResultsContainer) batchResultsContainer.style.display = 'none';
@@ -440,6 +442,27 @@ document.addEventListener('DOMContentLoaded', () => {
         const progressDesc = document.getElementById('progress-desc');
         if (progressTitle && title) progressTitle.textContent = title;
         if (progressDesc && desc) progressDesc.textContent = desc;
+
+        const batchBox = document.getElementById('batch-progress-box');
+        const pctBadge = document.getElementById('progress-pct-badge');
+        const trackFill = document.getElementById('progress-track-fill');
+        const statusText = document.getElementById('progress-status-text');
+        const subDetail = document.getElementById('progress-sub-detail');
+
+        if (batchBox) {
+            batchBox.style.display = 'block';
+            if (isBatch) {
+                if (pctBadge) pctBadge.textContent = '0%';
+                if (trackFill) trackFill.style.width = '0%';
+                if (statusText) statusText.innerHTML = `<i class="fas fa-layer-group"></i> Mengunggah & Mempersiapkan ${totalCount} Berkas...`;
+                if (subDetail) subDetail.textContent = 'Menyiapkan antrean audit paralel...';
+            } else {
+                if (pctBadge) pctBadge.textContent = '10%';
+                if (trackFill) trackFill.style.width = '10%';
+                if (statusText) statusText.innerHTML = `<i class="fas fa-file-pdf"></i> Membaca Struktur Berkas Publikasi...`;
+                if (subDetail) subDetail.textContent = 'Ekstraksi metadata & teks anatomi...';
+            }
+        }
 
         if (progressCard) progressCard.style.display = 'block';
         if (btnAnalyze) btnAnalyze.disabled = true;
@@ -463,8 +486,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (steps[stepIndex]) steps[stepIndex].classList.replace('active', 'done');
                 stepIndex++;
                 if (steps[stepIndex]) steps[stepIndex].classList.add('active');
+
+                if (!isBatch && trackFill && pctBadge) {
+                    const singlePct = [10, 35, 70, 92][stepIndex] || 92;
+                    pctBadge.textContent = `${singlePct}%`;
+                    trackFill.style.width = `${singlePct}%`;
+                    if (statusText) {
+                        const stepTitles = [
+                            '1. Ekstraksi PDF & Metadata',
+                            '2. Pindai Visual & Tabel Statistik',
+                            '3. Validasi Anatomi 11 Seksi Resmi',
+                            '4. Kompilasi Lembar Evaluasi BPS'
+                        ];
+                        statusText.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${stepTitles[stepIndex]}...`;
+                    }
+                }
             }
-        }, 1200);
+        }, 1300);
     }
 
     function stopProgress() {
@@ -476,8 +514,16 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('step-4')
         ];
         steps.forEach(s => { if (s) s.className = 'step-pill done'; });
-        if (progressCard) progressCard.style.display = 'none';
-        if (btnAnalyze) btnAnalyze.disabled = false;
+        const batchBox = document.getElementById('batch-progress-box');
+        const trackFill = document.getElementById('progress-track-fill');
+        const pctBadge = document.getElementById('progress-pct-badge');
+        if (trackFill) trackFill.style.width = '100%';
+        if (pctBadge) pctBadge.textContent = '100%';
+        setTimeout(() => {
+            if (batchBox) batchBox.style.display = 'none';
+            if (progressCard) progressCard.style.display = 'none';
+            if (btnAnalyze) btnAnalyze.disabled = false;
+        }, 350);
     }
 
     // ── 6. SUBMIT ANALYSIS (SINGLE & MULTI BATCH) ──
@@ -513,7 +559,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     : `Sedang Melakukan Audit Kolektif ${selectedPdfFiles.length} Berkas PDF...`;
                 startProgress(
                     progressTitle,
-                    'Sistem mengekstrak dan memindai seluruh berkas secara terpadu, mendeteksi ketidaksesuaian wilayah/kasus ganti kover, menyusun 1 Master File Excel Terpadu (.xlsx), dan mengemas seluruh Laporan PDF resmi (.zip).'
+                    'Sistem mengekstrak dan memindai seluruh berkas secara terpadu, mendeteksi ketidaksesuaian wilayah/kasus ganti kover, menyusun 1 Master File Excel Terpadu (.xlsx), dan mengemas seluruh Laporan PDF resmi (.zip).',
+                    true,
+                    selectedPdfFiles.length
                 );
 
                 fetch('/api/analyze-batch-upload', {
@@ -567,14 +615,30 @@ document.addEventListener('DOMContentLoaded', () => {
                                 if (pollData.status === 'processing') {
                                     const pCount = pollData.processed || 0;
                                     const cDist = pollData.current_district || '';
+                                    const total = pollData.total || totalFiles || 1;
+                                    const pct = Math.min(100, Math.round((pCount / total) * 100));
+
                                     const progressTitleEl = document.getElementById('progress-title');
                                     const progressDescEl = document.getElementById('progress-desc');
                                     if (progressTitleEl) {
-                                        progressTitleEl.textContent = `Sedang Memproses Audit Kolektif (${pCount}/${pollData.total || totalFiles})...`;
+                                        progressTitleEl.textContent = `Sedang Memproses Audit Kolektif (${pCount}/${total})...`;
                                     }
                                     if (progressDescEl) {
                                         progressDescEl.textContent = cDist ? `Memeriksa kepatuhan & visual: ${cDist}` : 'Memindai berkas publikasi paralel...';
                                     }
+
+                                    const batchBox = document.getElementById('batch-progress-box');
+                                    const pctBadge = document.getElementById('progress-pct-badge');
+                                    const trackFill = document.getElementById('progress-track-fill');
+                                    const statusText = document.getElementById('progress-status-text');
+                                    const subDetail = document.getElementById('progress-sub-detail');
+
+                                    if (batchBox) batchBox.style.display = 'block';
+                                    if (pctBadge) pctBadge.textContent = `${pct}%`;
+                                    if (trackFill) trackFill.style.width = `${pct}%`;
+                                    if (statusText) statusText.innerHTML = `<i class="fas fa-microchip"></i> Memproses berkas ${pCount} dari ${total}...`;
+                                    if (subDetail) subDetail.textContent = cDist ? `Dokumen aktif: ${cDist}` : 'Memindai berkas publikasi paralel...';
+
                                     pollTimeoutId = setTimeout(pollStatus, 1200);
                                 } else if (pollData.status === 'completed') {
                                     isBatchPollingActive = false;
