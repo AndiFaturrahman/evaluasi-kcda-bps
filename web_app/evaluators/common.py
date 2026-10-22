@@ -607,3 +607,37 @@ def deduplicate_all_defects(defects_dict):
         deduped[sec] = deduplicate_section_items(sec, items)
     return deduped
 
+
+def sanitize_invisible_unicode(s):
+    """
+    Menghilangkan seluruh karakter tak kasat mata (invisible unicode), zero-width characters,
+    soft hyphens, dan byte-order-marks yang secara visual tidak tampak oleh manusia,
+    tetapi kerap mengacaukan pembacaan regex dan evaluasi teks PDF.
+    """
+    if not s or not isinstance(s, str):
+        return ""
+    # Hapus BOM, zero-width characters, soft hyphens, dan invisible directional marks
+    clean = (
+        s.replace('\ufeff', '')   # BOM / Zero-width no-break space
+         .replace('\u200b', '')   # Zero-width space
+         .replace('\u200c', '')   # Zero-width non-joiner
+         .replace('\u200d', '')   # Zero-width joiner
+         .replace('\u00ad', '')   # Soft hyphen (InDesign layout hyphenation)
+         .replace('\u2060', '')   # Word joiner
+         .replace('\u200e', '')   # LTR mark
+         .replace('\u200f', '')   # RTL mark
+         .replace('\xa0', ' ')    # Non-breaking space -> regular space
+         .replace('\u202f', ' ')  # Narrow no-break space -> regular space
+         .replace('\u2009', ' ')  # Thin space -> regular space
+         .replace('\u200a', ' ')  # Hair space -> regular space
+    )
+    # Normalisasi ligatur tipografi umum (InDesign font ligatures)
+    clean = (
+        clean.replace('\ufb01', 'fi')
+             .replace('\ufb02', 'fl')
+             .replace('\ufb00', 'ff')
+             .replace('\ufb03', 'ffi')
+             .replace('\ufb04', 'ffl')
+    )
+    return clean
+

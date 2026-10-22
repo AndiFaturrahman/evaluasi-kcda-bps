@@ -15,7 +15,8 @@ from .common import (
     HAVE_CV2, cv_auditor, JABATAN_SALAH_JAMAK, KNOWN_BANGKEP_ISSN,
     KECAMATAN_TO_KABUPATEN, URL_SUBDOMAIN_TO_KABUPATEN, ALL_REGENCIES_MAP,
     DUPLICATE_KECAMATAN_MAP, WILAYAH_METADATA, detect_kabupaten_name,
-    find_page_with_text, validate_issn_checksum, scan_cover_raster_header
+    find_page_with_text, validate_issn_checksum, scan_cover_raster_header,
+    sanitize_invisible_unicode
 )
 from .visual_verifier import (
     is_block_visually_visible,
@@ -125,7 +126,7 @@ def extract_pdf_metadata(pdf_path):
     pages_text = {}
     pages_lines = {}
     for i in range(num_pages):
-        txt = doc[i].get_text("text")
+        txt = sanitize_invisible_unicode(doc[i].get_text("text"))
         # ── PRIORITAS PEMINDAIAN VISUAL (RAPIDOCR) ──
         # Sesuai kaidah: "Nilai apa yang kasat mata bagi pembaca, abaikan apa yang tak kasat mata".
         # Jika halaman berupa kover (depan/belakang) atau memuat objek gambar grafis, prioritaskan pemindaian visual OCR
@@ -153,6 +154,7 @@ def extract_pdf_metadata(pdf_path):
                                 txt = (txt + "\n" + ocr_txt).strip()
                 except Exception:
                     pass
+        txt = sanitize_invisible_unicode(txt)
         pages_text[i] = txt
         pages_lines[i] = [l.strip() for l in txt.split("\n") if l.strip()]
 
@@ -1288,25 +1290,33 @@ def extract_pdf_metadata(pdf_path):
         else:
             marker_locations.append('multi_section')
     if re.search(r'nama\s+kepala\s+BPS\s+Kako\s+tanpa\s+gelar', full_doc_text, re.I):
-        pages_nk = [str(i + 1) for i in range(num_pages) if re.search(r'nama\s+kepala\s+BPS\s+Kako\s+tanpa\s+gelar', pages_text.get(i, ""), re.I)]
-        p_str = f" (terdeteksi di Hal. {', '.join(pages_nk)})" if pages_nk else ""
-        template_markers_found.append(f'Teks instruksi template "nama kepala BPS Kako tanpa gelar"{p_str} pada halaman Tim Penyusun')
-        marker_locations.append('tim_penyusun')
+        pages_nk = filter_visible_template_markers(doc, r'nama\s+kepala\s+BPS\s+Kako\s+tanpa\s+gelar', pages_text=pages_text)
+        if pages_nk:
+            p_str = f" (terdeteksi di Hal. {', '.join(str(p) for p in pages_nk)})"
+            template_markers_found.append(f'Teks instruksi template "nama kepala BPS Kako tanpa gelar"{p_str} pada halaman Tim Penyusun')
+            marker_locations.append('tim_penyusun')
     if re.search(r'\bNAMA\s+TANPA\s+GELAR\b', full_doc_text):
-        pages_ntg = [str(i + 1) for i in range(num_pages) if re.search(r'\bNAMA\s+TANPA\s+GELAR\b', pages_text.get(i, ""))]
-        p_str = f" (terdeteksi di Hal. {', '.join(pages_ntg)})" if pages_ntg else ""
-        template_markers_found.append(f'Teks instruksi template "NAMA TANPA GELAR"{p_str} pada halaman Kata Pengantar / Preface')
-        marker_locations.append('kata_pengantar')
+        pages_ntg = filter_visible_template_markers(doc, r'\bNAMA\s+TANPA\s+GELAR\b', pages_text=pages_text)
+        if pages_ntg:
+            p_str = f" (terdeteksi di Hal. {', '.join(str(p) for p in pages_ntg)})"
+            template_markers_found.append(f'Teks instruksi template "NAMA TANPA GELAR"{p_str} pada halaman Kata Pengantar / Preface')
+            marker_locations.append('kata_pengantar')
     # Personil dummy hanya dicek pada halaman Tim Penyusun (mencegah false match pada nomor ISSN XXXX-XXXX)
     if re.search(r'xxxxx\s*[•\*]\s*xxxxx', team_txt, re.I) or ('xxxxx' in team_txt and '•' in team_txt):
-        template_markers_found.append('Placeholder nama personil penyusun "xxxxx • xxxxx" pada susunan tim')
-        marker_locations.append('tim_penyusun')
-    if re.search(r'lorem\s+ipsum\s+dolor\s+sit\s+amet', full_doc_text, re.I):
-        pages_lorem = [str(i + 1) for i in range(num_pages) if re.search(r'lorem\s+ipsum\s+dolor\s+sit\s+amet', pages_text.get(i, ""), re.I)]
-        p_str = f" (terdeteksi di Hal. {', '.join(pages_lorem)})" if pages_lorem else ""
+        if team_idx >= 0 and doc:
+            pages_pers = filter_visible_template_markers(doc, r'xxxxx\s*[•\*]\s*xxxxx', pages_text={team_idx: team_txt})
+            if pages_pers:
+                template_markers_found.append('Placeholder nama personil penyusun "xxxxx • xxxxx" pada susunan tim')
+                marker_locations.append('tim_penyusun')
+        else:
+            template_markers_found.append('Placeholder nama personil penyusun "xxxxx • xxxxx" pada susunan tim')
+            marker_locations.append('tim_penyusun')
+    pages_lorem_nums = filter_visible_template_markers(doc, r'lorem\s+ipsum\s+dolor\s+sit\s+amet', pages_text=pages_text)
+    if pages_lorem_nums:
+        p_str = f" (terdeteksi di Hal. {', '.join(str(p) for p in pages_lorem_nums)})"
         template_markers_found.append(f'Ulasan statistik dan sambutan masih berupa teks dummy Latin "Lorem ipsum dolor sit amet..."{p_str}')
         marker_locations.append('batang_tubuh')
-    pages_kat_nums = filter_visible_template_markers(doc, r'1102001\.(?:xx|xxxx)\b')
+    pages_kat_nums = filter_visible_template_markers(doc, r'1102001\.(?:xx|xxxx)\b', pages_text=pages_text)
     if pages_kat_nums:
         p_str = f" (terdeteksi di Hal. {', '.join(str(p) for p in pages_kat_nums)})"
         template_markers_found.append(f'Nomor katalog masih berupa placeholder template "1102001.xx" / "1102001.xxxx"{p_str}')
@@ -1315,7 +1325,7 @@ def extract_pdf_metadata(pdf_path):
         else:
             marker_locations.append('katalog')
 
-    pages_issn_nums = filter_visible_template_markers(doc, r'ISSN\s*XXXX\s*-\s*XXXX')
+    pages_issn_nums = filter_visible_template_markers(doc, r'ISSN\s*XXXX\s*-\s*XXXX', pages_text=pages_text)
     if pages_issn_nums:
         p_str = f" (terdeteksi di Hal. {', '.join(str(p) for p in pages_issn_nums)})"
         template_markers_found.append(f'Nomor ISSN masih berupa template bawaan "ISSN XXXX -XXXX"{p_str}')
@@ -1324,21 +1334,22 @@ def extract_pdf_metadata(pdf_path):
         else:
             marker_locations.append('multi_section')
     if re.search(r'Dinas\s+xxx\b', full_doc_text, re.I):
-        pages_dinas = [str(i + 1) for i in range(num_pages) if re.search(r'Dinas\s+xxx\b', pages_text.get(i, ""), re.I)]
-        p_str = f" (terdeteksi di Hal. {', '.join(pages_dinas)})" if pages_dinas else ""
-        template_markers_found.append(f'Daftar kontributor data masih memuat "Dinas xxx"{p_str}')
-        marker_locations.append('katalog')
+        pages_dinas = filter_visible_template_markers(doc, r'Dinas\s+xxx\b', pages_text=pages_text)
+        if pages_dinas:
+            p_str = f" (terdeteksi di Hal. {', '.join(str(p) for p in pages_dinas)})"
+            template_markers_found.append(f'Daftar kontributor data masih memuat "Dinas xxx"{p_str}')
+            marker_locations.append('katalog')
     if re.search(r'Jl\.\s*\.{2,}|Telp\.:\s*\.{2,}|@bps\.go\.id', back_full_txt, re.I) and '...' in back_full_txt:
         template_markers_found.append(f'Alamat, kontak, dan email pada kover belakang masih berupa placeholder titik-titik ("Jl. ... Telp.: ...") (Hal. {num_pages})')
         marker_locations.append('kover_belakang')
 
     unique_marker_sections = set(marker_locations)
-    has_lorem = bool(re.search(r'lorem\s+ipsum\s+dolor\s+sit\s+amet', full_doc_text, re.I))
+    has_lorem = bool(pages_lorem_nums)
     
-    # Hitung kemunculan YYYYY di batang tubuh naskah (di luar HJU)
-    yyyyy_pages = [i + 1 for i in range(num_pages) if re.search(r'\bYYYYY\b', pages_text.get(i, ""))]
-    # Hanya dianggap masif jika tersebar di banyak halaman batang tubuh (>= 5 halaman)
-    has_yyyyy_body_massive = len(yyyyy_pages) >= 5
+    # Hitung kemunculan YYYYY di batang tubuh naskah (di luar HJU) yang benar-benar kasat mata
+    yyyyy_pages = filter_visible_template_markers(doc, r'\bYYYYY\b', pages_text=pages_text)
+    yyyyy_body_pages = [p for p in yyyyy_pages if p > 15]
+    has_yyyyy_body_massive = len(yyyyy_body_pages) >= 5
 
     is_pure_template = (
         bool(re.search(r'\bCOVER\s+DEPAN\b', cover_full_txt, re.I)) or
@@ -2257,14 +2268,29 @@ def extract_pdf_metadata(pdf_path):
             )
 
         # Ketidakurutan nomor catatan kaki tabel (Footnote Sequence Gap, misal 1 dan 3 ada tapi 2 hilang)
-        has_fn1 = bool(re.search(r'(?:Catatan|Note|Sumber|Source|Tabel|Table)[^\n]*?\b1\b|1/\s+|[a-zA-Z]1\b', txt))
-        has_fn3 = bool(re.search(r'(?:Catatan|Note|Sumber|Source|Tabel|Table)[^\n]*?\b3\b|3/\s+|[a-zA-Z]3\b', txt))
-        has_fn2 = bool(re.search(r'(?:Catatan|Note|Sumber|Source|Tabel|Table)[^\n]*?\b2\b|2/\s+|[a-zA-Z]2\b', txt))
-        if has_fn1 and has_fn3 and not has_fn2 and ('Catatan' in txt or 'Note' in txt):
-            table_findings.append(
-                f"{tbl_label}: Terdapat ketidakurutan nomor catatan kaki (terdapat nomor catatan kaki 1 dan 3, tapi tidak ada nomor catatan kaki 2). "
-                f"Seharusnya penomoran catatan kaki dan tanda rujukan berurutan 1, 2, 3, dst. Periksa juga tabel lainnya."
-            )
+        # Hanya diperiksa jika ada blok Catatan/Note nyata (bukan mencocokkan angka sembarangan di Sumber/Tabel)
+        m_fn_block = re.search(r'Catatan/Note\s*:?\s*(.*?)(?:Sumber/Source\s*:|$)', txt, re.DOTALL | re.I)
+        if m_fn_block:
+            fn_block = m_fn_block.group(1).strip()
+            # Cek penomoran rujukan di blok Catatan/Note
+            fn1 = bool(re.search(r'(?:^|\n|\b)(?:1/|1\)|1\.|¹|[¹1]\s+[A-Za-z])', fn_block))
+            fn2 = bool(re.search(r'(?:^|\n|\b)(?:2/|2\)|2\.|²|[²2]\s+[A-Za-z])', fn_block))
+            fn3 = bool(re.search(r'(?:^|\n|\b)(?:3/|3\)|3\.|³|[³3]\s+[A-Za-z])', fn_block))
+            
+            # Cek juga tanda rujukan di sel/header tabel
+            hdr_fn1 = bool(re.search(r'\b[A-Za-z]+\s*(?:1/|¹/|¹)\b', txt))
+            hdr_fn2 = bool(re.search(r'\b[A-Za-z]+\s*(?:2/|²/|²)\b', txt))
+            hdr_fn3 = bool(re.search(r'\b[A-Za-z]+\s*(?:3/|³/|³)\b', txt))
+            
+            has_fn1_real = fn1 or hdr_fn1
+            has_fn2_real = fn2 or hdr_fn2
+            has_fn3_real = fn3 or hdr_fn3
+            
+            if has_fn1_real and has_fn3_real and not has_fn2_real:
+                table_findings.append(
+                    f"{tbl_label}: Terdapat ketidakurutan nomor catatan kaki (terdapat nomor catatan kaki 1 dan 3, tapi tidak ada nomor catatan kaki 2). "
+                    f"Seharusnya penomoran catatan kaki dan tanda rujukan berurutan 1, 2, 3, dst. Periksa juga tabel lainnya."
+                )
 
         # Posisi baris agregat total kecamatan di baris pertama alih-alih baris paling bawah
         m_col_num = re.search(r'\(\s*1\s*\)', txt)
@@ -2408,7 +2434,11 @@ def extract_pdf_metadata(pdf_path):
                 print(f"[OCR Back Cover] Warning: {e_ocr}")
 
     combined_kb_text = (last_page_text + " " + kb_ocr_text).strip()
-    has_slogan_kb = ('DATA MENCERDASKAN' in combined_kb_text.upper() or 'MENCERDASKAN BANGSA' in combined_kb_text.upper())
+    has_slogan_kb = bool(
+        re.search(r'DATA\s+MENCERDASKAN|MENCERDASKAN\s+BANGSA', combined_kb_text, re.I) or
+        re.search(r'DATA\s+(?:ENLIGHTEN|ENLIGHTENS|EMPOWERS)|(?:ENLIGHTEN|EMPOWERS)\s+THE\s+NATION', combined_kb_text, re.I) or
+        re.search(r'Mencer[\s-]*daskan', combined_kb_text, re.I)
+    )
     has_berakhlak_kb = ('BERAKHLAK' in combined_kb_text.upper() or 'BerAKHLAK' in combined_kb_text or 'BANGGA MELAYANI' in combined_kb_text.upper() or 'SENSUS EKONOMI' in combined_kb_text.upper())
     logo_cluster_pos_kb = None  # 'top_right', 'top_left', 'bottom_right', 'bottom_left', or None
 

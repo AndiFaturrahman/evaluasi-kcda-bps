@@ -30,8 +30,10 @@ import fitz
 
 def is_block_visually_visible(page, bbox, min_dark_pixels=15, dark_threshold=200, dpi=150):
     """
-    Memeriksa apakah bounding box (x0, y0, x1, y1) memiliki piksel teks kasat mata (gelap).
-    Mengembalikan True jika kasat mata, False jika tak kasat mata (0 atau < min_dark_pixels).
+    Memeriksa apakah bounding box (x0, y0, x1, y1) memiliki piksel teks kasat mata bagi mata manusia:
+    1. Menguji keberadaan piksel teks gelap pada latar belakang terang (dokumen umum).
+    2. Menguji varians kontras lokal (std >= 10.0 dan ptp >= 35) untuk teks terang di atas latar gelap/berwarna (kover & pembatas bab).
+    3. Jika area seragam (flat/solid) tanpa kontras (std < 4), berarti teks tertutup/tersembunyi (tak kasat mata).
     """
     try:
         r = fitz.Rect(bbox)
@@ -45,8 +47,18 @@ def is_block_visually_visible(page, bbox, min_dark_pixels=15, dark_threshold=200
         if img is None or img.size == 0:
             return False
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        
+        # 1. Kasus umum: Teks gelap di atas latar terang
         dark_count = int(np.sum(gray < dark_threshold))
-        return dark_count >= min_dark_pixels
+        if dark_count >= min_dark_pixels:
+            return True
+            
+        # 2. Kasus kover/pembatas bab: Teks putih/terang di atas latar gelap atau berwarna
+        # Jika ada variasi kontras lokal yang signifikan, berarti ada elemen teks kasat mata
+        if np.ptp(gray) >= 35 and np.std(gray) >= 10.0:
+            return True
+
+        return False
     except Exception:
         return False
 

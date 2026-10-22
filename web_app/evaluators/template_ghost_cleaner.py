@@ -18,7 +18,7 @@ import fitz
 from .visual_verifier import is_block_visually_visible
 
 
-def filter_visible_template_markers(doc, pattern_regex, min_dark_pixels=15):
+def filter_visible_template_markers(doc, pattern_regex, min_dark_pixels=15, pages_text=None):
     """
     Mencari seluruh halaman di mana pola template tertentu benar-benar KASAT MATA.
     Jika pola hanya ada di text layer PDF tetapi di gambar rendered memiliki 0 piksel gelap
@@ -31,7 +31,7 @@ def filter_visible_template_markers(doc, pattern_regex, min_dark_pixels=15):
     compiled_pat = re.compile(pattern_regex, re.IGNORECASE) if isinstance(pattern_regex, str) else pattern_regex
 
     for p in range(total):
-        page_txt = doc[p].get_text("text")
+        page_txt = pages_text.get(p, "") if pages_text is not None else doc[p].get_text("text")
         if not compiled_pat.search(page_txt):
             continue
 
